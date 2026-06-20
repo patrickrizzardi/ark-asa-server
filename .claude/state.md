@@ -10,10 +10,10 @@
 
 <!-- RADAR-START -->
 ### Active Roadmaps
-*(no active roadmaps)*
+- ark-asa-server (Patrick) — 0 plans — 2026-06-20
 
 ### Active Workstreams
-*(no active workstreams)*
+- [ark-asa-server] initiative
 <!-- RADAR-END -->
 
 ---
