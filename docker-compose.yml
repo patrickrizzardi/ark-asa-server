@@ -1,0 +1,52 @@
+# ARK: Survival Ascended — M1: lean single-server image for FAST local config testing.
+# Scope is deliberately just this. MySQL / shared store / AsaApi plugins / clustering
+# come back in later milestones (M2+) once this image boots fast and clean.
+#
+# The config dir is a HOST bind mount on purpose: edit ./config/GameUserSettings.ini,
+# restart, and you're back in ~1 min. That's the whole point of the local sandbox.
+
+services:
+  # Sets the host kernel mmap limit ASA needs, or the server crash-loops (exit code 21).
+  # vm.max_map_count is non-namespaced, so a privileged container writes it to the HOST
+  # kernel, then exits. Runs before the server on every `up` — WSL or VPS, no manual step.
+  sysctl:
+    image: busybox:stable
+    command: sysctl -w vm.max_map_count=262144
+    privileged: true
+    network_mode: none
+    restart: "no"
+
+  the-island:
+    build: .
+    image: ark-asa:latest
+    container_name: ark-the-island
+    depends_on:
+      sysctl:
+        condition: service_completed_successfully
+    ports:
+      - "7777:7777/udp"      # game + query
+      - "27020:27020/tcp"    # RCON
+    environment:
+      SERVER_MAP: ${SERVER_MAP:-TheIsland_WP}
+      SESSION_NAME: ${SESSION_NAME:-ARK-Test}
+      MAX_PLAYERS: ${MAX_PLAYERS:-10}
+      ARK_ADMIN_PASSWORD: ${ARK_ADMIN_PASSWORD:?set ARK_ADMIN_PASSWORD in your env file}
+      UPDATE_ON_BOOT: ${UPDATE_ON_BOOT:-0}
+      SAVE_ON_STOP: ${SAVE_ON_STOP:-0}
+      ENABLE_BATTLEYE: ${ENABLE_BATTLEYE:-0}
+      MODS: ${MODS:-}
+      WINEDEBUG: ${WINEDEBUG:--all}   # -all = clean logs; set +err,+seh to debug a crash
+    volumes:
+      - ark-game:/home/container/arkserver                                           # game files + proton prefix + saves (persist → fast boot)
+      - ./config:/home/container/arkserver/ShooterGame/Saved/Config/WindowsServer    # YOUR ini files — edit on host, restart
+    stop_grace_period: ${STOP_GRACE_PERIOD:-30s}   # test=0s insta-kill, prod=30s for SaveWorld
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  ark-game:
+    name: ark-game
