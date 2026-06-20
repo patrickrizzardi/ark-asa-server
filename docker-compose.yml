@@ -37,8 +37,11 @@ services:
       MODS: ${MODS:-}
       WINEDEBUG: ${WINEDEBUG:--all}   # -all = clean logs; set +err,+seh to debug a crash
     volumes:
-      - ark-game:/home/container/arkserver                                           # game files + proton prefix + saves (persist → fast boot)
-      - ./config:/home/container/arkserver/ShooterGame/Saved/Config/WindowsServer    # YOUR ini files — edit on host, restart
+      - ark-game:/home/container/arkserver   # game files + proton prefix + saves (persist → fast boot)
+      - ./config:/home/container/config      # YOUR ini files — edit on host, restart. Bound SHALLOW on purpose:
+                                             # a deep bind into …/Saved/Config/WindowsServer makes Docker root-create
+                                             # the volume's intermediate dirs, blocking the non-root user from writing
+                                             # Logs/saves. The entrypoint symlinks this into the engine's config path.
     stop_grace_period: ${STOP_GRACE_PERIOD:-30s}   # test=0s insta-kill, prod=30s for SaveWorld
     restart: unless-stopped
     logging:

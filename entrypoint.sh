@@ -24,17 +24,28 @@ LOG_FILE="${ARK_DIR}/ShooterGame/Saved/Logs/ShooterGame.log"
 SERVER_EXE="${ARK_DIR}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe"
 
 install_or_update() {
+  # ASA's server (app 2430930) ships a Windows-only depot — no Linux build exists. SteamCMD on
+  # Linux defaults to the Linux platform and fails with "Missing configuration" for this app, so
+  # force the Windows platform BEFORE +login. The game then runs under Proton/Wine.
+  local force_windows="+@sSteamCmdForcePlatformType windows"
   if [[ ! -f "$INSTALL_MARKER" ]]; then
     echo "[entrypoint] First run — full install + validate (one-time, this IS slow)…"
-    "${STEAMCMD_DIR}/steamcmd.sh" +force_install_dir "${ARK_DIR}" \
+    "${STEAMCMD_DIR}/steamcmd.sh" ${force_windows} +force_install_dir "${ARK_DIR}" \
       +login anonymous +app_update "${ASA_APPID}" validate +quit
+    # steamcmd exits 0 even when app_update fails (its well-known footgun), so its exit code
+    # can't gate the marker. Verify the server binary actually landed — otherwise a partial
+    # download would set the marker, fast-boot would skip repair, and the server would crash.
+    if [[ ! -f "$SERVER_EXE" ]]; then
+      echo "[entrypoint] FATAL: install finished but ${SERVER_EXE} is missing — install incomplete." >&2
+      exit 1
+    fi
     # shed ~6GB we never need on a headless server (re-pulled only on a future validate)
     rm -rf "${ARK_DIR}/ShooterGame/Binaries/Win64/ArkAscendedServer.pdb" \
            "${ARK_DIR}/ShooterGame/Content/Movies/"
     touch "$INSTALL_MARKER"
   elif [[ "$UPDATE_ON_BOOT" == "1" ]]; then
     echo "[entrypoint] UPDATE_ON_BOOT=1 — delta update, no validate…"
-    "${STEAMCMD_DIR}/steamcmd.sh" +force_install_dir "${ARK_DIR}" \
+    "${STEAMCMD_DIR}/steamcmd.sh" ${force_windows} +force_install_dir "${ARK_DIR}" \
       +login anonymous +app_update "${ASA_APPID}" +quit
   else
     echo "[entrypoint] Fast boot — skipping Steam (set UPDATE_ON_BOOT=1 to update)."
@@ -47,6 +58,23 @@ main() {
   mkdir -p "${STEAM_COMPAT_DATA_PATH}" "${STEAM_COMPAT_CLIENT_INSTALL_PATH}" \
            "$(dirname "$LOG_FILE")" "$XDG_RUNTIME_DIR"
   chmod 700 "$XDG_RUNTIME_DIR"
+
+  # Link the engine's config path to the host bind mount (/home/container/config).
+  # The bind is shallow (see docker-compose.yml) so the volume tree stays owned by this
+  # non-root user; we create the dir chain here and symlink WindowsServer at the host mount.
+  # Edit ./config/*.ini on the host → restart → ASA reads through the link.
+  local config_link="${ARK_DIR}/ShooterGame/Saved/Config/WindowsServer"
+  mkdir -p "$(dirname "$config_link")"
+  rm -rf "$config_link"
+  ln -sfn /home/container/config "$config_link"
+
+  # Proton's lsteamclient loads the native Steam client from ~/.steam/sdk{64,32}/steamclient.so;
+  # without it the server asserts in steamclient_main.c and aborts (exit 21). The .so is baked
+  # into the image (see Dockerfile); ~/.steam is ephemeral (not on the volume), so relink each boot.
+  : "${STEAMCMD_DIR:=/opt/steamcmd}"
+  mkdir -p "${HOME}/.steam/sdk64" "${HOME}/.steam/sdk32"
+  ln -sf "${STEAMCMD_DIR}/linux64/steamclient.so" "${HOME}/.steam/sdk64/steamclient.so"
+  ln -sf "${STEAMCMD_DIR}/linux32/steamclient.so" "${HOME}/.steam/sdk32/steamclient.so"
 
   install_or_update
   : > "$LOG_FILE"

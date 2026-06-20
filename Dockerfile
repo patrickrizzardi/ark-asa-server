@@ -13,9 +13,14 @@ FROM ghcr.io/parkervcp/steamcmd:proton
 USER root
 
 ARG STEAMCMD_DIR=/opt/steamcmd
+# Run steamcmd once at build so it self-updates and bakes its native client libs
+# (linux32/linux64/steamclient.so) into the image. Proton's lsteamclient loads steamclient.so
+# at launch or the server asserts and aborts; baking it means even a fast boot (which skips
+# steamcmd) always has it. It's a fixed dependency → image, per build-time-vs-runtime.md.
 RUN mkdir -p ${STEAMCMD_DIR} \
  && curl -sL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" \
       | tar -xz -C ${STEAMCMD_DIR} \
+ && "${STEAMCMD_DIR}/steamcmd.sh" +login anonymous +quit \
  && chown -R container:container ${STEAMCMD_DIR}
 
 # Pre-create the game dir owned by container so the named volume mounted here inherits that
