@@ -3,8 +3,4 @@
 !.env.test.example
 !.env.prod.example
 
-# Generated server config (ASA writes a huge default GameUserSettings.ini here on
-# first boot). Un-ignore once you curate configs you actually want version-controlled.
-config/
-
 # Game files + saves live in the `ark-game` docker volume, nothing to ignore on disk.

@@ -26,8 +26,9 @@ cp .env.test.example .env.test     # set ARK_ADMIN_PASSWORD
 docker compose --env-file .env.test up --build
 ```
 
-First boot installs ~30GB of game + builds the Proton prefix (slow, one-time). Every boot
-after skips Steam entirely and is fast — the only cost is ARK's ~60–120s map load.
+First boot installs ~13GB of game + builds the Proton prefix (slow, one-time). Every boot
+after skips Steam entirely and is fast — full startup is ~20s. Verified on bare-metal Ubuntu
+22.04: `Server has successfully started!` → advertising for join, port 7777/udp bound.
 
 ### Fast config loop
 
@@ -49,10 +50,19 @@ docker compose --env-file .env.prod up -d --build   # VPS
 
 Real secrets live in `.env.test` / `.env.prod` (gitignored). Only the `.example` files are tracked.
 
+## Troubleshooting: exit code 21
+
+ASA aborts early with exit 21 for several distinct reasons — too-low `vm.max_map_count`
+(handled above), a missing native `steamclient.so` for Proton (baked into the image + symlinked
+at boot), or a partial Steam install. The default `WINEDEBUG=-all` hides the real fault; to see
+it, boot with `WINEDEBUG=+err,+seh docker compose up` and look for the first non-Sentry `err:` line.
+
 ## Joining from the Windows ARK client (WSL)
 
-Enable `networkingMode=mirrored` in `.wslconfig`, restart WSL, then in-game console:
-`open localhost:7777`. Logs + RCON work without any of this.
+The server itself runs fine under WSL2 (the old exit-21 crash was the missing `steamclient.so`,
+not WSL) — but the verified test box is bare-metal Linux (`dell`). To join from the Windows ARK
+client when running under WSL2, set `networkingMode=mirrored` in `.wslconfig`, or use the console
+`open localhost:7777`.
 
 ## Roadmap
 
