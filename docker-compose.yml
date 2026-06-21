@@ -15,12 +15,18 @@ services:
     network_mode: none
     restart: "no"
 
-  # MariaDB 11.4 (LTS) backs the ArkShop shared economy store. Internal to the compose
-  # network only — no host port published. ArkShop connects via service name `mariadb:3306`.
+  # MariaDB 11.4 (LTS) backs the ArkShop shared economy store. ArkShop connects internally over
+  # the compose network (`mariadb:3306`). The host port is driven by MARIADB_HOST_PORT and
+  # DEFAULTS to 127.0.0.1:3307 — loopback only, so a prod/VPS deploy never exposes the DB to the
+  # network (honors the Phase 1 "DB not network-exposed" AC / ADR 0001). A LAN box that wants
+  # remote DB browsing (e.g. DataGrip against dell) sets MARIADB_HOST_PORT=3307 in its env file to
+  # bind all interfaces. 3307 not 3306 because 3306 is taken by another container on dell.
   # MariaDB is required over MySQL ≥8.0.28: ArkShop's client lib rejects that version range
   # (see docs/internal/decisions/0001-db-engine-mariadb.md).
   mariadb:
     image: mariadb:11.4
+    ports:
+      - "${MARIADB_HOST_PORT:-127.0.0.1:3307}:3306"
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?set MARIADB_ROOT_PASSWORD in your env file}
       MARIADB_DATABASE: ${MARIADB_DATABASE:-arkshop}
