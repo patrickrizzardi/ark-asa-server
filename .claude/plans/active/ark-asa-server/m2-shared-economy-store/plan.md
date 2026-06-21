@@ -530,7 +530,7 @@ It's last because it needs AsaApi loading (Phase 4) and the DB (Phase 1).
 - [x] deviation-judge #5 (approach: separate ./plugins-config host dir): PASS 2026-06-21T05:10 (round 3 — re-judged the file-symlink fix across 4 adversarial inputs incl. warm-boot + cross-device mv; sound)
 - [x] deviation-judge #6 (approach: jq --arg cred injection): PASS 2026-06-21T05:10 (round 3 — re-judged the readlink-resolve change across 6 inputs incl. broken-symlink; port guard + || exit 1 hold)
 - [x] deviation-judge #7 (approach: 955333 auto-append gated to ENABLE_ASAAPI=1): PASS round 1 (carried — MODS-append logic untouched)
-- [x] Committed: 024bb5b
+- [x] Committed: 03264a5
 
 ## Quality Checklist (verify at completion)
 - [ ] DB creds validated/handled at boot (fail fast on missing); no `any`-equivalent silent defaults
