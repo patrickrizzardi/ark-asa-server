@@ -437,25 +437,34 @@ Everything prior (bits in place, VC++ present) exists to make this gate pass. Ar
 3. compose: add `ENABLE_ASAAPI: ${ENABLE_ASAAPI:-1}` to `the-island.environment`; add the var to both `.env.*.example`.
 4. Boot on `dell` with `ENABLE_ASAAPI=1` and confirm AsaApi init in `ArkApi.log`; if it faults, debug with `WINEDEBUG=+err,+seh`.
 **Acceptance criteria**:
-- [ ] With `ENABLE_ASAAPI=1`, `…/Binaries/Win64/logs/ArkApi.log` shows AsaApi initialized (framework banner / "loaded" lines), no fatal load error
-  - Evidence: (filled at phase completion)
-- [ ] The server still reaches "has successfully started" / advertises for join (the M1 success signal) under the loader
-  - Evidence: (filled at phase completion)
-- [ ] With `ENABLE_ASAAPI=0`, launch is byte-for-byte the M1 vanilla path (`ArkAscendedServer.exe`) — rollback works with no rebuild
-  - Evidence: (filled at phase completion)
+- [x] With `ENABLE_ASAAPI=1`, `…/Binaries/Win64/logs/ArkApi.log` shows AsaApi initialized (framework banner / "loaded" lines), no fatal load error
+  - Evidence: `phase4-runtime-evidence.md` §AC1 (+ §Round-2) — AsaApi log on dell shows `[API][info] API was successfully loaded` + `Loaded plugin Ark:SA ArkShop V1.4` + `Loaded plugin Ark:SA Permissions V1.1` + `Loaded all plugins`, no critical/fatal. (v1.21 names the file `ArkApi_<pid>_<ts>.log`, not a fixed `ArkApi.log` — research-detail correction.) The only warning is the explicitly-Phase-5-deferred optional ASA API Utils mod (singleton not found; mod ID 955333 discovered). Required the pdb fix (deviation #3) + Xvfb (deviation #2). acceptance-verifier round 3: MET.
+- [x] The server still reaches "has successfully started" / advertises for join (the M1 success signal) under the loader
+  - Evidence: `phase4-runtime-evidence.md` §AC2 — under `[AsaApiLoader — modded, Xvfb :0]` launch: `Server: "ARK-Test" has successfully started!` + `Server has completed startup and is now advertising for join. (10.29GB Mem)` (Full Startup 47.73s); container `Up`, not restarting. acceptance-verifier round 3: MET.
+- [x] With `ENABLE_ASAAPI=0`, launch is byte-for-byte the M1 vanilla path (`ArkAscendedServer.exe`) — rollback works with no rebuild
+  - Evidence: `phase4-runtime-evidence.md` §AC3 — `ENABLE_ASAAPI=0 docker compose up -d` (same image SHA, no rebuild) → `[vanilla]` launch banner → `Server "ARK-Test" has successfully started!` + advertising for join; `grep "API was successfully loaded" → 0` (AsaApi absent). Vanilla `else` branch sets `launch_exe="${SERVER_EXE}"`, skips Xvfb, reuses identical `${query}`/`${flags}`. acceptance-verifier round 3: MET.
 **Quality gate**:
-- [ ] Toggle defaults documented in `.env.*.example`
-- [ ] Same query/flags reused (no drift between vanilla and loader launch)
-- [ ] Rollback path (toggle `0`) verified, not just asserted
-- [ ] `WINEDEBUG=-all` remains the default (no secret/noise leak)
+- [x] Toggle defaults documented in `.env.*.example` (both files: `ENABLE_ASAAPI=1` + kill-switch comment)
+- [x] Same query/flags reused (no drift between vanilla and loader launch) — `launch_exe` single-sources `proton run "${launch_exe}" "${query}" ${flags}`; identical args both branches
+- [x] Rollback path (toggle `0`) verified, not just asserted — dell boot with `ENABLE_ASAAPI=0` → `[vanilla]` launch, server started, AsaApi absent (AC3 evidence)
+- [x] `WINEDEBUG=-all` remains the default (no secret/noise leak) — unchanged in compose; `+err,+seh` used only for the transient debug runs
 **Verification**: `ENABLE_ASAAPI=1 docker compose up` on dell → `ArkApi.log` shows init + server advertises; flip to `0` → vanilla launch.
 
+**Integration-gate fixes (found by the first real dell build/boot, all verified):**
+- Dockerfile: base image lacks `unzip` → added apt layer (Phase 2 defect, scope deviation #1).
+- entrypoint: AsaApiLoader needs an X display → Xvfb in loader branch + socket+liveness guard (approach deviation #2).
+- entrypoint: AsaApi requires `ArkAscendedServer.pdb` (offset-cache key) → keep pdb when modded + `ensure_modded_pdb()` self-heal with size floor (approach deviation #3).
+- Bonus: ASA API Utils CurseForge mod ID = **955333** (for Phase 5).
+
 **Phase Review Gates**:
-- [ ] code-reviewer: <verdict + ISO timestamp>
-- [ ] rules-compliance-reviewer: <verdict + ISO timestamp>
-- [ ] plan-adherence-verifier: <verdict + ISO timestamp>
-- [ ] acceptance-verifier: <verdict + ISO timestamp>
-- [ ] design-compliance-reviewer: <verdict + ISO timestamp>
+- [x] code-reviewer: PASS 2026-06-21T03:20 (round 3; R1 BLOCK pdb-install-gate + R2 concerns resolved, no regression)
+- [x] rules-compliance-reviewer: PASS 2026-06-21T03:20 (round 3; R1 main() Big-O + R2 Xvfb-geometry magic-number resolved)
+- [x] plan-adherence-verifier: PASS 2026-06-21T03:20 (round 3; Scope-escape CLEAR, 4/4 Steps MET, Dockerfile deviation documented)
+- [x] acceptance-verifier: PASS 2026-06-21T03:20 (round 3; 3/3 ACs MET with dell runtime receipts)
+- [x] design-compliance-reviewer: PASS 2026-06-21T02:55 (round 1, carried R2/R3 — all 3 placements pass build-vs-runtime 3-question test; Phase 3→4 launch divergence CLOSED; locked-doc files untouched by R2/R3 entrypoint delta)
+- [x] deviation-judge #1 (scope: Dockerfile unzip apt layer): PASS 2026-06-21T02:55 (round 1, carried — Dockerfile untouched R2/R3; layer-cache + scope probes clean)
+- [x] deviation-judge #2 (approach: Xvfb virtual framebuffer for loader): PASS 2026-06-21T03:20 (round 3; R1 timing-guard + R2 stale-socket BLOCKs resolved via socket+`kill -0` liveness check; residual TOCTOU is loud/negligible)
+- [x] deviation-judge #3 (approach: keep pdb when modded + ensure_modded_pdb self-heal): PASS 2026-06-21T03:20 (round 3; R1 install-gate + R2 truncated-pdb BLOCKs resolved via launch-gate `pdb_ok` size floor; residual >1MiB-truncation is loud/negligible)
 - [ ] Committed: <commit SHA>
 
 ### Phase 5: ArkShop configured against MariaDB (shared store, end-to-end)

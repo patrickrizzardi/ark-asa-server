@@ -12,6 +12,12 @@ FROM ghcr.io/parkervcp/steamcmd:proton
 # Base sets USER container; switch to root only to install SteamCMD + drop in our entrypoint.
 USER root
 
+# unzip is needed to extract the AsaApi + ArkShop zips below; the steamcmd:proton base
+# ships curl/tar but not unzip. Fixed build dependency → image layer (build-time-vs-runtime.md).
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends unzip \
+ && rm -rf /var/lib/apt/lists/*
+
 ARG STEAMCMD_DIR=/opt/steamcmd
 # Run steamcmd once at build so it self-updates and bakes its native client libs
 # (linux32/linux64/steamclient.so) into the image. Proton's lsteamclient loads steamclient.so

@@ -126,3 +126,24 @@ findings, decision drains, override rationales.
 - **Verified the MariaDB ACs locally in WSL docker, not on dell.** AC1(healthy)/AC2(connect)/AC3(persist) are host-agnostic — `mariadb:11.4` is a stock upstream image with zero Proton/Wine involvement, so a local boot is valid evidence, not an approximation. dell matters only for the GE-Proton game server (Phase 4/5). The full-stack `the-island`-starts-after-mariadb ordering half of AC1 stays compose-guaranteed (`depends_on: condition: service_healthy`) and gets empirically confirmed when the game image boots on dell in Phase 4/5. Coordinator call; all reviewers + acceptance-verifier accepted the local evidence as sufficient for this phase.
 - **Committed the plan contract to `main` (873509a) before phase work.** Precedent: the roadmap was committed straight to main in b81e215. Keeps per-phase diffs clean against a stable BASE. Phase code lives on `feat/m2-1-mariadb`.
 - **ADR backup deferral anchored to the `m4-ops-tooling` capability-ledger row** ("Backups: economy DB (mysqldump)", planned) rather than inventing fresh prose — the cleaner of the two no-duct-tape resolution options.
+
+## Phase 4 — execution churn (2026-06-21)
+
+**Coordinator probes (pre-gate):**
+- 2026-06-21T02:10Z — coordinator probe (pre-gate): launch-branch correctness in entrypoint.sh. Command: `git diff 29735d2 -- entrypoint.sh` (read). Result: REFUTED (suspicion of error) — `launch_exe` single-sources backgrounding, identical query/flags both branches, `bash -n` clean. Routing: proceeded to dell boot.
+
+**Integration-gate defects found by the real dell build/boot (all fixed in-phase):**
+- 2026-06-21T02:20Z — `docker build` failed: `unzip: not found` (exit 127) — `parkervcp/steamcmd:proton` base lacks unzip; Phase 2's plugin-download RUN never built before. Fixed: unzip apt layer in Dockerfile (scope deviation #1).
+- 2026-06-21T02:27Z — container restart-loop; `WINEDEBUG=+err,+seh` showed `AsaApiLoader.exe` aborting on `nodrv_CreateWindow` (needs an X display; vanilla is headless via SDL dummy). Fixed: Xvfb in loader branch (approach deviation #2).
+- 2026-06-21T02:34Z — server started but AsaApi loaded 0 plugins: `[critical] Failed to read pdb`. AsaApi SHA-256's ArkAscendedServer.pdb to derive its offset-cache key; M1 entrypoint shed the pdb. Fixed: keep pdb when ENABLE_ASAAPI=1 (approach deviation #3); pdb restored on dell's volume via steamcmd validate (~2.0 GB; first attempt bailed on a transient `Update state (0x0): Timed out` — retry loop cleared it).
+
+**Result:** ENABLE_ASAAPI=1 → `API was successfully loaded` + ArkShop V1.4 + Permissions V1.1 loaded + server advertising for join. ENABLE_ASAAPI=0 → byte-for-byte vanilla path, server starts, AsaApi absent. All 3 ACs MET. Receipts: `phase4-runtime-evidence.md`.
+
+**Bonus discovered:** ASA API Utils CurseForge mod ID = **955333** (from ArkShop's optional-mod warning) — needed for Phase 5.
+
+**Decisions this phase:** see `## Phase 4 — decisions` below.
+
+## Phase 4 — decisions
+- pdb retention is now ENABLE_ASAAPI-gated, not unconditional-shed. WHY: AsaApi hard-requires ArkAscendedServer.pdb (offset-cache key); the M1 disk optimization was incompatible with the modded stack. The ~2.0 GB pdb is the cost of a functioning modded server — named tradeoff, not duct tape.
+- Xvfb is gated to the loader branch (not always-on). WHY: keeps ENABLE_ASAAPI=0 byte-for-byte M1 (AC3 rollback guarantee).
+- Dockerfile `unzip` fix made in Phase 4 rather than re-opening Phase 2. WHY: it's a Phase-2 defect but it blocks the Phase-4 gate; fixing at the point of discovery (no-duct-tape) and documenting as a scope deviation is correct. Phase 2's static "coordinator probe" that claimed unzip worked was run on a host with unzip, not in the image build — a lesson for /learn.

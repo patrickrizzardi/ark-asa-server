@@ -61,6 +61,7 @@ services:
       UPDATE_ON_BOOT: ${UPDATE_ON_BOOT:-0}
       SAVE_ON_STOP: ${SAVE_ON_STOP:-0}
       ENABLE_BATTLEYE: ${ENABLE_BATTLEYE:-0}
+      ENABLE_ASAAPI: ${ENABLE_ASAAPI:-1}
       MODS: ${MODS:-}
       WINEDEBUG: ${WINEDEBUG:--all}   # -all = clean logs; set +err,+seh to debug a crash
     volumes:

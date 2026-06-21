@@ -18,10 +18,12 @@ set -euo pipefail
 : "${UPDATE_ON_BOOT:=0}"              # 1 = check for an ASA update this boot (slower)
 : "${SAVE_ON_STOP:=1}"               # 1 = RCON SaveWorld on stop; 0 = instant kill (test loops)
 : "${ENABLE_BATTLEYE:=0}"            # 1 = BattlEye anti-cheat ON (prod PvP); 0 = off (testing)
+: "${ENABLE_ASAAPI:=1}"             # 1 = launch via AsaApiLoader (modded); 0 = vanilla ArkAscendedServer (M1 rollback)
 
 INSTALL_MARKER="${ARK_DIR}/.installed"
 LOG_FILE="${ARK_DIR}/ShooterGame/Saved/Logs/ShooterGame.log"
 SERVER_EXE="${ARK_DIR}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe"
+LOADER_EXE="${ARK_DIR}/ShooterGame/Binaries/Win64/AsaApiLoader.exe"
 
 install_or_update() {
   # ASA's server (app 2430930) ships a Windows-only depot — no Linux build exists. SteamCMD on
@@ -39,9 +41,15 @@ install_or_update() {
       echo "[entrypoint] FATAL: install finished but ${SERVER_EXE} is missing — install incomplete." >&2
       exit 1
     fi
-    # shed ~6GB we never need on a headless server (re-pulled only on a future validate)
-    rm -rf "${ARK_DIR}/ShooterGame/Binaries/Win64/ArkAscendedServer.pdb" \
-           "${ARK_DIR}/ShooterGame/Content/Movies/"
+    # Shed assets a headless server never needs. Movies/ is the intro videos a headless server never plays.
+    # ArkAscendedServer.pdb (~6GB): kept on a fresh modded install, shed on a fresh vanilla install.
+    # A volume first-installed as vanilla (pdb absent) that later flips to ENABLE_ASAAPI=1 is
+    # handled by ensure_modded_pdb() at the launch gate — it restores the pdb via steamcmd validate
+    # without requiring a manual intervention or a full reinstall.
+    rm -rf "${ARK_DIR}/ShooterGame/Content/Movies/"
+    if [[ "${ENABLE_ASAAPI}" != "1" ]]; then
+      rm -rf "${ARK_DIR}/ShooterGame/Binaries/Win64/ArkAscendedServer.pdb"
+    fi
     touch "$INSTALL_MARKER"
   elif [[ "$UPDATE_ON_BOOT" == "1" ]]; then
     echo "[entrypoint] UPDATE_ON_BOOT=1 — delta update, no validate…"
@@ -183,7 +191,62 @@ install_vcredist() {
   echo "[entrypoint] VC++ 2019 redist installed — msvcp140, vcruntime140, vcruntime140_1 verified in prefix."
 }
 
+ensure_modded_pdb() {
+  # AsaApi SHA-256s ArkAscendedServer.pdb to derive its symbol-offset cache key. Without the pdb
+  # it logs "[critical] Failed to read pdb" and loads ZERO plugins — the server still starts and
+  # reports success, making this a silent failure. The install-time shed (above) covers fresh
+  # vanilla installs; this function covers the vanilla→modded flip: a volume first-installed with
+  # ENABLE_ASAAPI=0 sheds the pdb and writes .installed, so subsequent boots with ENABLE_ASAAPI=1
+  # skip install_or_update entirely and would launch into the silent failure without this gate.
+  #
+  # Flow:
+  #   1. Return early if the pdb is already present and non-trivially-sized (common path on a modded volume)
+  #   2. Attempt steamcmd validate (up to 3 times) to restore the pdb; break on a valid artifact
+  #   3. Verify the pdb is present and non-trivially-sized — trust the artifact, not steamcmd's exit code
+  #   4. Fatal-exit if still missing after all attempts
+  #
+  # Time: O(1) compute, up to 3 steamcmd validate calls (I/O-dominated)  Space: O(1)
+  #
+  # Side effects: may write ~6GB pdb file onto the ark-game volume.
+  local pdb="${ARK_DIR}/ShooterGame/Binaries/Win64/ArkAscendedServer.pdb"
+  local force_windows="+@sSteamCmdForcePlatformType windows"
+
+  # A bare -f test passes a 0-byte or truncated pdb (e.g. steamcmd exhausted disk mid-download),
+  # which AsaApi then fails to SHA-256 — the exact silent-zero-plugin failure this function prevents.
+  # The real pdb is ~6GB; require >1 MiB to reject truncated files while never rejecting a real one.
+  pdb_ok() { [[ -f "${pdb}" ]] && [[ "$(stat -c%s "${pdb}" 2>/dev/null || echo 0)" -gt 1048576 ]]; }
+
+  if pdb_ok; then
+    return 0
+  fi
+
+  echo "[entrypoint] ENABLE_ASAAPI=1 but pdb is absent — restoring via steamcmd validate…"
+
+  local attempt
+  for attempt in 1 2 3; do
+    echo "[entrypoint] steamcmd validate attempt ${attempt}/3…"
+    # steamcmd exits 0 even on transient failures ("Timed out waiting for update to start"),
+    # so its exit code is not the success gate — the pdb file's presence is.
+    "${STEAMCMD_DIR}/steamcmd.sh" ${force_windows} +force_install_dir "${ARK_DIR}" \
+      +login anonymous +app_update "${ASA_APPID}" validate +quit || true
+    if pdb_ok; then
+      echo "[entrypoint] pdb restored on attempt ${attempt}."
+      break
+    fi
+    echo "[entrypoint] pdb still absent after attempt ${attempt}."
+  done
+
+  if ! pdb_ok; then
+    echo "[entrypoint] FATAL: ArkAscendedServer.pdb is still missing or truncated after 3 steamcmd validate attempts." >&2
+    echo "  Expected: ${pdb}" >&2
+    echo "  AsaApi cannot load plugins without the pdb. Check Steam CDN reachability or disk space." >&2
+    exit 1
+  fi
+}
+
 main() {
+  # Time: O(1) compute; boot is I/O-dominated (steamcmd update + pdb restore up to 3 calls,
+  #       Proton game load, Xvfb socket poll bounded to 50 × 0.1s)  Space: O(1)
   export HOME="${HOME:-/home/container}"
   export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/xdg-$(id -u)}"
   mkdir -p "${STEAM_COMPAT_DATA_PATH}" "${STEAM_COMPAT_CLIENT_INSTALL_PATH}" \
@@ -210,6 +273,9 @@ main() {
   install_or_update
   deploy_plugins
   install_vcredist
+  if [[ "${ENABLE_ASAAPI}" == "1" ]]; then
+    ensure_modded_pdb
+  fi
   : > "$LOG_FILE"
 
   echo "[entrypoint] vm.max_map_count = $(cat /proc/sys/vm/max_map_count) (ASA needs >= 262144)"
@@ -223,9 +289,47 @@ main() {
   if [[ "$ENABLE_BATTLEYE" == "1" ]]; then flags="${flags} -BattlEye"; else flags="${flags} -NoBattlEye"; fi
   [[ -n "$MODS" ]] && flags="${flags} -mods=${MODS}"
 
-  echo "[entrypoint] Launching ${SERVER_MAP} on :${SERVER_PORT} (rcon :${RCON_PORT})"
+  # Route launch through the AsaApiLoader (modded) or the vanilla server binary.
+  # Both binaries accept identical args; ENABLE_ASAAPI=0 restores the M1 vanilla path with no rebuild.
+  local launch_exe
+  local xvfb_pid=""
+  if [[ "${ENABLE_ASAAPI}" == "1" ]]; then
+    launch_exe="${LOADER_EXE}"
+    # AsaApiLoader creates a real Win32 window during init (via Wine's x11 driver), unlike the
+    # vanilla server which runs headless through SDL_VIDEODRIVER=dummy. With no X display, Wine
+    # logs nodrv_CreateWindow ("explorer process failed to start") and the loader aborts. Give it
+    # a virtual framebuffer. Vanilla (ENABLE_ASAAPI=0) skips this — its launch stays byte-for-byte M1.
+    # Geometry 1024x768x24 is an arbitrary conventional minimum: the loader only needs a valid display
+    # to create its init window; ASA/Wine render nothing (headless), so the actual resolution is ignored.
+    Xvfb :0 -screen 0 1024x768x24 -nolisten tcp >/dev/null 2>&1 &
+    xvfb_pid=$!
+    export DISPLAY=:0
+    # Xvfb binds its socket asynchronously; launch before it is ready and Wine still finds no
+    # display. Wait for the X socket (cap ~5s — Xvfb is local and comes up in well under 1s).
+    for _ in $(seq 1 50); do [[ -S /tmp/.X11-unix/X0 ]] && break; sleep 0.1; done
+    # Two ways Xvfb leaves us without a usable display, both ending in the same nodrv_CreateWindow
+    # abort we started Xvfb to prevent:
+    #   1. It never bound its socket (missing kernel DRI, display in use) — the loop exhausts and the
+    #      socket file is absent.
+    #   2. It bound the socket then died (crash post-startup) — a STALE socket file passes -S but
+    #      nothing is listening, so proton run hits ECONNREFUSED.
+    # Require BOTH the socket present AND the Xvfb process still alive before proceeding. stderr was
+    # suppressed above, so these checks are the only signal we have.
+    xvfb_dead=0
+    kill -0 "${xvfb_pid}" 2>/dev/null || xvfb_dead=1
+    if [[ ! -S /tmp/.X11-unix/X0 || "${xvfb_dead}" -eq 1 ]]; then
+      echo "[entrypoint] FATAL: Xvfb is not providing a usable display — socket absent or process dead after 5s." >&2
+      echo "  AsaApiLoader requires a real X display. Check that Xvfb is installed in the image." >&2
+      kill "${xvfb_pid}" 2>/dev/null || true
+      exit 1
+    fi
+    echo "[entrypoint] Launching ${SERVER_MAP} on :${SERVER_PORT} (rcon :${RCON_PORT}) [AsaApiLoader — modded, Xvfb :0]"
+  else
+    launch_exe="${SERVER_EXE}"
+    echo "[entrypoint] Launching ${SERVER_MAP} on :${SERVER_PORT} (rcon :${RCON_PORT}) [vanilla]"
+  fi
   # WINEDEBUG comes from the container env (compose). -all = clean; +err,+seh to debug.
-  proton run "${SERVER_EXE}" "${query}" ${flags} 2>&1 &
+  proton run "${launch_exe}" "${query}" ${flags} 2>&1 &
   local server_pid=$!
 
   # Stream the game log to container stdout → visible in `docker compose up`.
@@ -243,6 +347,7 @@ main() {
 
   wait "$server_pid"
   kill "$tail_pid" 2>/dev/null || true
+  [[ -n "$xvfb_pid" ]] && kill "$xvfb_pid" 2>/dev/null || true
 }
 
 main "$@"
