@@ -198,3 +198,20 @@ if (misses.size > 0) {
   process.exit(1);
 }
 console.log('all item labels resolved OK.');
+
+// --- optional: write the block into config/Game.ini between markers (idempotent) ---
+const MARK_START = '; >>> GENERATED SUPPLY-CRATE LOOT (tools/gen-loot.ts) — do not edit between markers >>>';
+const MARK_END = '; <<< END GENERATED SUPPLY-CRATE LOOT <<<';
+if (process.argv.includes('--write')) {
+  const iniPath = join(here, '..', 'config', 'Game.ini');
+  let ini = readFileSync(iniPath, 'utf8');
+  // flip the existing multiplier in place (do not duplicate); fishing multiplier untouched
+  ini = ini.replace(/^SupplyCrateLootQualityMultiplier=.*$/m, 'SupplyCrateLootQualityMultiplier=1.0');
+  const block = `${MARK_START}\n${emitted.join('\n')}\n${MARK_END}`;
+  const between = new RegExp(`${MARK_START.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s\\S]*?${MARK_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+  ini = between.test(ini) ? ini.replace(between, block) : `${ini.replace(/\s*$/, '')}\n\n${block}\n`;
+  writeFileSync(iniPath, ini);
+  console.log(`patched config/Game.ini (marked block replaced/inserted; SupplyCrateLootQualityMultiplier=1.0).`);
+} else {
+  console.log('(run with --write to patch config/Game.ini in place)');
+}
