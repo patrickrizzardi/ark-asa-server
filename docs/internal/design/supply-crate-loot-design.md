@@ -9,290 +9,172 @@
 
 ## Goal
 
-Replace ARK's vanilla supply-crate loot with hand-authored, themed loot tables that are
-**more rewarding than vanilla but not instant-endgame**. Loot climbs by color tier
-(white → red), the "ring" (Double) variant of each color is slightly better and slightly
-more than its non-ring twin, and the rare jackpot items (top dino saddles, ascendant gear,
-element) sit at low weight so they stay exciting.
+Replace ARK's vanilla supply-crate loot with hand-authored, themed tables that are **more
+rewarding than vanilla but not instant-endgame**. Loot quality climbs by color tier
+(white → red), the "ring" (Double) variant of each color is slightly better/more than its
+non-ring twin, and the rare jackpot grades (ascendant gear, crown saddles, element) sit at
+low weight / low pull so they stay rare.
 
-## Non-negotiables (locked during brainstorm)
-
-1. **All maps, one file.** `ConfigOverrideSupplyCrateItems` lines for crate classes that
-   don't exist on the currently-loaded map are **silently ignored** by ASA — so this one
-   `Game.ini` carries every map's crate classes, and each map picks up only its own. The
-   *same per-tier design* is stamped onto every map's matching class string ("same loot per
-   map").
-2. **Full override**, not append. Each authored crate fully replaces its vanilla contents.
-3. **`SupplyCrateLootQualityMultiplier` → `1.0`** (currently 2.5), with a comment. Quality is
-   authored per-crate in the tables below, so the global knob stays neutral and our numbers
-   are the real numbers. `FishingLootQualityMultiplier` is a separate system — **untouched**.
-4. **BP-at-half rule.** Every *gear* item (tools, weapons, armor, saddles **only**) appears
-   twice in a set: the item at weight `W`, and its **blueprint at weight `W/2`** (so the BP
-   shows up ~half as often as the item). **The BP rolls the same quality band as the item**
-   (mastercraft sword → mastercraft sword BP). Structures, turrets, kibble, resources, ammo,
-   and element are **item-only** (no BP — no quality tier / no blueprint exists).
-5. **Random, count-limited pools.** Each set lists the *full* menu of tier-appropriate items;
-   `MinNumItems`/`MaxNumItems` + `bItemsRandomWithoutReplacement=true` pull only a few at
-   random. Nobody can predict a specific drop, and rolling the whole menu at once is
-   near-impossible.
-6. **Ring (Double) variant** of each color = same table, **+1 item pulled** and **quality
-   nudged ~+20%**. Deliberately less than vanilla's flat 2×.
-7. **Tek:** engrams stay free (`bAutoUnlockAllEngrams=true` unchanged). **No tek blueprints**
-   in drops (pointless — engrams already unlocked; the real tek gate is *element*). Red drops
-   a *small* element boost only.
+## Assumed leans (veto if wrong)
+- **Kibble** → folded into the Resources group (green+).
+- **Metal structures** → dropped (a stack of mats beats a stack of walls).
 
 ---
 
-## How to read the tables (tweak guide)
+## Locked rules
 
-- **Weight** = the relative pick-weight that goes in the config (`EntryWeight`). Within a set
-  I've normalized weights to sum to ~100, so a weight reads like a "% share of that set."
-  **This is the number you tweak.**
-- **Pull** = how many items the set draws (`MinNumItems`–`MaxNumItems`), random without
-  replacement.
-- **~Appears** = rough chance the item shows in a given crate ≈ `avg(Pull) × weight ÷ 100`
-  (capped at ~95%). **Approximate** — it's derived from Weight + Pull; tweak the Weight, this
-  follows.
-- **+BP** in the Item column = a second entry exists for its blueprint at **half** the listed
-  weight, same quality band. (Not shown as its own row to keep the table readable.)
-- **Set type:** *Guaranteed* sets always fire (`MinNumItems ≥ 1`); *Bonus* sets use
-  `MinNumItems=0`, so they're a chance, not a promise.
-
-> Quality bands are named here. Their exact `MinQuality`/`MaxQuality` numbers get mapped and
-> **verified at implementation** (the named-tier → numeric mapping is engine-specific). Same
-> for every crate/item **class string** — verified per map before it touches `Game.ini`, since
-> a typo is a silent no-op.
-
----
-
-## Tier summary
-
-| Tier | Min lvl | Quality band | Gear pulled (non-ring / ring) | Element |
-|------|--------:|--------------|:-----------------------------:|--------:|
-| ⚪ White  |  3 | Primitive → Ramshackle      | 1–2 / 2–3 | — |
-| 🟢 Green  | 15 | Ramshackle → Apprentice     | 2–3 / 3–4 | — |
-| 🔵 Blue   | 25 | Apprentice → Journeyman     | 2–3 / 3–4 | — |
-| 🟣 Purple | 35 | Journeyman → Mastercraft    | 3–4 / 4–5 | — |
-| 🟡 Yellow | 45 | Mastercraft → low Ascendant | 3–4 / 4–5 | — |
-| 🔴 Red    | 60 | Ascendant                   | 4–5 / 5–6 | ~150 / ~200 (ring) |
+1. **All maps, one file.** Crate classes absent on the loaded map are **silently ignored** by
+   ASA, so this one `Game.ini` carries every map's classes; each map uses only its own. The
+   *same per-tier design* is stamped onto every map's matching class string.
+2. **Full override** (not append). Each authored crate fully replaces vanilla contents.
+3. **`SupplyCrateLootQualityMultiplier` → `1.0`** (was 2.5), commented. Quality is authored
+   per-crate below, so the global knob stays neutral. `FishingLootQualityMultiplier` untouched.
+4. **Quality is a TIER property, not per-item.** Every gear item + saddle in a tier rolls that
+   tier's quality band (set via `MinQuality`/`MaxQuality`). A "pick" is journeyman in blue,
+   mastercraft in purple, ascendant in red — same item, quality climbs with color. No per-item
+   quality labels.
+5. **Ascendant is the rare tail.** Red's quality roll is skewed so most red gear lands high
+   (mastercraft-ish) and ascendant is the lucky top edge — *not* the default. Crown items
+   (giga saddle, etc.) also carry the lowest weights.
+6. **BP-at-half** (gear + saddles only). Each such item appears twice: the item at weight `W`,
+   its **blueprint at `W/2`**, **same quality band**. Turrets, resources, ammo, kibble, element
+   = item-only (no BP).
+7. **Random, count-limited.** Each group lists its full menu; `MinNumItems`/`MaxNumItems` +
+   `bItemsRandomWithoutReplacement=true` pull only a few at random.
+8. **Gear menu GROWS with tier, lower items persist.** White is a tiny menu; each tier adds
+   items; red's menu is *everything* — so a red pull (just 1 item) might be an ascendant pistol
+   *or* an ascendant rocket launcher. Luck of the draw on which.
+9. **Tek:** engrams stay free (`bAutoUnlockAllEngrams=true` unchanged). No tek BPs. Element is a
+   small rare boost in red only.
 
 ---
 
-## ⚪ White (lvl 3) — "Scraps" · quality Primitive→Ramshackle
+## The 4 groups (per crate)
 
-**Gear set — Guaranteed, Pull 1–2**
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Stone Pick (+BP)     | 20 | ~30% |
-| Stone Hatchet (+BP)  | 20 | ~30% |
-| Metal Pick (+BP)     | 12 | ~18% |
-| Metal Hatchet (+BP)  | 12 | ~18% |
-| Spear (+BP)          | 14 | ~21% |
-| Bow (+BP)            | 12 | ~18% |
-| Simple Pistol (+BP)  |  6 | ~9%  |
-| Slingshot (+BP)      |  4 | ~6%  |
-
-**Structures set — Bonus, Pull 0–1** (item-only)
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Metal Foundation ×2 | 40 | ~20% |
-| Metal Wall ×3       | 35 | ~17% |
-| Metal Ceiling ×2    | 25 | ~12% |
+| # | Group | Fires | Quality? | BP? | Notes |
+|---|-------|-------|:--------:|:---:|-------|
+| 1 | **Gear** | Guaranteed | Yes (tier band) | Yes | Growing menu; tools weighted > weapons |
+| 2 | **Saddles** | Bonus (blue+) | Yes (tier band) | Yes | One master set; crown saddles low weight |
+| 3 | **Turrets** | Bonus | No | No | Auto (blue+), Heavy (purple+) |
+| 4 | **Resources** | **Guaranteed ≥2** | No | No | Mats + ammo + kibble; qty scales with tier |
 
 ---
 
-## 🟢 Green (lvl 15) — "Early kit" · quality Ramshackle→Apprentice
+## Pull counts by tier (items drawn per group)
 
-**Gear set — Guaranteed, Pull 2–3**
+| Tier | Quality band | Gear (NR/ring) | Saddle (NR/ring) | Turret (NR/ring) | Resource (NR/ring) | Element |
+|------|---|:---:|:---:|:---:|:---:|:---:|
+| ⚪ White  | Prim→Ram   | 1–2 / 3–4 | — | — | 2–3 / 3–4 | — |
+| 🟢 Green  | Ram→App    | 1–2 / 3–4 | — | — | 2–3 / 3–4 | — |
+| 🔵 Blue   | App→Jour   | 1–2 / 3–4 | 0–1 / 0–1 | 0–1 / 0–1 | 2–3 / 3–4 | — |
+| 🟣 Purple | Jour→MC    | 1–2 / 3–4 | 0–1 / 0–1 | 0–1 / 0–1 | 2–3 / 3–4 | — |
+| 🟡 Yellow | MC→low Asc | 1–2 / 3   | 0–1 / 0–1 | 0–1 / 0–1 | 2–3 / 3–4 | — |
+| 🔴 Red    | Ascendant  | 1 / 2     | 0–1 / 0–1 | 0–1 / 0–1 | 2–3 / 3–4 | ~150 / ~200 |
 
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Metal Pick (+BP)     | 14 | ~35% |
-| Metal Hatchet (+BP)  | 14 | ~35% |
-| Sickle (+BP)         |  8 | ~20% |
-| Pike (+BP)           | 14 | ~35% |
-| Bow (+BP)            | 12 | ~30% |
-| Crossbow (+BP)       | 10 | ~25% |
-| Simple Pistol (+BP)  | 10 | ~25% |
-| Spear (+BP)          |  8 | ~20% |
-
-**Armor set — Bonus, Pull 0–2**
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Hide armor pieces (+BP)  | 55 | ~28% |
-| Cloth armor pieces (+BP) | 45 | ~22% |
-
-**Kibble set — Bonus, Pull 0–1** (item-only)
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Basic Kibble ×5    | 40 | ~20% |
-| Simple Kibble ×3   | 35 | ~17% |
-| Regular Kibble ×2  | 25 | ~12% |
-
-**Resources — Bonus, Pull 0–1** (item-only): Stone Arrows ×40 / ARB ×20 (low weight).
+> **Ring delta:** gear pulls per the table above (you set these — note ring is non-uniform:
+> +2 items at white, +1 at red). Saddle/turret/resource pulls +1 on ring. **Quality +~20% on
+> ring** for gear + saddles.
 
 ---
 
-## 🔵 Blue (lvl 25) — "Utility" · quality Apprentice→Journeyman
+## How to read the matrices (tweak guide)
 
-**Gear set — Guaranteed, Pull 2–3**
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Journeyman tools (pick/hatchet) (+BP) | 22 | ~55% |
-| Crossbow (+BP)        | 14 | ~35% |
-| Longneck Rifle (+BP)  | 14 | ~35% |
-| Simple Pistol (+BP)   | 10 | ~25% |
-| Pike (+BP)            | 10 | ~25% |
-| Sword (+BP)           | 12 | ~30% |
-| Bow (+BP)             |  8 | ~20% |
-
-**Armor set — Bonus, Pull 0–2**
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Chitin armor pieces (+BP) | 60 | ~30% |
-| Flak armor pieces (+BP)   | 40 | ~20% |
-
-**Saddle set — Bonus, Pull 0–1** (common dinos)
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Parasaur Saddle (+BP) | 28 | ~14% |
-| Raptor Saddle (+BP)   | 26 | ~13% |
-| Trike Saddle (+BP)    | 24 | ~12% |
-| Carno Saddle (+BP)    | 22 | ~11% |
-
-**Misc set — Bonus, Pull 0–1** (item-only): 1× Auto Turret (low weight), ARB ×50.
+- **Weight** = the relative `EntryWeight` that goes in the config — *this is the knob you tweak.*
+  Columns are normalized to ~100, so a weight reads like a "% share of that group at that tier."
+- A **blank cell** = item isn't in that tier's menu yet (menu grows left→right).
+- **~Chance to appear** ≈ `avg(Pull) × weight ÷ 100` (capped ~95%). Derived from weight + pull.
+- **+BP** = a blueprint entry exists at half the listed weight, same quality.
 
 ---
 
-## 🟣 Purple (lvl 35) — "Strong" · quality Journeyman→Mastercraft
+## Group 1 — GEAR (weight by rarity; tools > weapons; all +BP)
 
-**Gear set — Guaranteed, Pull 3–4**
+| Item | Type | ⚪ | 🟢 | 🔵 | 🟣 | 🟡 | 🔴 |
+|------|------|---:|---:|---:|---:|---:|---:|
+| Pick           | tool   | 24 | 16 | 12 |  9 |  7 |  6 |
+| Hatchet        | tool   | 24 | 16 | 12 |  9 |  7 |  6 |
+| Sickle         | tool   |  — | 10 |  8 |  6 |  5 |  4 |
+| Spear          | weapon | 18 | 10 |  7 |  5 |  4 |  3 |
+| Bow            | weapon | 16 | 10 |  7 |  5 |  4 |  3 |
+| Simple Pistol  | weapon | 18 | 10 |  8 |  6 |  5 |  4 |
+| Pike           | weapon |  — |  8 |  6 |  5 |  4 |  3 |
+| Crossbow       | weapon |  — | 10 |  8 |  6 |  5 |  4 |
+| Longneck Rifle | weapon |  — |  — | 10 |  8 |  6 |  5 |
+| Sword          | weapon |  — |  — |  6 |  5 |  4 |  3 |
+| Assault Rifle  | weapon |  — |  — |  — |  8 |  7 |  6 |
+| Pump Shotgun   | weapon |  — |  — |  — |  7 |  6 |  5 |
+| Fabricated Pistol | weapon | — | — | — |  6 |  5 |  4 |
+| Fabricated Sniper | weapon | — | — | — |  — |  7 |  6 |
+| Compound Bow   | weapon |  — |  — |  — |  — |  5 |  4 |
+| Rocket Launcher| weapon |  — |  — |  — |  — |  — |  4 |
+| Hide Armor (set) | armor | — | 10 |  6 |  4 |  3 |  2 |
+| Flak Armor (set) | armor | — |  — |  8 |  6 |  5 |  4 |
+| Riot Armor (set) | armor | — |  — |  — |  — |  6 |  4 |
 
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Mastercraft tools (+BP)    | 18 | ~63% |
-| Assault Rifle (+BP)        | 16 | ~56% |
-| Pump-Action Shotgun (+BP)  | 14 | ~49% |
-| Fabricated Pistol (+BP)    | 14 | ~49% |
-| Sword (+BP)                | 12 | ~42% |
-| Crossbow (+BP)             | 10 | ~35% |
-| Longneck Rifle (+BP)       | 16 | ~56% |
-
-**Armor set — Bonus, Pull 0–2**
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Flak armor set (+BP) | 100 | ~35% |
-
-**Saddle set — Bonus, Pull 0–1** (mid-tier dinos)
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Ankylo Saddle (+BP)      | 24 | ~12% |
-| Doedicurus Saddle (+BP)  | 22 | ~11% |
-| Sabertooth Saddle (+BP)  | 20 | ~10% |
-| Carbonemys Saddle (+BP)  | 18 | ~9%  |
-| Argentavis Saddle (+BP)  | 16 | ~8%  |
-
-**Misc set — Bonus, Pull 0–1** (item-only): 1–2× Heavy Turret (low weight), ARB ×100.
+*Menu growth: White = pick/hatchet/spear/bow/pistol · Green +sickle/pike/crossbow/hide ·
+Blue +longneck/sword/flak · Purple +assault rifle/shotgun/fab pistol · Yellow +fab sniper/
+compound bow/riot · Red +rocket launcher (full menu).*
 
 ---
 
-## 🟡 Yellow (lvl 45) — "High-end" · quality Mastercraft→low Ascendant
+## Group 2 — SADDLES (one master set, blue→red; quality = tier; all +BP)
 
-**Gear set — Guaranteed, Pull 3–4**
+Same set + same weights at every tier blue→red; **only the quality differs** (journeyman in
+blue … ascendant in red). Crown saddles kept rare by low weight.
 
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Ascendant Pick / Hatchet (+BP) | 16 | ~56% |
-| Assault Rifle (mc→asc) (+BP)   | 16 | ~56% |
-| Pump-Action Shotgun (+BP)      | 14 | ~49% |
-| Fabricated Sniper (+BP)        | 12 | ~42% |
-| Compound Bow (+BP)             | 14 | ~49% |
-| Sword (+BP)                    | 12 | ~42% |
-| Longneck Rifle (+BP)           | 16 | ~56% |
+| Saddle | Weight | | Saddle | Weight |
+|--------|---:|---|--------|---:|
+| Parasaur     | 10 | | Argentavis      | 5 |
+| Raptor       | 10 | | Direbear        | 4 |
+| Trike        |  9 | | Baryonyx        | 4 |
+| Carno        |  8 | | Allosaurus      | 4 |
+| Pteranodon   |  7 | | Rex             | 4 |
+| Stego        |  7 | | Paracer (plat)  | 3 |
+| Sarco        |  6 | | Bronto (plat)   | 3 |
+| Ankylosaurus |  6 | | Spino           | 3 |
+| Doedicurus   |  5 | | Therizinosaurus | 3 |
+| Sabertooth   |  5 | | Megalodon       | 3 |
+| Carbonemys   |  4 | | Mosasaur (plat) | 2 |
+| Quetzal (plat)| 2 | | Plesiosaur      | 2 |
+| Basilosaurus |  2 | | Megalania       | 2 |
+| Giganotosaurus| 1 | | Rock Drake      | 1 |
+| Managarmr    |  1 | | | |
 
-**Armor set — Bonus, Pull 0–2**
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Flak armor set (+BP)   | 60 | ~30% |
-| Riot armor pieces (+BP)| 40 | ~20% |
-
-**Saddle set — Bonus, Pull 0–1** (high-tier dinos)
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Rex Saddle (+BP)        | 24 | ~12% |
-| Spino Saddle (+BP)      | 22 | ~11% |
-| Therizino Saddle (+BP)  | 20 | ~10% |
-| Megalodon Saddle (+BP)  | 18 | ~9%  |
-| Mosasaur Saddle (+BP)   | 16 | ~8%  |
-
-**Misc set — Bonus, Pull 0–1** (item-only): Heavy Turret ×1–2, ARB ×150, Rocket Propelled Grenade ×3.
+*Saddles for creatures absent on a given map are harmless no-ops (the item still exists).
+Final saddleable-creature list verified per map at implementation.*
 
 ---
 
-## 🔴 Red (lvl 60) — "Jackpot" · quality Ascendant
+## Group 3 — TURRETS (bonus, item-only; weight by rarity)
 
-**Gear set — Guaranteed, Pull 4–5**
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Ascendant tools (+BP)        | 14 | ~63% |
-| Ascendant Assault Rifle (+BP)| 14 | ~63% |
-| Ascendant Shotgun (+BP)      | 12 | ~54% |
-| Fabricated Sniper (+BP)      | 12 | ~54% |
-| Compound Bow (+BP)           | 12 | ~54% |
-| Longneck Rifle (+BP)         | 12 | ~54% |
-| Sword (+BP)                  | 12 | ~54% |
-
-**Armor set — Bonus, Pull 0–2**
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Ascendant Flak set (+BP) | 60 | ~40% |
-| Riot armor set (+BP)     | 40 | ~27% |
-
-**Saddle set — Bonus, Pull 0–1** (top-tier dinos — the rare jackpot)
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Rex Saddle (+BP)          | 18 | ~9%  |
-| Giganotosaurus Saddle (+BP)| 10 | ~5% |
-| Wyvern Saddle (+BP)       | 12 | ~6%  |
-| Mosasaur Saddle (+BP)     | 14 | ~7%  |
-| Basilosaurus Saddle (+BP) | 14 | ~7%  |
-| Spino Saddle (+BP)        | 16 | ~8%  |
-| Therizino Saddle (+BP)    | 16 | ~8%  |
-
-**Misc set — Bonus, Pull 0–1** (item-only)
-
-| Item | Weight | ~Appears |
-|------|-------:|---------:|
-| Element ×150              |  8 | ~4%  |
-| Heavy Turret ×2–3         | 30 | ~15% |
-| ARB ×250                  | 32 | ~16% |
-| Rocket Propelled Grenade ×5 | 30 | ~15% |
+| Item | 🔵 | 🟣 | 🟡 | 🔴 | Qty |
+|------|---:|---:|---:|---:|----:|
+| Auto Turret  | 70 | 40 | 30 | 25 | 1–2 |
+| Heavy Turret |  — | 60 | 70 | 75 | 1–2 |
 
 ---
 
-## Ring (Double) variant rule
+## Group 4 — RESOURCES (guaranteed ≥2; item-only; quantity scales with tier)
 
-Each color's ring crate is its own class string. It reuses the **same `ItemSets`** as the
-non-ring color, with two changes baked in:
+Weights pick *which* mats; quantity grows up the ladder. Black pearls gated purple+, element red.
 
-1. **+1 to every set's pull** (`MinNumItems`/`MaxNumItems` each +1) → more items per crate.
-2. **Quality range ~+20%** on every gear entry → slightly better rolls.
+| Resource | Weight | Qty ⚪→🔴 (scales) | Tiers |
+|----------|---:|---|---|
+| Metal Ingot     | 16 | 30 → 300 | all |
+| Silica Pearls   | 12 | 20 → 200 | all |
+| Oil             | 10 | 20 → 200 | all |
+| Polymer         | 10 | 10 → 150 | all |
+| Electronics     | 10 | 10 → 150 | all |
+| Crystal         | 10 | 20 → 200 | all |
+| Cementing Paste | 10 | 20 → 200 | all |
+| Ammo bundle*    | 14 | scales (see note) | all |
+| Kibble (variety)|  8 | 3 → 15   | green+ |
+| Black Pearls    |  6 | 5 → 50   | **purple+** |
+| Element         |  8 | ~150 (red) / ~200 (ring) | **red** |
 
-Concrete element exception: red+ring drops **~200** element (vs ~150 non-ring), still low weight.
+*Ammo bundle scales: Stone Arrows / Simple ammo (white–green) → Advanced Rifle Bullets
+(blue–yellow) → ARB + Rockets (red). Not coupled to the dropped weapon — ARK loot entries roll
+independently, so ammo is its own roll.*
 
 ---
 
@@ -309,12 +191,11 @@ SupplyCrateLootQualityMultiplier=1.0
 
 ## To verify at implementation (plan stage — not guessed here)
 
-1. **Exact crate class strings per map** (`SupplyCrate_Level##_<Map>_C` + the Double/ring
-   variants) for every map in the cluster. Source: Beacon / arkcodes / live game files on dell.
-   A wrong string = silent no-op.
-2. **Item class strings** for every item listed (e.g. `PrimalItem_WeaponRifle_C`).
-3. **Quality band → numeric `MinQuality`/`MaxQuality`** mapping per named tier.
-4. **Element craft sanity check** — confirm ~150 element is a "head start," not enough to
-   trivialize tek, in the context of the 3× boss element rewards already in `Game.ini`.
-5. **Saddle availability per map** — drop saddles for dinos that don't exist on a given map
-   are harmless (the saddle item still exists), but worth a sanity pass.
+1. **Exact crate class strings per map** (`SupplyCrate_Level##_<Map>_C` + ring/Double variants),
+   every map in the cluster. A wrong string = silent no-op.
+2. **Item class strings** for every item/resource/saddle/turret listed.
+3. **Quality band → numeric `MinQuality`/`MaxQuality`** per tier, **plus the curve that makes
+   ascendant the rare tail** (rule 5) — likely via the quality roll power, verified in-game.
+4. **Saddleable-creature list per map** (drop saddles for absent dinos are harmless).
+5. **Element sanity** — ~150 is a head-start vs the 3× boss element already in `Game.ini`
+   (Dragon Alpha 1320, King Titan Alpha 1500), not a shortcut.
