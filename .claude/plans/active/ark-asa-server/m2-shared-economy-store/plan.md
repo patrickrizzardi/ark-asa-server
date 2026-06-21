@@ -405,7 +405,7 @@ as its own phase makes the "redist landed" fact independently verifiable before 
 - [x] acceptance-verifier: PASS 2026-06-20T23:30 (round 2; 4/4 ACs MET at static-evidence ceiling — runtime boot receipt deferred to Phase 4/dell)
 - [x] design-compliance-reviewer: PASS 2026-06-20T23:30 (round 2; round 1 BLOCK on unrecorded AsaApiLoader-launch-row contradiction resolved via `## Design Divergences` entry — judged a real tradeoff, Phase 4 reversal trigger)
 - [x] deviation-judge #1 (approach: conjunctive marker+DLL fast-path @ entrypoint.sh:151-155): PASS 2026-06-20T23:30 (round 2; false-RUN not false-skip — marker-write structurally gated behind `missing[]` `exit 1`, no bypass)
-- [ ] Committed: <commit SHA>
+- [x] Committed: 29735d2
 
 ### Phase 4: Flip launch to AsaApiLoader.exe (AsaApi loads)
 **PR scope**: Entrypoint launches `AsaApiLoader.exe` (behind an `ENABLE_ASAAPI` toggle) instead of `ArkAscendedServer.exe`; AsaApi initializes under Proton.
