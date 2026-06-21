@@ -207,11 +207,17 @@ if (process.argv.includes('--write')) {
   let ini = readFileSync(iniPath, 'utf8');
   // flip the existing multiplier in place (do not duplicate); fishing multiplier untouched
   ini = ini.replace(/^SupplyCrateLootQualityMultiplier=.*$/m, 'SupplyCrateLootQualityMultiplier=1.0');
-  const block = `${MARK_START}\n${emitted.join('\n')}\n${MARK_END}`;
-  const between = new RegExp(`${MARK_START.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s\\S]*?${MARK_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
-  ini = between.test(ini) ? ini.replace(between, block) : `${ini.replace(/\s*$/, '')}\n\n${block}\n`;
+  // Idempotency keys on the config LINES, not the marker comments — ARK rewrites
+  // GameUserSettings.ini (stripping comments); Game.ini appears read-only, but if that
+  // ever changes our markers could vanish. We own every supply-crate override (full
+  // custom design), so stripping all `ConfigOverrideSupplyCrateItems=` lines + the old
+  // markers and re-appending the fresh block is idempotent regardless of comment fate.
+  const kept = ini.split('\n').filter((l) =>
+    !l.startsWith('ConfigOverrideSupplyCrateItems=') && l !== MARK_START && l !== MARK_END);
+  const body = kept.join('\n').replace(/\n{3,}/g, '\n\n').replace(/\s*$/, '');
+  ini = `${body}\n\n${MARK_START}\n${emitted.join('\n')}\n${MARK_END}\n`;
   writeFileSync(iniPath, ini);
-  console.log(`patched config/Game.ini (marked block replaced/inserted; SupplyCrateLootQualityMultiplier=1.0).`);
+  console.log(`patched config/Game.ini (stripped old overrides, re-added ${emitted.length}; SupplyCrateLootQualityMultiplier=1.0).`);
 } else {
   console.log('(run with --write to patch config/Game.ini in place)');
 }
