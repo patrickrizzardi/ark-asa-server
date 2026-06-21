@@ -100,26 +100,33 @@ deploy_plugins() {
     done
   fi
 
-  # Remove AsaApi-owned paths. ArkApi/ holds the framework DLL + all plugins. The
-  # root-level DLLs and loader are listed explicitly to avoid touching game-owned files.
-  rm -rf "${win64}/ArkApi" \
-         "${win64}/AsaApiLoader.exe" \
-         "${win64}/AsaApiLoader.pdb" \
-         "${win64}/msdia140.dll" \
-         "${win64}/libcrypto-3-x64.dll" \
-         "${win64}/libssl-3-x64.dll" \
-         "${win64}/msvcp140.dll"
+  # Derive the AsaApi-owned root-artifact set from the image tree (single source of truth):
+  # every top-level /opt/asaapi entry EXCEPT ArkApi/ (the subtree, copied whole below) and
+  # config.json (the framework config, seed-if-absent below). Deriving it — rather than hand-
+  # listing the loader + DLLs in both an rm-list and a cp-list — means a pinned-version bump that
+  # adds or drops a root DLL is picked up automatically, with no list to keep in lockstep with the
+  # Dockerfile bake. The entrypoint now follows whatever the image ships; the two can't drift.
+  local root_artifacts=() entry base
+  for entry in "${src}"/*; do
+    base="$(basename "${entry}")"
+    [[ "${base}" == "ArkApi" || "${base}" == "config.json" ]] && continue
+    root_artifacts+=("${base}")
+  done
 
-  # Copy the full ArkApi tree (framework DLL + all plugin dirs with their default configs).
+  # Remove AsaApi-owned paths (the ArkApi tree + the derived root artifacts) so stale binaries
+  # from a prior version can't linger. Only AsaApi-owned names are touched — game files are safe.
+  local artifact
+  rm -rf "${win64}/ArkApi"
+  for artifact in "${root_artifacts[@]}"; do
+    rm -f "${win64}/${artifact}"
+  done
+
+  # Copy fresh from the image: the full ArkApi tree (framework DLL + plugin dirs with their
+  # default configs) plus each derived root artifact (loader exe + runtime DLLs).
   cp -r "${src}/ArkApi" "${win64}/"
-
-  # Copy root-level binaries and runtime DLLs.
-  cp "${src}/AsaApiLoader.exe" \
-     "${src}/msdia140.dll" \
-     "${src}/libcrypto-3-x64.dll" \
-     "${src}/libssl-3-x64.dll" \
-     "${src}/msvcp140.dll" \
-     "${win64}/"
+  for artifact in "${root_artifacts[@]}"; do
+    cp "${src}/${artifact}" "${win64}/"
+  done
 
   # Restore stashed operator configs, overwriting the image defaults.
   # A plugin dir that existed before gets its operator config back; a new plugin dir
