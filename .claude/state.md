@@ -14,7 +14,7 @@
 
 ### Active Workstreams
 - [ark-asa-server] initiative
-  - m2-shared-economy-store (Patrick) — 9 files touched — 72/102 done — roadmap: ark-asa-server — 2026-06-20
+  - m2-shared-economy-store (Patrick) — 9 files touched — 72/102 done — roadmap: ark-asa-server — 2026-06-21
 <!-- RADAR-END -->
 
 ---
