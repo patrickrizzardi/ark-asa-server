@@ -166,14 +166,17 @@ rule already governs; resolved by the rule's own 3-question test, since both tar
 
 ## Design Divergences
 
-_(Divergences from a `[locked]` design doc. The `build-time-vs-runtime.md` rule's example **table**
-is amended in Phase 3 to match the volume-backed-prefix reality — this is a doc *correction* made
-in-change, not a divergence from the rule's actual logic (the 3-question procedure already yields
-"entrypoint" for volume-backed targets). No `[locked]` design doc is contradicted. Empty.)_
+_(The `build-time-vs-runtime.md` rule's example **table** is amended in Phase 3 to match the
+volume-backed-prefix reality — that is a doc *correction* made in-change, not a divergence (the
+3-question procedure already yields "entrypoint" for volume-backed targets). Separately, Phase 3
+bootstraps the design-sources registry and registers `build-time-vs-runtime.md` `[locked]`, which
+**activates enforcement** on the rule's "Launch `AsaApiLoader.exe`" target row one phase before the
+code reaches that state — the launcher flip is Phase 4. That transient mismatch is a recorded
+divergence below.)_
 
 | Doc | What it says | What we do instead | Approved rationale (named cost + reversal path) |
 |-----|-------------|-------------------|------------------------------------------------|
-| — | — | — | _(empty — no divergences; the rule table is corrected in-change, see Phase 3)_ |
+| `build-time-vs-runtime.md` §The Split (launch row) | Launch `AsaApiLoader.exe` (NOT `ArkAscendedServer.exe`) | Through M2 Phases 1–3 the launch remains `ArkAscendedServer.exe` (the proven M1 vanilla path); the flip is Phase 4 | **Hard phase-dependency, not duct tape.** `AsaApiLoader.exe` cannot load without the VC++ runtime that *this* phase (Phase 3) installs into the volume Proton prefix — flipping before the redist lands would crash the server on boot. The registry is bootstrapped in Phase 3 Step 6, one phase before the code reaches the target launch state, so the locked row is transiently unmet. **Named cost:** the launch-target row is enforced-but-unmet for the Phase 3→4 window. **Reversal/trigger:** Phase 4 ("Flip launch to `AsaApiLoader.exe`") flips it behind the `ENABLE_ASAAPI` toggle, closing this divergence. **Risk:** none new — the interim launch IS the M1 vanilla path already proven on `dell`. |
 
 ## Documentation Deliverables
 
@@ -347,7 +350,7 @@ expects them before we can flip the launcher (Phase 4) or configure ArkShop (Pha
 - [x] deviation-judge #1 (scope: clean-replace decision re-homed to plan.md Decision Ledger row #12): PASS 2026-06-20T22:30 (round 2 PASS, carried R3 — plan.md/notes.md untouched; R1 decision-in-churn BLOCK resolved)
 - [x] deviation-judge #2 (approach: stash-rm-cp clean-replace, not rsync --delete): PASS 2026-06-20T22:30 (round 3 final; sound; dual-static-list coupling fails loud, deferred to Phase 5)
 - [x] deviation-judge #3 (approach: versioned URLs + PERMISSIONS_VERSION doc-pin): PASS 2026-06-20T22:30 (round 3 final; R1 dead-pin BLOCK resolved via doc-pin comment R2; R2 stale-literal residual de-hardcoded R3)
-- [ ] Committed: <commit SHA>
+- [x] Committed: 1f9f1b7
 
 ### Phase 3: Install VC++ 2019 redist — in the container, at runtime
 **PR scope**: Bake the VC++ 2019 redist installer in the image; entrypoint installs it into the volume Proton prefix (marker-guarded, idempotent). Amend `build-time-vs-runtime.md` to match the volume-backed-prefix reality.
@@ -380,14 +383,14 @@ as its own phase makes the "redist landed" fact independently verifiable before 
 5. Write ADR `0002-runtime-deploy-of-image-baked-artifacts.md` (the pattern: bake immutable artifacts in `/opt`, deploy/install onto the volume at runtime — covers VC++ AND plugins; cites the 3-question test).
 6. Bootstrap `.claude/design-sources.md`: register `build-time-vs-runtime.md` `[locked]` + ADR 0001/0002 `[locked]`.
 **Acceptance criteria**:
-- [ ] After first boot, `${STEAM_COMPAT_DATA_PATH}/pfx/drive_c/windows/system32/` contains `msvcp140.dll`, `vcruntime140.dll`, `vcruntime140_1.dll`
-  - Evidence: (filled at phase completion)
-- [ ] The install-skip is gated on actual DLL presence (not a bare marker); a second boot skips the install (log shows the skip), and a `pfx/` reset correctly RE-triggers the install rather than falsely skipping
-  - Evidence: (filled at phase completion)
-- [ ] `build-time-vs-runtime.md` table row for VC++/prefix amended to reflect volume-backed-prefix → entrypoint, with the rationale note
-  - Evidence: (filled at phase completion)
-- [ ] ADR `0002` exists (pattern + 3-question-test rationale); `.claude/design-sources.md` created registering the rule + both ADRs `[locked]`
-  - Evidence: (filled at phase completion)
+- [x] After first boot, `${STEAM_COMPAT_DATA_PATH}/pfx/drive_c/windows/system32/` contains `msvcp140.dll`, `vcruntime140.dll`, `vcruntime140_1.dll`
+  - Evidence: `entrypoint.sh` `install_vcredist()` — `proton run /opt/vcredist/VC_redist.x64.exe /quiet /norestart` then walks all three prefix `system32` DLL paths; `missing[]` check + `exit 1` with named-DLL output if any absent → the function can only return 0 with all three present. Installer baked from `aka.ms/vs/16` (`Dockerfile` VC++ RUN block, chown container). Static-evidence ceiling (no docker/boot in this env; real boot receipt = Phase 4 on dell), strengthened by the round-2 rc-capture fix (`|| rc=$?` — benign installer `3010`/`1638` no longer aborts before the DLL check). acceptance-verifier round 2: MET.
+- [x] The install-skip is gated on actual DLL presence (not a bare marker); a second boot skips the install (log shows the skip), and a `pfx/` reset correctly RE-triggers the install rather than falsely skipping
+  - Evidence: `entrypoint.sh` `install_vcredist()` fast-path `if [[ -f marker && -f msvcp && -f vcrt && -f vcrt1 ]]` → `"[entrypoint] VC++ 2019 redist already installed — skipping."` + `return 0`. (a) bare-marker skip impossible (all three `-f <dll>` required); (b) warm boot: DLLs+marker present → skip; (c) `pfx/` reset wipes the DLLs while the marker (one level above `pfx/`) survives, but the conjunctive gate still fails → reinstall correctly re-triggers. Round-2 `|| rc=$?` makes the DLL check the sole arbiter (runs unconditionally post-install; `touch marker` structurally downstream of the `missing[]` `exit 1`). deviation-judge #1 traced partial-DLL / marker-without-DLL / SIGKILL-mid-install — no false skip. Static-evidence ceiling. acceptance-verifier round 2: MET.
+- [x] `build-time-vs-runtime.md` table row for VC++/prefix amended to reflect volume-backed-prefix → entrypoint, with the rationale note
+  - Evidence: `.claude/rules/build-time-vs-runtime.md` §The Split — "Wine prefix + VC++ redist install" row changed from **Dockerfile** to **entrypoint** (volume-backed prefix) with reason `Q1 yes: prefix on the mounted ark-game volume → entrypoint`; rationale note added below the table walking the 3-question test and explaining the row previously assumed a prefix-in-image, citing ADR 0002 (installer baked in `/opt/vcredist`, runs against the live prefix at runtime). acceptance-verifier round 2: MET.
+- [x] ADR `0002` exists (pattern + 3-question-test rationale); `.claude/design-sources.md` created registering the rule + both ADRs `[locked]`
+  - Evidence: `docs/internal/decisions/0002-runtime-deploy-of-image-baked-artifacts.md` created (+~128) — `doc-type: adr`, 3-question-test table applied to BOTH the VC++ and plugin cases ("any yes → entrypoint"), pattern + rejected alternatives + Consequences naming the evergreen-fetch-then-frozen-in-image tradeoff (vs the name-pinned `?version=` plugins; corrected in round 2 to drop false "14.2x" precision). `.claude/design-sources.md` created (+8) registering `build-time-vs-runtime.md` + ADR 0001 + ADR 0002 all `[locked]`; all three globs resolve to real files. acceptance-verifier round 2: MET.
 **Quality gate**:
 - [ ] Marker-guarded + idempotent (no re-install on warm boot)
 - [ ] Redist installer baked in image (immutable); install acts on the volume prefix (runtime)
@@ -396,11 +399,12 @@ as its own phase makes the "redist landed" fact independently verifiable before 
 **Verification**: fresh volume boot → check the three DLLs exist in the prefix; restart → log shows "VC++ already installed, skipping".
 
 **Phase Review Gates**:
-- [ ] code-reviewer: <verdict + ISO timestamp>
-- [ ] rules-compliance-reviewer: <verdict + ISO timestamp>
-- [ ] plan-adherence-verifier: <verdict + ISO timestamp>
-- [ ] acceptance-verifier: <verdict + ISO timestamp>
-- [ ] design-compliance-reviewer: <verdict + ISO timestamp>
+- [x] code-reviewer: PASS 2026-06-20T23:30 (round 2; round 1 PASS w/ 2 concerns ELEVATED to fixes per Rule 11 — `set -e` abort before DLL-verify + version-precision — both resolved R2, no regression)
+- [x] rules-compliance-reviewer: PASS 2026-06-20T23:30 (round 2; round 1 BLOCK on missing Big-O `Space:` @ entrypoint.sh:141 resolved)
+- [x] plan-adherence-verifier: PASS 2026-06-20T23:30 (round 2; Scope-escape CLEAR, 6/6 Steps MET)
+- [x] acceptance-verifier: PASS 2026-06-20T23:30 (round 2; 4/4 ACs MET at static-evidence ceiling — runtime boot receipt deferred to Phase 4/dell)
+- [x] design-compliance-reviewer: PASS 2026-06-20T23:30 (round 2; round 1 BLOCK on unrecorded AsaApiLoader-launch-row contradiction resolved via `## Design Divergences` entry — judged a real tradeoff, Phase 4 reversal trigger)
+- [x] deviation-judge #1 (approach: conjunctive marker+DLL fast-path @ entrypoint.sh:151-155): PASS 2026-06-20T23:30 (round 2; false-RUN not false-skip — marker-write structurally gated behind `missing[]` `exit 1`, no bypass)
 - [ ] Committed: <commit SHA>
 
 ### Phase 4: Flip launch to AsaApiLoader.exe (AsaApi loads)

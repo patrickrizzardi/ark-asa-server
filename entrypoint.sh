@@ -127,6 +127,62 @@ deploy_plugins() {
   echo "[entrypoint] AsaApi deploy done — $(ls "${win64}/ArkApi/Plugins/" 2>/dev/null | tr '\n' ' ')"
 }
 
+install_vcredist() {
+  # The VC++ 2019 runtime is required by AsaApiLoader. The Proton Wine prefix lives on the
+  # ark-game volume and is created at runtime, so the redist cannot be installed at image-build
+  # time. The installer is baked in /opt/vcredist/ (immutable); this function installs it into
+  # the volume prefix on first boot and is a no-op on every boot after.
+  #
+  # Skip gate: check for the three runtime DLLs directly in the prefix system32 rather than
+  # relying on a bare marker file. A marker-only gate would falsely skip after a pfx/ reset
+  # (e.g. prefix nuked and recreated), leaving AsaApi unable to load. DLL presence is the
+  # source of truth; the optional .vcredist-installed marker is a fast-path hint only.
+  #
+  # Time: O(1)  Space: O(1)  — missing[] bounded to 3 elements (constant)
+  # Side effects: writes VC++ DLLs into ${STEAM_COMPAT_DATA_PATH}/pfx/ on the volume.
+  #               Writes .vcredist-installed marker to the volume dir.
+  local pfx_sys32="${STEAM_COMPAT_DATA_PATH}/pfx/drive_c/windows/system32"
+  local marker="${STEAM_COMPAT_DATA_PATH}/.vcredist-installed"
+
+  local msvcp="${pfx_sys32}/msvcp140.dll"
+  local vcrt="${pfx_sys32}/vcruntime140.dll"
+  local vcrt1="${pfx_sys32}/vcruntime140_1.dll"
+
+  # Fast-path: marker present AND all three DLLs still exist → skip without a filesystem walk.
+  if [[ -f "${marker}" && -f "${msvcp}" && -f "${vcrt}" && -f "${vcrt1}" ]]; then
+    echo "[entrypoint] VC++ 2019 redist already installed — skipping."
+    return 0
+  fi
+
+  echo "[entrypoint] Installing VC++ 2019 redist into Proton prefix…"
+  # Capture the installer's exit code rather than letting set -e abort on it.
+  # The VC++ installer returns benign non-zero codes on success: 3010 (reboot suppressed)
+  # and 1638 (another version already installed) are both normal. The DLL-presence check
+  # below is the sole success/failure arbiter — same discipline as the steamcmd .installed
+  # marker above. Log the rc if non-zero so it is visible in the boot log.
+  local rc=0
+  proton run /opt/vcredist/VC_redist.x64.exe /quiet /norestart || rc=$?
+  if [[ ${rc} -ne 0 ]]; then
+    echo "[entrypoint] VC++ installer exited with rc=${rc} (3010/1638 are benign — DLL check is the arbiter)."
+  fi
+
+  # Verify the three runtime DLLs actually landed in the prefix; the rc above is not trusted.
+  local missing=()
+  [[ -f "${msvcp}"  ]] || missing+=("msvcp140.dll")
+  [[ -f "${vcrt}"   ]] || missing+=("vcruntime140.dll")
+  [[ -f "${vcrt1}"  ]] || missing+=("vcruntime140_1.dll")
+
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    echo "[entrypoint] FATAL: VC++ install finished but the following DLLs are missing from the prefix:" >&2
+    printf "  %s\n" "${missing[@]}" >&2
+    echo "  Expected in: ${pfx_sys32}" >&2
+    exit 1
+  fi
+
+  touch "${marker}"
+  echo "[entrypoint] VC++ 2019 redist installed — msvcp140, vcruntime140, vcruntime140_1 verified in prefix."
+}
+
 main() {
   export HOME="${HOME:-/home/container}"
   export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/xdg-$(id -u)}"
@@ -153,6 +209,7 @@ main() {
 
   install_or_update
   deploy_plugins
+  install_vcredist
   : > "$LOG_FILE"
 
   echo "[entrypoint] vm.max_map_count = $(cat /proc/sys/vm/max_map_count) (ASA needs >= 262144)"

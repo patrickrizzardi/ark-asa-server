@@ -53,6 +53,16 @@ RUN mkdir -p /opt/asaapi/ArkApi/Plugins/ArkShop \
  && find /opt/asaapi -name '*.pdb' -delete \
  && chown -R container:container /opt/asaapi
 
+# Bake the VC++ 2019 redist installer into the image. The Proton Wine prefix lives on the
+# ark-game volume (created at first boot), so the redist CANNOT be run at build time — the
+# prefix does not exist yet. The image stores the immutable installer at /opt/vcredist/;
+# the entrypoint installs it into the volume prefix on first boot (marker-guarded, idempotent).
+# Per build-time-vs-runtime.md 3-question test: Q1 yes (depends on the mounted volume) → entrypoint.
+RUN mkdir -p /opt/vcredist \
+ && curl -fsSL "https://aka.ms/vs/16/release/vc_redist.x64.exe" \
+      -o /opt/vcredist/VC_redist.x64.exe \
+ && chown -R container:container /opt/vcredist
+
 # Pre-create the game dir owned by container so the named volume mounted here inherits that
 # ownership on first use (Docker seeds an empty named volume from the image dir's perms).
 RUN mkdir -p /home/container/arkserver \
