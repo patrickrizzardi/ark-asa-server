@@ -497,18 +497,18 @@ It's last because it needs AsaApi loading (Phase 4) and the DB (Phase 1).
 5. Boot on dell; verify `ArkApi.log` has no `Singleton not found` and no DB connection error; run a points/shop action (RCON or in-game) and confirm a row appears in MariaDB.
 6. README: add a "Shared store" section — plugin-config edit loop, how points/shop work, where the data lives.
 **Acceptance criteria**:
-- [ ] `ArkApi.log` shows ArkShop + Permissions loaded with NO `Singleton not found` and NO MySQL connection error
-  - Evidence: (filled at phase completion)
-- [ ] ArkShop/Permissions `config.json` on the volume has `UseMysql=true` + `MysqlHost=mariadb` + creds, written at boot from `.env` (password NOT present in git or container logs)
-  - Evidence: (filled at phase completion)
-- [ ] A points/shop action (e.g. RCON `AddPoints` or playtime accrual) persists a row to MariaDB — verified by querying the DB
-  - Evidence: (filled at phase completion)
-- [ ] Plugin `config.json` is edit-on-host (edit → restart → change takes effect) and is NOT clobbered by the boot sync
-  - Evidence: (filled at phase completion)
-- [ ] ASA API Utils mod ID recorded + the mod downloaded under the game's mods dir
-  - Evidence: (filled at phase completion)
-- [ ] README "Shared store" section added (config loop + data location)
-  - Evidence: (filled at phase completion)
+- [x] `ArkApi.log` shows ArkShop + Permissions loaded with NO `Singleton not found` and NO MySQL connection error
+  - Evidence: `phase5-runtime-evidence.md` §AC1 — dell ArkApi log: `Loaded plugin Ark:SA ArkShop V1.4` + `Loaded plugin Ark:SA Permissions V1.1` + `Loaded all plugins`; no `does not exist`/`Singleton not found`/MySQL error. ArkShop created `ArkShopPlayers` + `ArkShopLogTransactions` in MariaDB (proof of connect). acceptance-verifier round 3: MET.
+- [x] ArkShop/Permissions `config.json` on the volume has `UseMysql=true` + `MysqlHost=mariadb` + creds, written at boot from `.env` (password NOT present in git or container logs)
+  - Evidence: `phase5-runtime-evidence.md` §AC2 — live `config.json` Mysql block `UseMysql:true, MysqlHost:mariadb, MysqlUser:arkshop, MysqlDB:arkshop, MysqlPort:3306` (int), pass present; boot log omits password; `plugins-config/**` gitignored; `git grep` finds no password. acceptance-verifier round 3: MET.
+- [x] A points/shop action (e.g. RCON `AddPoints` or playtime accrual) persists a row to MariaDB — verified by querying the DB
+  - Evidence: `phase5-runtime-evidence.md` §AC3 — RCON `SetPoints <eosid> 250` → "Successfully set points" → `SELECT … ArkShopPlayers` Points 0→250; connected player confirmed in-game. (Arg order `<eosid> <amount>`.) acceptance-verifier round 3: MET.
+- [x] Plugin `config.json` is edit-on-host (edit → restart → change takes effect) and is NOT clobbered by the boot sync
+  - Evidence: `phase5-runtime-evidence.md` §AC4 — host-config marker survived `docker compose restart` + plugins still loaded (not clobbered); inject-takes-effect proven (ArkShop connected via host-file creds). Required the Xvfb stale-lock restart fix (commit 96e3813). acceptance-verifier round 3: MET.
+- [x] ASA API Utils mod ID recorded + the mod downloaded under the game's mods dir
+  - Evidence: `phase5-runtime-evidence.md` §AC5 — `-mods=955333` on the live launch line; `Singleton not found` absent from ArkApi.log (the exact missing-mod failure mode); ID recorded in notes.md/README.md/entrypoint.sh. acceptance-verifier round 3: MET.
+- [x] README "Shared store" section added (config loop + data location)
+  - Evidence: `README.md` `## Shared store` — plugin-config edit loop + economy data location documented. acceptance-verifier round 3: MET.
 **Quality gate**:
 - [ ] DB password injected at boot, never logged, never committed (placeholders in `.example`)
 - [ ] Plugin config host-owned + seed-if-absent (no overwrite of operator edits)
@@ -518,12 +518,19 @@ It's last because it needs AsaApi loading (Phase 4) and the DB (Phase 1).
 **Verification**: `ENABLE_ASAAPI=1 docker compose --env-file .env.test up` on dell → `ArkApi.log` clean → RCON a points command → `docker compose exec mariadb mariadb -u arkshop -p arkshop -e 'SELECT * FROM <points table> LIMIT 5;'` shows the row.
 
 **Phase Review Gates**:
-- [ ] code-reviewer: <verdict + ISO timestamp>
-- [ ] rules-compliance-reviewer: <verdict + ISO timestamp>
-- [ ] plan-adherence-verifier: <verdict + ISO timestamp>
-- [ ] acceptance-verifier: <verdict + ISO timestamp>
-- [ ] design-compliance-reviewer: <verdict + ISO timestamp>
-- [ ] Committed: <commit SHA>
+- [x] code-reviewer: PASS 2026-06-21T05:10 (round 3 final; R1 PASS, R2 PASS post code-fixes, R3 PASS on 2 runtime-bug fixes — both traced in a live shell rig)
+- [x] rules-compliance-reviewer: PASS 2026-06-21T05:10 (round 3 final; R1 BLOCK jq-DRY resolved R2, R3 PASS w/ 3 non-blocking comment nits trimmed)
+- [x] plan-adherence-verifier: PASS 2026-06-21T05:10 (round 3 final; R1 BLOCK auth-plugin scope-escape removed R2, R3 Scope-escape CLEAR — Xvfb fix judged required for AC4)
+- [x] acceptance-verifier: PASS 2026-06-21T05:10 (round 3 final; 6/6 ACs MET with live dell receipts in phase5-runtime-evidence.md; R1 runtime-pending closed by the dell boot)
+- [x] design-compliance-reviewer: PASS 2026-06-21T01:xx (round 1, carried R2/R3 — locked-doc files untouched by the entrypoint/compose deltas; build-vs-runtime split honored)
+- [x] deviation-judge #1 (scope: Dockerfile +jq apt layer): PASS (OVERRIDE — jq→python3 premise unverified; jq plan-sanctioned + design-approved; Patrick chose keep-jq)
+- [x] deviation-judge #2 (scope: plugins-config/** gitignore): PASS round 1 (carried — .gitignore untouched)
+- [x] deviation-judge #3 (scope: plugins-config/.gitkeep dir anchor): PASS round 1 (carried — root-create hazard confirmed real, .gitkeep prevents it)
+- [x] deviation-judge #4 (scope: notes.md churn): PASS round 1 (carried — no contract decision in churn)
+- [x] deviation-judge #5 (approach: separate ./plugins-config host dir): PASS 2026-06-21T05:10 (round 3 — re-judged the file-symlink fix across 4 adversarial inputs incl. warm-boot + cross-device mv; sound)
+- [x] deviation-judge #6 (approach: jq --arg cred injection): PASS 2026-06-21T05:10 (round 3 — re-judged the readlink-resolve change across 6 inputs incl. broken-symlink; port guard + || exit 1 hold)
+- [x] deviation-judge #7 (approach: 955333 auto-append gated to ENABLE_ASAAPI=1): PASS round 1 (carried — MODS-append logic untouched)
+- [x] Committed: 024bb5b
 
 ## Quality Checklist (verify at completion)
 - [ ] DB creds validated/handled at boot (fail fast on missing); no `any`-equivalent silent defaults

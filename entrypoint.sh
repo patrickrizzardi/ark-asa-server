@@ -261,9 +261,9 @@ setup_plugin_configs() {
   #
   # ONLY the config.json FILE is symlinked, never the whole plugin dir: the deployed plugin dir
   # also holds the plugin DLL (ArkShop.dll etc.) that AsaApi loads, so replacing the dir with a
-  # symlink to a config-only host dir would delete the DLL and AsaApi would log "Plugin … does not
-  # exist" (it did — that's the bug this shape fixes). The DLL + everything else stay in the
-  # deploy_plugins()-managed dir; just config.json points at the host bind.
+  # symlink to a config-only host dir would delete the DLL and AsaApi would fail to find the plugin
+  # ("Plugin … does not exist"). The DLL + everything else stay in the deploy_plugins()-managed
+  # dir; only config.json points at the host bind.
   #
   # Seed-if-absent: if the host has no config.json yet, copy the image default before linking;
   # never overwrite a config the operator already edited.
@@ -355,7 +355,6 @@ inject_plugin_db_config() {
   #               produces the same file content (creds from env are constant within a boot).
   local win64="${ARK_DIR}/ShooterGame/Binaries/Win64"
 
-  # Fail fast on missing/empty creds — no half-configured shop.
   if [[ -z "${ARKSHOP_DB_HOST}" || -z "${ARKSHOP_DB_USER}" || -z "${ARKSHOP_DB_PASS}" || -z "${ARKSHOP_DB_NAME}" ]]; then
     echo "[entrypoint] FATAL: ArkShop DB credentials are missing or empty." >&2
     echo "  Required: ARKSHOP_DB_HOST, ARKSHOP_DB_USER, ARKSHOP_DB_PASS, ARKSHOP_DB_NAME" >&2
@@ -464,7 +463,7 @@ main() {
     # exits, but the stale socket makes the readiness loop below break instantly and races kill -0
     # into a false pass, launching the loader against a dead display → instant crash / restart loop.
     # On a restart the old Xvfb is already gone (fresh PID namespace), so clearing these is safe.
-    rm -f /tmp/.X0-lock /tmp/.X11-unix/X0 2>/dev/null || true
+    rm -f /tmp/.X0-lock /tmp/.X11-unix/X0
     Xvfb :0 -screen 0 1024x768x24 -nolisten tcp >/dev/null 2>&1 &
     xvfb_pid=$!
     export DISPLAY=:0

@@ -205,3 +205,21 @@ findings, decision drains, override rationales.
 2. `_inject_mysql_block()` now resolves the symlink (`readlink -f`) and `mv`s onto the real target — a bare `mv tmp symlink` would replace the link with a regular file and orphan the host-bound config. jq still READS through the symlink; the resolved-target mv keeps the link intact so edit-on-host + creds stay consistent.
 
 Reboot self-heals the volume: `deploy_plugins()` clean-replace restores fresh plugin dirs (with DLLs) before `setup_plugin_configs()` re-links config.json. Re-verifying on dell.
+
+## Phase 5 — dell runtime verification + 2 runtime bugs fixed (2026-06-21)
+
+**AC results from the live dell boot (modded, ENABLE_ASAAPI=1):**
+- AC1 MET: ArkApi log `Loaded plugin Ark:SA ArkShop V1.4` + `Loaded plugin Ark:SA Permissions V1.1` + `Loaded all plugins`; NO `does not exist`, NO `Singleton not found`, NO MySQL error.
+- AC2 MET: ArkShop config.json `UseMysql:true, MysqlHost:mariadb, MysqlPort:3306` (int), pass present (host-bound file).
+- AC3 MET: RCON `SetPoints <eosid> 250` → "Successfully set points" → `SELECT … ArkShopPlayers` shows Points=250 (was 0). ArkShop also created its schema (`ArkShopPlayers`, `ArkShopLogTransactions`) = proof of DB connect. NOTE: arg order is `<eosid> <amount>` (id first); `<amount> <eosid>` returns "Couldn't add points". Patrick (connected player) confirmed points in-game.
+- AC4 MET: added a marker key to host config.json → restart → marker survived + plugins still loaded (not clobbered); inject-takes-effect proven (ArkShop connected via host-file creds).
+- AC5 MET: `-mods=955333` on the launch line; no Singleton-not-found = ASA API Utils loaded.
+- AC6 MET (static): README Shared store section.
+
+**BUG 1 (commit 042bef4): config-symlink deleted the plugin DLL.** `setup_plugin_configs()` rm-rf'd the whole plugin dir + symlinked it → a config-only host dir, deleting ArkShop.dll → AsaApi "Plugin ArkShop does not exist", ArkShop never connected (SHOW TABLES empty). Fix: symlink ONLY config.json (the file); `_inject_mysql_block` resolves the symlink (`readlink -f`) + mv onto the real target so creds land on the host file. Re-verified: plugins load + tables created.
+
+**BUG 2 (commit 96e3813): modded server crash-looped on `docker compose restart`.** Reused container keeps /tmp → prior boot's Xvfb lock+socket linger; new Xvfb :0 refuses the locked display + exits, but the stale socket makes the readiness loop break instantly and races kill -0 into a false pass → AsaApiLoader launches against a dead display → 0-byte ShooterGame.log, exit 3, restart loop. (`up -d --force-recreate` cleared /tmp + booted fine = diagnosis confirmed.) Fix: `rm -f /tmp/.X0-lock /tmp/.X11-unix/X0` before starting Xvfb. **Restart-survival test in progress on dell.** Critical because the config loop uses `docker compose restart`.
+
+**Follow-on (Patrick request, after Phase 5 closes):** add an ArkShop UI mod to MODS so he can play on dell. Candidates: official ArkShopUI Ascended (ark-server-api resource 13) or MX-E Ark Shop UI (CurseForge mod 942249, needs ArkShop 1.00+ — we run V1.4). One-line MODS change; confirm which + verify ID when adding.
+
+**Still TODO before status:done:** confirm restart-survival test PASS → fill phase5-runtime-evidence.md with receipts + commit → re-gate the 2 runtime fixes (code-reviewer + judge#5 own setup_plugin_configs; rules/plan-adherence) → re-run acceptance with real receipts → end-of-plan cumulative sweep → flip status:done. Then add the UI mod.
