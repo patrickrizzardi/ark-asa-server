@@ -128,13 +128,38 @@ ascendant in red). Crown/Tek kept rare by weight. **The full saddle-item roster 
 from Beacon at implementation and each creature assigned to a band** — bareback/no-saddle
 creatures (wyvern, managarmr, griffin, shadowmane, gigantopithecus, direwolf, etc.) filtered out.
 
-| Band | Weight | Representative members (full roster verified at build) |
-|------|---:|---|
-| Common | 10 | parasaur, raptor, trike, carno, stego, sarco, pteranodon, dilo, pachy, morellatops, iguanodon |
-| Mid | 5 | ankylo, doedic, sabertooth, argent, baryonyx, carbonemys, **Dunkleosteus**, **Velonasaur**, thorny dragon, kaprosuchus, dire bear, mammoth |
-| High | 3 | rex, spino, therizino, megalodon, mosa, plesi, **Tusoteuthis**, basilosaurus, allosaurus, yutyrannus, quetzal/bronto/paracer (platform) |
-| Crown | 1 | giganotosaurus, rock drake, karkinos, megachelon, astrocetus |
-| **Tek** (RED only) | 1 | Rex Tek, Mosasaur Tek, Megalodon Tek, Rock Drake Tek, Tapejara Tek |
+**Full enumeration** of every rideable creature from the ARK roster, banded by power. Bareback
+creatures (no saddle item) are listed separately and excluded. `(?)` = saddle-vs-bareback call
+I'm not 100% on — final saddle-item existence verified against Beacon at build.
+
+**Common (weight 10)** — early / utility
+parasaur, raptor, triceratops, carnotaurus, stegosaurus, sarco, pteranodon, pachy, phiomia,
+morellatops, iguanodon, gallimimus, pulmonoscorpius, pelagornis, ichthyosaurus, megaloceros,
+procoptodon, equus, manta, diplocaulus, moschops, terror bird, aurochs, kairuku(?), dimorphodon(?)
+
+**Mid (weight 5)** — combat / utility
+ankylosaurus, doedicurus, sabertooth, argentavis, baryonyx, carbonemys, **Dunkleosteus**,
+**Velonasaur**, thorny dragon, kaprosuchus, dire bear, mammoth, woolly rhino, castoroides,
+chalicotherium, daeodon, megatherium, beelzebufo, arthropluera, araneo, deinonychus,
+pachyrhinosaurus, snow owl, tapejara, tropeognathus, ravager, thylacoleo, mantis, lymantria,
+desmodus, andrewsarchus, maewing, megalania, megalosaurus, sarco, anglerfish
+
+**High (weight 3)** — heavy hitters / platforms
+rex, spino, therizinosaur, megalodon, mosasaurus, plesiosaur, **Tusoteuthis**, basilosaurus,
+allosaurus, yutyrannus, carcharodontosaurus, acrocanthosaurus, amargasaurus, basilisk,
+astrodelphis, magmasaur, quetzal (platform), brontosaurus (platform), paraceratherium (platform),
+diplodocus (platform)
+
+**Crown (weight 1)** — endgame
+giganotosaurus, rock drake, megachelon (platform), astrocetus (platform), titanosaur (platform)
+
+**Tek (RED only, weight 1)**
+Rex Tek, Mosasaur Tek, Megalodon Tek, Rock Drake Tek, Tapejara Tek
+
+**Bareback — rideable but NO saddle item, EXCLUDED:**
+direwolf, wyvern (all variants), griffin, managarmr, shadowmane, ferox, gigantopithecus, gasbags,
+reaper, bloodstalker, phoenix, liopleurodon, crystal wyvern, gacha, karkinos, roll rat,
+rock elemental, ice golem. *(Mek/Enforcer/Exo-Mek/Tek Stryder = crafted/special, not saddle.)*
 
 ---
 
