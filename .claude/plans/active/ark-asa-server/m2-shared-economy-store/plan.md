@@ -277,7 +277,7 @@ it up + verifying it independently isolates DB problems from plugin problems.
 - [x] acceptance-verifier: PASS 2026-06-20T20:42 (round 2; 5/5 ACs MET with runtime receipts; round 1 BLOCK on AC1/2/3 WEAK resolved)
 - [x] design-compliance-reviewer: PASS 2026-06-20T20:42 (round 2; loud-fallback — registry created in Phase 3)
 - [x] deviation-judge #1 (scope: phase1-runtime-evidence.md evidence receipt): PASS 2026-06-20T20:42
-- [ ] Committed: <commit SHA>
+- [x] Committed: 21fe5a8
 
 ### Phase 2: Bake AsaApi + ArkShop + Permissions into the image (pinned) + entrypoint deploy
 **PR scope**: Dockerfile downloads pinned plugin binaries to `/opt/asaapi/`; entrypoint syncs them onto the volume's `Win64` each boot. No launch change yet.
