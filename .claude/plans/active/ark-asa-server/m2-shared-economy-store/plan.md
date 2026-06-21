@@ -465,7 +465,7 @@ Everything prior (bits in place, VC++ present) exists to make this gate pass. Ar
 - [x] deviation-judge #1 (scope: Dockerfile unzip apt layer): PASS 2026-06-21T02:55 (round 1, carried — Dockerfile untouched R2/R3; layer-cache + scope probes clean)
 - [x] deviation-judge #2 (approach: Xvfb virtual framebuffer for loader): PASS 2026-06-21T03:20 (round 3; R1 timing-guard + R2 stale-socket BLOCKs resolved via socket+`kill -0` liveness check; residual TOCTOU is loud/negligible)
 - [x] deviation-judge #3 (approach: keep pdb when modded + ensure_modded_pdb self-heal): PASS 2026-06-21T03:20 (round 3; R1 install-gate + R2 truncated-pdb BLOCKs resolved via launch-gate `pdb_ok` size floor; residual >1MiB-truncation is loud/negligible)
-- [ ] Committed: <commit SHA>
+- [x] Committed: 4f19274
 
 ### Phase 5: ArkShop configured against MariaDB (shared store, end-to-end)
 **PR scope**: Plugin config on the host volume; entrypoint injects DB secrets into ArkShop/Permissions `config.json` at boot; add ASA API Utils to `MODS`; prove points persist to MariaDB.
