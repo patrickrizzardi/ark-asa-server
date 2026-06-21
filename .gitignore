@@ -8,6 +8,11 @@
 plugins-config/**
 !plugins-config/.gitkeep
 
+# Per-host Docker Compose overrides (auto-merged by `docker compose`). Operator-local only —
+# e.g. dell publishes the MariaDB port for DataGrip browsing; prod keeps the DB internal-only.
+# Keeping this untracked stops a local override from leaking host ports into the committed stack.
+docker-compose.override.yml
+
 # Game files + saves live in the `ark-game` docker volume, nothing to ignore on disk.
 
 # Plan-status heartbeat overlay (ephemeral; written by /execute-plan, read by Tessa kanban).
