@@ -1,0 +1,130 @@
+class_string	label	maps	min_sets	max_sets
+SupplyCrate_Cave_Aberration_Level35_C	Aberration Blue	Aberration+Valguero	1	2
+SupplyCrate_Cave_Aberration_Level35_Double_C	Aberration Blue Bonus	Aberration+Valguero	2	2
+SupplyCrate_Dungeon_Aberration_Level35_C	Aberration Dungeon Blue	Aberration	2	2
+SupplyCrate_Dungeon_Aberration_Level50_C	Aberration Dungeon Purple	Aberration	2	2
+SupplyCrate_Dungeon_Aberration_Level80_C	Aberration Dungeon Red	Aberration	2	3
+SupplyCrate_Dungeon_Aberration_Level65_C	Aberration Dungeon Yellow	Aberration	2	2
+SupplyCrate_Cave_Aberration_Level25_C	Aberration Green	Aberration+Valguero	1	1
+SupplyCrate_Cave_Aberration_Level25_Double_C	Aberration Green Bonus	Aberration+Valguero	2	2
+SupplyCrate_Cave_Aberration_Level50_C	Aberration Purple	Aberration+Valguero	1	2
+SupplyCrate_Cave_Aberration_Level50_Double_C	Aberration Purple Bonus	Aberration+Valguero	2	2
+SupplyCrate_Cave_Aberration_Level80_C	Aberration Red	Aberration+Valguero	1	3
+SupplyCrate_Cave_Aberration_Level80_Double_C	Aberration Red Bonus	Aberration+Valguero	3	3
+SupplyCrate_Level35_Aberrant_Surface_C	Aberration Surface Blue	Aberration	2	4
+SupplyCrate_Level35_Aberrant_Surface_Double_C	Aberration Surface Blue Bonus	Aberration	2	4
+SupplyCrate_Level50_Aberrant_Surface_C	Aberration Surface Purple	Aberration	2	4
+SupplyCrate_Level50_Aberrant_Surface_Double_C	Aberration Surface Purple Bonus	Aberration	2	4
+SupplyCrate_Level80_Aberrant_Surface_C	Aberration Surface Red	Aberration	2	4
+SupplyCrate_Level80_Aberrant_Surface_Double_C	Aberration Surface Red Bonus	Aberration	3	4
+SupplyCrate_Level65_Aberrant_Surface_C	Aberration Surface Yellow	Aberration	2	4
+SupplyCrate_Level65_Aberrant_Surface_Double_C	Aberration Surface Yellow Bonus	Aberration	2	4
+SupplyCrate_Cave_Aberration_Level10_C	Aberration White	Aberration+Valguero	1	1
+SupplyCrate_Cave_Aberration_Level10_Double_C	Aberration White Bonus	Aberration+Valguero	2	2
+SupplyCrate_Cave_Aberration_Level65_C	Aberration Yellow	Aberration+Valguero	1	2
+SupplyCrate_Cave_Aberration_Level65_Double_C	Aberration Yellow Bonus	Aberration+Valguero	2	2
+SupplyCrate_BuriedTreasureBase_Test_C	Admin-Spawned Chest	Island+Scorched+Center+Aberration+Extinction+Astraeos+Ragnarok+Valguero+LostColony	1	1
+SupplyCrate_BuriedTreasureBase_Bloodhound_Doggo_C	Armadoggo Crate	Extinction	1	1
+SupplyCrate_Level25_Astraeos_C	Astraeos Blue	Astraeos	2	4
+SupplyCrate_Level25_Double_Astraeos_C	Astraeos Blue Bonus	Astraeos	4	4
+SupplyCrate_Level30_ScorchedEarth_Astraeos_C	Astraeos Desert Blue	Astraeos	1	1
+SupplyCrate_Level30_Double_ScorchedEarth_Astraeos_C	Astraeos Desert Blue Bonus	Astraeos	1	1
+SupplyCrate_Level45_ScorchedEarth_Astraeos_C	Astraeos Desert Purple	Astraeos	1	1
+SupplyCrate_Level45_Double_ScorchedEarth_Astraeos_C	Astraeos Desert Purple Bonus	Astraeos	5	5
+SupplyCrate_Level70_ScorchedEarth_Astraeos_C	Astraeos Desert Red	Astraeos	1	1
+SupplyCrate_Level70_Double_ScorchedEarth_Astraeos_C	Astraeos Desert Red Bonus	Astraeos	6	6
+SupplyCrate_Level55_ScorchedEarth_Astraeos_C	Astraeos Desert Yellow	Astraeos	1	1
+SupplyCrate_Level55_Double_ScorchedEarth_Astraeos_C	Astraeos Desert Yellow Bonus	Astraeos	5	5
+SupplyCrate_Level90_Astraeos_C	Astraeos Lime	Astraeos	2	4
+SupplyCrate_Base_Horde_Easy_Astraeos_C	Astraeos Orbital Easy	Astraeos	1	1
+SupplyCrate_Base_Horde_Hard_Astraeos_C	Astraeos Orbital Hard	Astraeos	1	1
+SupplyCrate_Base_Horde_Legendary_Astraeos_C	Astraeos Orbital Legendary	Astraeos	1	1
+SupplyCrate_Base_Horde_Medium_Astraeos_C	Astraeos Orbital Medium	Astraeos	1	1
+SupplyCrate_Level35_Astraeos_C	Astraeos Purple	Astraeos	2	4
+SupplyCrate_Level35_Double_Astraeos_C	Astraeos Purple Bonus	Astraeos	4	4
+SupplyCrate_Level60_Astraeos_C	Astraeos Red	Astraeos	2	4
+SupplyCrate_Level60_Double_Astraeos_C	Astraeos Red Bonus	Astraeos	4	4
+SupplyCrate_Level45_Astraeos_C	Astraeos Yellow	Astraeos	2	4
+SupplyCrate_Level45_Double_Astraeos_C	Astraeos Yellow Bonus	Astraeos	4	4
+SupplyCrateBaseBP_Instantaneous_DenLogs_Child2_C	Beaver Den	Ragnarok	1	1
+SupplyCrate_PlayerHat_C	Candy Corn A (Fear Evolved Event)	Island+Scorched+Center	2	2
+SupplyCrate_DinoHat_C	Candy Corn B (Fear Evolved Event)	Island+Scorched+Center	2	2
+SupplyCrate_BuriedTreasure_ShoulderDragon_C	Dragon Hoard	Scorched+Center+Extinction+Astraeos+Ragnarok+Valguero+LostColony	3	3
+SupplyCrate_Cave_QualityTier1_EX_C	Extinction Cave Blue	Extinction	2	2
+SupplyCrate_Cave_QualityTier3_EX_C	Extinction Cave Red	Extinction	2	2
+SupplyCrate_Cave_QualityTier2_EX_C	Extinction Cave Yellow	Extinction	2	2
+SupplyCrate_Base_Horde_Easy_C	Extinction Orbital Easy	Extinction	1	1
+SupplyCrate_Base_Horde_Hard_C	Extinction Orbital Hard	Extinction	1	1
+SupplyCrate_Base_Horde_Legendary_C	Extinction Orbital Legendary	Extinction	1	1
+SupplyCrate_Base_Horde_Medium_C	Extinction Orbital Medium	Extinction	1	1
+SupplyCrateBaseBP_Instantaneous_DenLogs_Child2_C	Giant Beaver Den	Valguero	1	1
+SupplyCrate_Level25_C	Island Blue	Island+Center+Ragnarok+Valguero	2	4
+SupplyCrate_Level25_Double_C	Island Blue Bonus	Island+Center+Ragnarok+Valguero	4	4
+SupplyCrate_Cave_QualityTier2_C	Island Cave Blue	Island+Center+Astraeos+Ragnarok+Valguero	3	3
+SupplyCrate_Cave_QualityTier1_C	Island Cave Green	Island+Ragnarok	3	3
+SupplyCrate_Cave_QualityTier4_C	Island Cave Red	Island+Center+Astraeos+Ragnarok+Valguero	3	3
+SupplyCrate_Cave_QualityTier3_C	Island Cave Yellow	Island+Astraeos+Ragnarok+Valguero	3	3
+SupplyCrate_OceanInstant_C	Island Deep Sea	Island+Center+Astraeos+Ragnarok+Valguero	2	2
+SupplyCrate_Level15_C	Island Green	Island+Center+Ragnarok+Valguero	2	4
+SupplyCrate_Level15_Double_C	Island Green Bonus	Island+Center+Ragnarok+Valguero	4	4
+SupplyCrate_IceCaveTier1_C	Island Ice Cave Blue	Island+Ragnarok	2	2
+SupplyCrate_IceCaveTier3_C	Island Ice Cave Red	Island+Center+Astraeos+Ragnarok	2	2
+SupplyCrate_IceCaveTier2_C	Island Ice Cave Yellow	Island+Astraeos+Ragnarok	2	2
+SupplyCrate_Level35_C	Island Purple	Island+Center+Ragnarok	2	4
+SupplyCrate_Level35_Double_C	Island Purple Bonus	Island+Center+Ragnarok	4	4
+SupplyCrate_Level60_C	Island Red	Island+Center+Ragnarok	2	4
+SupplyCrate_Level60_Double_C	Island Red Bonus	Island+Ragnarok	4	4
+SupplyCrate_SwampCaveTier1_C	Island Swamp Cave Blue	Island+Valguero	2	2
+SupplyCrate_SwampCaveTier3_C	Island Swamp Cave Red	Island+Ragnarok+Valguero	2	2
+SupplyCrate_SwampCaveTier2_C	Island Swamp Cave Yellow	Island+Valguero	2	2
+SupplyCrate_UnderwaterCaveTier1_C	Island Underwater Blue	Island+Astraeos	2	2
+SupplyCrate_UnderwaterCaveTier3_C	Island Underwater Red	Island+Astraeos	2	2
+SupplyCrate_UnderwaterCaveTier2_C	Island Underwater Yellow	Island+Astraeos	2	2
+SupplyCrate_Level03_C	Island White	Island+Center+Ragnarok+Valguero	2	3
+SupplyCrate_Level03_Double_C	Island White Bonus	Island+Scorched+Center+Ragnarok+Valguero	4	4
+SupplyCrate_Level45_C	Island Yellow	Island+Center+Ragnarok	2	4
+SupplyCrate_Level45_Double_C	Island Yellow Bonus	Island+Center+Ragnarok	4	4
+SupplyCrateBaseBP_Instantaneous_DamLogs_Child_C	Large Beaver Dam	Ragnarok	1	1
+SupplyCrate_LostLootChest_T1_C	Lost Colony Blue	LostColony	4	6
+SupplyCrate_LostLootChest_Cave_T1_C	Lost Colony Cave Blue	LostColony	4	6
+SupplyCrate_LostLootChest_Cave_T3_C	Lost Colony Cave Red	LostColony	4	6
+SupplyCrate_LostLootChest_Cave_T2_C	Lost Colony Cave Yellow	LostColony	4	6
+SupplyCrate_LostLootChest_T3_C	Lost Colony Red	LostColony	4	6
+SupplyCrate_LostLootChest_T2_C	Lost Colony Yellow	LostColony	4	6
+SupplyCrate_Cave_QualityTier4_Ragnarok_C	Ragnarok Cave Red	Ragnarok	3	3
+SupplyCrate_Cave_QualityTier3_Ragnarok_C	Ragnarok Cave Yellow	Ragnarok	3	3
+SupplyCrate_Gift_C	Raptor Claws Gift	Island	1	1
+SupplyCrate_Gift_Scorched_C	Raptor Claws Gift (Scorched Earth)	Island	1	1
+SupplyCrate_Gift_TheCenter_C	Raptor Claws Gift (The Center)	Island	1	1
+SupplyCrate_Level30_ScorchedEarth_C	Scorched Blue	Scorched+Ragnarok+Valguero	2	4
+SupplyCrate_Level30_Double_ScorchedEarth_C	Scorched Blue Bonus	Scorched+Ragnarok+Valguero	2	4
+SupplyCrate_BuriedTreasureBase_Apprentice_C	Scorched Buried Blue	Scorched	2	2
+SupplyCrate_BuriedTreasureBase_Ramshackle_C	Scorched Buried Green	Scorched	2	2
+SupplyCrate_BuriedTreasureBase_Journeyman_C	Scorched Buried Purple	Scorched	2	2
+SupplyCrate_BuriedTreasureBase_Ascendant_C	Scorched Buried Red	Scorched	2	2
+SupplyCrate_BuriedTreasureBase_Primitive_C	Scorched Buried White	Scorched	2	2
+SupplyCrate_BuriedTreasureBase_Mastercraft_C	Scorched Buried Yellow	Scorched	2	2
+SupplyCrate_Cave_QualityTier1_ScorchedEarth_C	Scorched Cave Blue	Scorched	2	2
+SupplyCrate_Cave_QualityTier3_ScorchedEarth_C	Scorched Cave Red	Scorched+Aberration+Ragnarok	2	2
+SupplyCrate_Cave_QualityTier2_ScorchedEarth_C	Scorched Cave Yellow	Scorched+Aberration	2	2
+SupplyCrate_Level15_ScorchedEarth_C	Scorched Green	Scorched+Ragnarok+Valguero	2	4
+SupplyCrate_Level15_Double_ScorchedEarth_C	Scorched Green Bonus	Scorched+Ragnarok+Valguero	2	4
+SupplyCrate_Level45_ScorchedEarth_C	Scorched Purple	Scorched+Ragnarok+Valguero	2	4
+SupplyCrate_Level45_Double_ScorchedEarth_C	Scorched Purple Bonus	Scorched+Ragnarok+Valguero	5	5
+SupplyCrate_Level70_ScorchedEarth_C	Scorched Red	Scorched+Ragnarok+Valguero	2	4
+SupplyCrate_Level70_Double_ScorchedEarth_C	Scorched Red Bonus	Scorched+Ragnarok+Valguero	6	6
+SupplyCrate_Level03_ScorchedEarth_C	Scorched White	Scorched+Ragnarok+Valguero	2	3
+SupplyCrate_Level03_Double_ScorchedEarth_C	Scorched White Bonus	Scorched+Ragnarok+Valguero	2	3
+SupplyCrate_Level55_ScorchedEarth_C	Scorched Yellow	Scorched+Ragnarok+Valguero	2	4
+SupplyCrate_Level55_Double_ScorchedEarth_C	Scorched Yellow Bonus	Scorched+Ragnarok+Valguero	5	5
+SupplyCrate_Cave_QualityTier3_TheCenter_C	The Center Cave Yellow	Center	3	3
+SupplyCrate_Level60_TheCenter_C	The Center Red	Center	2	4
+SupplyCrate_Level60_Double_TheCenter_C	The Center Red Bonus	Center	4	4
+SupplyCrate_Chest_Treasure_JacksonL_C	Treasure Chest	Ragnarok	1	1
+Val_SupplyCrate_Level35_C	Valguero Purple	Valguero	1	2
+Val_SupplyCrate_Level35_Double_C	Valguero Purple Bonus	Valguero	4	4
+Val_SupplyCrate_Level60_C	Valguero Red	Valguero	2	4
+Val_SupplyCrate_Level60_Double_C	Valguero Red Bonus	Valguero	4	4
+Val_SupplyCrate_Level45_C	Valguero Yellow	Valguero	2	4
+Val_SupplyCrate_Level45_Double_C	Valguero Yellow Bonus	Valguero	4	4
+SupplyCrateBaseBP_Instantaneous_VolcanoCrystal_C_C	Volcanic Rock	Ragnarok	1	1
