@@ -1,0 +1,10 @@
+object_id	content_pack_id	label	world_name	difficulty_scale	type	mask	sort	cycle_scale_multiplier	day_scale_multiplier	night_scale_multiplier	day_start_time	day_end_time
+373b172a-4389-55b6-9504-340cfd39f70c	b32a3d73-9406-56f2-bd8f-936ee0275249	The Island	TheIsland_WP	4.0	Official Canon	1	0	1.0	1.0	1.0	18900	73400
+7d765e68-2441-4dda-8741-cac0ab1ee3e4	b32a3d73-9406-56f2-bd8f-936ee0275249	Scorched Earth	ScorchedEarth_WP	4.0	Official Canon	2	1	0.45	1.0	2.0	18900	73400
+2071f0e0-74ed-5c89-b460-ce6dd21e61b6	b32a3d73-9406-56f2-bd8f-936ee0275249	Aberration	Aberration_WP	4.0	Official Canon	8	2	1.0	1.0	1.0	19800	63000
+a98c89d0-8b9d-57b4-991d-d67a47ec1e08	b32a3d73-9406-56f2-bd8f-936ee0275249	Extinction	Extinction_WP	5.0	Official Canon	16	3	1.0	1.0	1.0	18900	73400
+3a18f20b-7516-57ba-8045-251ad73446a5	b32a3d73-9406-56f2-bd8f-936ee0275249	Lost Colony	LostColony_WP	5.0	Official Canon	256	4	1.0	1.0	1.0	18900	73400
+45366cb7-9822-4825-96ef-a89d1feaa9c9	b32a3d73-9406-56f2-bd8f-936ee0275249	The Center	TheCenter_WP	5.0	Official Non-Canon	4	0	1.0	1.1	0.9	18900	73400
+1bbb25ba-297c-45bc-86e4-6c3f49e9c666	b32a3d73-9406-56f2-bd8f-936ee0275249	Astraeos	Astraeos_WP	5.0	Official Non-Canon	32	1	1.0	1.0	2.0	18900	73400
+519e32a5-f1fa-5415-a9d5-b0d13219ef87	b32a3d73-9406-56f2-bd8f-936ee0275249	Ragnarok	Ragnarok_WP	5.0	Official Non-Canon	64	2	1.0	1.0	1.0	18900	73400
+38cea68f-832b-5823-9285-6f9ca9452e7b	b32a3d73-9406-56f2-bd8f-936ee0275249	Valguero	Valguero_WP	5.0	Official Non-Canon	128	3	1.0	1.0	1.0	18900	73400

@@ -1,0 +1,228 @@
+color_id	color_uuid	label	hex_value
+1	51605175-1fc5-5e00-9f0f-8000bbaf30a9	Red	ff0000
+2	757cd3bf-dcb3-5715-8460-36ee7249c637	Blue	0000ff
+3	260be6c1-a67e-578b-a5af-99896d1e3ce0	Green	00ff00
+4	6f642ee5-eb34-5b34-84b3-022e0716e968	Yellow	ffff00
+5	b4e2aaa6-b062-5ac5-8126-28966759445c	Cyan	00ffff
+6	d5b6b2e5-f283-5df6-951f-42dd2d9097f0	Magenta	ff00ff
+7	6a0f5262-9195-54e3-b1ee-924243a54c2b	Light Green	c1ffbc
+8	e0d93d1d-05ab-5034-9b80-1f960576f02d	Light Grey	c9cccb
+9	d3073b47-648f-5f01-83e0-7a13caa3a7cb	Light Brown	796858
+10	b1201ea1-23d7-5fe1-8d69-90e918dd6f56	Light Orange	ffb56c
+11	da279198-799b-55c2-bb77-5021f4ff1b26	Light Yellow	fffa8b
+12	fc776f3e-8e59-54f3-80ba-04a557691132	Light Red	ff766c
+13	23dda8d0-555f-540c-891e-b589efc97c9c	Dark Grey	7c7c7c
+14	c0e0e21a-27f7-5ecf-a567-7bae1785a8da	Black	383838
+15	b758cd02-1eb0-5ea4-91c4-65827a078405	Brown	593726
+16	f8f2108f-6e75-5554-ad0b-725d10aa78dc	Dark Green	1d4800
+17	50413d17-f88a-5447-8d7d-7c7f3e78494f	Dark Red	821b11
+18	f0ba62a6-5a8f-5626-b757-43867fd23cc0	White	ffffff
+19	7614fb0e-f1d4-56fc-ac5b-f6e564b063b4	Dino Light Red	ffaaaa
+20	3f2583d6-a74b-5d1e-9c4d-d1607f3610d5	Dino Dark Red	5c2828
+21	65f2cf81-36ec-531b-bd03-330f763fa814	Dino Light Orange	ffb795
+22	e2633455-e2d5-5876-b012-0b7d536edf36	Dino Dark Orange	89522b
+23	100b8a95-88d0-506b-97f1-83c9fd2778a9	Dino Light Yellow	cccca2
+24	54ffe4a5-193c-5134-be47-0e71c17e8f66	Dino Dark Yellow	95956c
+25	8566fe32-b9fd-5b2c-ad31-f807144b8e66	Dino Light Green	e1ffe1
+26	0f591956-f620-5168-819d-5ac004bd3775	Dino Medium Green	7a957a
+27	af4a94c5-6f82-5040-b7fe-2adb91089202	Dino Dark Green	224822
+28	19da0ad0-4dba-52dc-b236-d7b544d93025	Dino Light Blue	dae1ff
+29	cb2db005-af4b-54c0-a861-eeaf3f90c90d	Dino Dark Blue	364063
+30	fe2260ad-7356-560a-b0d9-00c98649fd0c	Dino Light Purple	e5daff
+31	daf094b7-5207-5cf3-a22d-da0b22a3f2db	Dino Dark Purple	41335d
+32	8914b5f3-0873-58da-81f0-e873e9c3363a	Dino Light Brown	ffe1bc
+33	0a77b5db-4d77-5070-8e46-6c6fd4b9cfca	Dino Medium Brown	958676
+34	7b43ee71-8e6b-51ee-bb1a-fc27386c8f3a	Dino Dark Brown	594d3f
+35	39625573-eb9e-5571-bd0f-12067f7debe0	Dino Darker Grey	595959
+36	bad72de4-cb65-5208-b364-1342713bf1b5	Dino Albino	ffffff
+37	1010b4ba-cce5-5200-a030-a35851a6bb8e	Big Foot 0	b89784
+38	db3083c1-62de-51c1-91e5-a487c3dc684e	Big Foot 4	ebdbd6
+39	bc5fce10-f4aa-571e-a614-17d6af724b69	Big Foot 5	d1a895
+40	1f3649fc-90aa-5b44-9fcc-13b544cd9f47	Wolf Fur	c5b5a0
+41	c3e1737b-c4ad-59b0-b550-956af98b5d92	Dark Wolf Fur	897766
+42	b5cec950-0811-5896-9a20-dbdb9df934ff	Dragon Base 0	a26649
+43	4853db0a-5337-5881-a5fa-b97af77c9c61	Dragon Base 1	cc7a55
+44	ead46c32-a8a2-5f04-83e2-bc9d0c689856	Dragon Fire	bd4e00
+45	5a10466a-a76c-54c9-888a-ce257b803a53	Dragon Green 0	79856c
+46	0981a8f7-85a3-53e5-8f8f-230d622c8b45	Dragon Green 1	929e79
+47	00cf68e4-b84a-5873-8f10-8e2dc40e9b5c	Dragon Green 2	a7a58c
+48	05cd9e5c-3df6-5122-9518-03f57370c4f2	Dragon Green 3	75949e
+49	3d9c2f48-ebc4-5cbb-ab7a-e21b9a52cbd4	Wyvern Purple 0	797497
+50	05bd7d08-a354-5392-ace1-6be476a295d9	Wyvern Purple 1	b2a4c2
+51	3fbecff8-290d-5da8-9a69-fdde1549ed06	Wyvern Blue 0	6282a9
+52	4bc24334-1df6-56f8-a30b-ade25b9fbc91	Wyvern Blue 1	475c76
+53	a22d8475-fa71-5de5-b409-537e5a07338b	Dino Medium Blue	5fa6eb
+54	ad90c29c-1544-54ec-8fba-0c1729a3332f	Dino Deep Blue	4368d5
+55	112b0339-8c0d-587d-ac12-2fa9b4f00dc8	Near White	eeeeee
+56	ccaaa54a-6a3f-5908-95bc-0b60149947e8	Near Black	505050
+57	8d76a10c-bffc-52e7-bffc-450513eac8da	Dark Turquoise	114344
+58	f8bf1878-41de-5f0f-92a2-b56f83c91ff2	Medium Turquoise	007160
+59	5f6a9811-9d53-5d70-b60e-5085c667f864	Turquoise	00c6ac
+60	8a8b73f3-c6e2-53a4-8ff5-69c94b5b5af1	Green Slate	3e594b
+61	2647ab4a-3818-5031-8cd8-93afb7dae126	Sage	3c4e3e
+62	f272df69-caeb-55cf-8ec2-bcbb61bae261	Dark Warm Gray	393635
+63	d03d544b-db7b-5ca8-96bc-268754377d1f	Medium Warm Gray	585453
+64	98167f4f-f63d-5af8-a629-8a5ba0ed4c8c	Light Warm Gray	9c9391
+65	2a870e95-d119-5d8a-a643-ec497916c78e	Dark Cement	515b56
+66	9a49aa0a-7676-5827-95c0-5924fb756cfc	Light Cement	8ba297
+67	bcf26dd7-edf5-5912-bbe1-c7fe071b060e	Light Pink	e8b1ff
+68	9f4fa6f2-ea10-5856-8f77-434e34305067	Deep Pink	ff099b
+69	a8d80577-e7d0-588d-8891-20db0376cb45	Dark Violet	740045
+70	051b8c76-6958-55c1-956c-c42970ec1103	Dark Magenta	b80040
+71	80120e89-04a6-587a-acb7-39f27d499cd6	Burnt Sienna	7f3018
+72	5f90350d-1e46-5b0f-954b-44cff6fb235a	Medium Autumn	aa2d00
+73	929e0bd9-7676-50c8-b2f0-d3f1aa3b57f7	Vermillion	ef2e00
+74	25916d0f-d2de-5dc3-ba3a-469da1bdc087	Coral	ff5831
+75	2d606283-f4a6-51f3-aad3-d04145f7cec4	Orange	ff8000
+76	0b984f52-5408-58a2-9f9e-9464d856076f	Peach	ffa838
+77	72d71de0-9e1a-5e01-8284-e883d92aae9e	Light Autumn	af7100
+78	118b5d1f-eb52-5008-980b-14303c2ea15e	Mustard	959523
+79	708a219c-400d-5b46-b5a2-2f9b4c06e197	Actual Black	0f0f0f
+80	8e136cd3-3929-503a-8ff6-185142e4b7cc	Midnight Blue	121733
+81	ae8a3b29-830f-5763-9448-225eccf441e9	Dark Blue	0e2737
+82	30a74f2b-94d5-5126-a693-3e57e2874438	Black Sands	2d202e
+83	91c4ae5d-58f6-5a02-a11b-56754aab5471	Lemon Lime	a9ff42
+84	4f523331-ec39-56a5-b3a9-67a6189f70d3	Mint	35e986
+85	f1ddba80-5710-5157-8e0e-3e564d3ebbc4	Jade	00893e
+86	1a0a3229-e9bf-514d-886e-a0591f282fd4	Pine Green	07542a
+87	d1586ed8-36da-5e4c-818f-a0324ebbd7fc	Spruce Green	005b43
+88	4060d84f-a596-5779-9ff1-516c4a786482	Leaf Green	5b9820
+89	7be2bc23-d974-5a00-bcfc-23b26fd8c11f	Dark Lavender	5e235f
+90	f69cdd66-8b2f-5bea-94d6-98fba1f35491	Medium Lavender	863288
+91	72b29a2c-4db2-59ac-8f03-184fe931b1de	Lavender	be78bf
+92	dcfb843f-7301-5690-8a2d-71f5b10165d7	Dark Teal	063e49
+93	f7a9267d-3742-5a46-8de6-3b966dcae529	Medium Teal	085463
+94	d13b577e-53c1-5f62-b2b9-00b1a276fdcf	Teal	0c859d
+95	b16cff88-a2d3-5179-ad8a-288fccd8c41d	Powder Blue	83a8ff
+96	ac3e4a50-3878-5c2a-be18-a6e7057be8d9	Glacial	adeaff
+97	ca4f4bec-3bb4-5451-a806-f53d0ed200b3	Cammo	4f5011
+98	92573abd-5733-5a03-aed1-33d13d658f87	Dry Moss	776f3d
+99	4874470f-6293-5e5d-803f-d2456b370e07	Custard	c1be5e
+100	6af38458-af55-5908-9183-4ebe2cb73d09	Cream	f4ffc1
+128	0693e6b2-60d8-58b6-b28a-b8198fe892d0	Burn Coloring	330000
+129	1f79f48a-af78-526b-96ad-17b4565a406d	Scab Coloring	660000
+130	67c6cdc2-ed17-5793-8558-e439fb88529c	Gore Coloring	B30000
+131	89ce139b-12f1-5c45-a67e-67d1c4022d78	Red Coloring	FF0000
+132	ac97cf32-58ea-53d3-b137-6877f72bd490	Tulip Coloring	FF7373
+133	16e7b6dc-3ff3-5c5f-baf1-5bf41480a002	Salmon Coloring	FFBFBF
+134	ebd0fa5a-b628-556e-95db-15a60e874324	Incense Coloring	D98D8D
+135	2e2feefc-5a32-5e1e-8f84-b350c5596244	Edocha Coloring	A65353
+136	72bae00c-aecc-5c57-9955-f87e1926a35b	Bronze Coloring	331900
+137	38919259-6fb6-5f82-9c01-cb3a14991803	Terracotta Coloring	663300
+138	95c092b4-b05d-5a9c-9dba-88685faf3168	Windsor Coloring	B35900
+139	08ec2115-dee2-5660-8a7a-d7feb74e42c0	Orange Coloring	FF7F00
+140	11a7f146-5f19-565d-8054-b436ee3c056f	Cantaloupe Coloring	FFB973
+141	1020d22a-9402-5a8b-9a59-86bb942e3edc	Peach Coloring	FFDFBF
+142	54269750-2ab6-5151-a237-6eea5b183b05	Latte Coloring	D9B38D
+143	8001a13a-415e-5dce-bdbd-a51e2ae37422	Dirt Coloring	A67C53
+144	542678a1-bdbe-56eb-83cc-d1e48ea33a85	Drab Coloring	333300
+145	374d44eb-fb25-54c1-b6aa-902540bdc945	Olive Coloring	666600
+146	ec395af5-684c-57b5-9944-6d356bb9c5d1	Citron Coloring	B2B300
+147	b0d1c953-5373-54b9-8f45-b664a532095b	Yellow Coloring	FFFF00
+148	6dc7f843-2d3a-5d1f-bdf7-aa178e580c1e	Canary Coloring	FFFF73
+149	1fc3178e-7c0a-50d8-9a92-b37f6afd4f48	Buttermilk Coloring	FFFFBF
+150	c6e4f30f-2760-52cd-b816-a39e95c95f4a	Khaki Coloring	D9D98D
+151	8329a66f-46a9-561d-be0d-40f3da45ad70	Mold Coloring	A6A653
+152	4e50cd98-711a-5af2-acf2-2423f86232bb	Swamp Coloring	193300
+153	fbf46479-88cf-5c75-b4cd-1ede0cd55acf	Avocado Coloring	336600
+154	8cd65382-0006-5b69-8d8f-973476d1b690	Orc Coloring	59B300
+155	12cf2cce-580d-556d-a319-91108a29c401	Chartreuse Coloring	80FF00
+156	284572b6-5675-5f3a-b931-b72eb4c602b2	Menthol Coloring	B9FF73
+157	38c837f4-8223-53ef-b93d-2463bc4532bf	Nyanza Coloring	DFFFBF
+158	9ec33f19-cac4-5849-be8d-3b7972b2a84e	Putrescence Coloring	B3D98D
+159	cb4e025d-1caa-5d18-bca2-1afc1914c147	Filth Coloring	7CA653
+160	6c8fdfb2-37ec-5210-ab07-306b06d04ccf	Nori Coloring	003300
+161	c51f39c0-3d16-595d-bcbe-51365b92a630	Hunter Coloring	006600
+162	8d277b25-4325-58f5-ba05-7efdc158994d	Emerald Coloring	00B300
+163	fedbe3ea-2889-5b05-8f29-bc8eda2259fe	Green Coloring	00FF00
+164	e435291b-70f5-57d0-b852-c6012c3a4454	Mint Coloring	73FF73
+165	b385119e-aa27-5b59-ad0f-f00ee7fdb5f7	Pistachio Coloring	BFFFBF
+166	b993fc4a-49b0-5e16-95ca-ddbef3d84023	Celadon Coloring	8DD98D
+167	b9e3c99e-8bd6-58ff-8df8-c82c5a75ae1c	Chateau Coloring	53A653
+168	e6037d10-abf7-5824-aa2a-6972e9638382	Jungle Coloring	00331A
+169	46583aa0-e879-5dbf-8881-0dc9b6610a50	Forest Coloring	006633
+170	3df30deb-12ec-57b6-bf69-8ffc4353a28b	Lagoon Coloring	00B359
+171	4caaa0d5-0656-5c59-a89e-32c2426581ae	Spring Coloring	00FF80
+172	0666008d-3bb9-588b-9cf8-82441be0160d	Aquamarine Coloring	73FFB9
+173	cab40fc8-6001-5049-a546-9cb1a09fcd72	Seafoam Coloring	BFFFDF
+174	d7514130-92d0-5376-b681-d57166ecc346	Turquoise Coloring	8DD9B3
+175	31730753-1f55-5018-9e5b-e89a863f115c	Shamrock Coloring	53A67C
+176	ea2b5d8c-3992-5d2a-ae39-b458308c4682	Mariana Coloring	003333
+177	365c9d2c-ea97-58c6-88fb-7c7be290f48c	Skobeloff Coloring	006666
+178	e44f082d-9db1-54ec-8750-7137c449dde1	Teal Coloring	00B3B3
+179	426a02c6-933b-5331-be32-763aa9016c2d	Cyan Coloring	00FFFF
+180	272be6ba-9e9a-5aec-b8ce-0cf7561e408f	Electricity Coloring	73FFFF
+181	e103d1a5-b229-5bd7-91f6-ff878a664e7d	Celeste Coloring	BFFFFF
+182	69d9415a-1928-58b7-aaad-775c10f68021	Crystal Coloring	8DD9D9
+183	6d5c2e6a-bfc4-51e9-8298-fb0cb9f1f65f	Ocean Coloring	53A6A6
+184	0dae220f-6807-5896-9882-19b2171d687b	Cetecean Coloring	001A33
+185	80160ea1-9f0c-5662-963d-08c4d047e806	Prussian Coloring	003366
+186	3438e6b6-8b3d-5c9f-8886-22c610681660	Sapphire Coloring	0059B3
+187	6899a2c3-8832-52ef-b726-dddc3fe29626	Azure Coloring	007FFF
+188	299597c3-0a97-555a-bff1-4d00abbf93a5	Babyblue Coloring	73B9FF
+189	57f0b5a3-937b-53d1-b906-1d31fa80babe	Cornflower Coloring	BFDFFF
+190	e344236b-d8f6-54c3-a621-04b0c8568c16	Overcast Coloring	8CB2D9
+191	02a8ddea-b461-5f74-ab30-1ef3836b603a	Moonstone Coloring	537CA6
+192	3392d180-b089-5445-b5f9-7867262a2cf2	Midnight Coloring	000033
+193	d8de2dfa-40e1-5322-8969-5b9b53f18fde	Navy Coloring	000066
+194	c822ced8-d7fa-55cd-bfc1-a252c5baf591	Cobalt Coloring	0000B3
+195	5824c669-a968-5ab7-9b20-0db11ff25b15	Blue Coloring	0000FF
+196	c8ff4b04-d266-5627-b4de-270fbb5f83d4	Denim Coloring	7373FF
+197	e72f16e5-b5bc-502d-80e8-9fb4c99a4558	Ice Coloring	BFBFFF
+198	323d4fb6-5fcb-5d9d-b062-7611fe25ef29	Frost Coloring	8C8CD9
+199	f016401d-eb81-5969-8d70-b8b6e88e3b00	Deepfreeze Coloring	5353A6
+200	89d79110-e379-5219-b925-a09bf42f5b31	Twilight Coloring	190033
+201	f4a70660-62db-5628-83c6-b166958f6768	Eminence Coloring	330066
+202	d4932eb7-0e95-5a6d-b8f3-405d874213eb	Indigo Coloring	5900B3
+203	6d6c6492-cdcd-5bb8-b75d-aa5ac4272f5d	Violet Coloring	8000FF
+204	3aec499f-8b7c-51af-bbda-d46b3700cd4c	Lilac Coloring	B973FF
+205	786611c7-3876-50d8-aacf-94a9ee28e8d1	Lavender Coloring	DFBFFF
+206	138c5dc8-acff-531c-8b2e-d7c1557cd91f	Mauve Coloring	B38DD9
+207	3cfee535-2e61-531f-a54d-0aaec803ea10	Royalty Coloring	7C53A6
+208	72f282ca-b5ae-5379-aaf4-bac531eda712	Eggplant Coloring	330033
+209	86bf72c6-3a1d-54be-a90b-488c60ea4df3	Plum Coloring	660066
+210	0d6f7011-06d8-5690-8ab6-19ce51074dc0	Purple Coloring	B200B3
+211	bd934572-ed37-5e66-8857-2ee9f1a4da9b	Magenta Coloring	FF00FF
+212	c1fe0e05-956f-53c1-9dbd-2d779a4568cc	Pink Coloring	FF73FF
+213	87908101-ae32-59ff-8d9a-b3dfb794eb8b	Cottoncandy Coloring	FFBFFF
+214	5fa6bab6-d39f-554d-9b32-d84e47e6083e	Orchid Coloring	D98DD9
+215	3a968850-639c-56ac-9f1d-294130e75f92	Bruise Coloring	A653A6
+216	0444db70-d636-50fe-a3c3-605a9b2df61a	Raisin Coloring	330019
+217	796cdccd-32cf-537c-bbcb-be5fa82a2f2c	Tyrian Coloring	660033
+218	eb5cd89a-ebd0-5a0b-aba5-74d7350a04de	Lust Coloring	B30059
+219	aefe0f94-f120-5b58-b1bd-4c8967d91a66	Fuschia Coloring	FF007F
+220	50a9ddaf-1a80-5787-8f9f-1c24b79638ac	Flamingo Coloring	FF73B9
+221	7887cc28-3dd0-561c-95dc-037b9e024113	Valentine Coloring	FFBFDF
+222	afb2f7de-21cc-5076-b647-60b37fcc6c47	Kobi Coloring	D98DB3
+223	513f8149-50ff-572d-aa4a-131ac7cbdbaa	Rouge Coloring	A6537C
+224	1f6bb764-6eef-5fd5-8899-a099b1d82a8a	Black Coloring	191919
+225	380ab0be-e316-5b28-807b-30f6fe6d3116	Shadow Coloring	333333
+226	b45b17c8-7a98-5001-9412-f19209047252	Charcoal Coloring	4D4D4D
+227	9bcb883b-c145-577f-ad2d-49efef7da4b1	Gunmetal Coloring	666666
+228	a995e6aa-0040-5392-ba42-f64347b5253c	Slate Coloring	808080
+229	c4ccbbd4-a137-5c01-b971-736b0d176aa7	Steel Coloring	999999
+230	a63d4f3a-519a-5450-ba67-5cf697e3743f	Grey Coloring	B3B3B3
+231	ebab29d0-fda5-57eb-b40a-a1ac05398c36	Silver Coloring	CCCCCC
+232	5892a37e-2ec2-5e4b-89a5-410ee7bfe3c5	Wisp Coloring	E6E6E6
+233	42754ae0-715f-50ca-9b36-e6091ab285fc	White Coloring	FFFFFF
+234	f3a5edd4-d586-5bcf-bd53-6b989ccf475d	Mud Coloring	403421
+235	61340819-188f-5c4f-843e-e7766585434c	Bark Coloring	594724
+236	2860502a-adb1-5854-9ec1-48c853c8f1e7	Brown Coloring	80642D
+237	9403fd4a-bb16-58a3-bb9e-0d6e1c0f1d44	Leather Coloring	99823D
+238	966d6dfa-b110-5936-ae8a-d2e56635c819	Camel Coloring	B39C59
+239	d6abd763-5b7a-52d8-b596-aad6dcf47cbc	Tan Coloring	CCB266
+240	a8024c79-67e5-504f-871e-f1b7c697bc5c	Sand Coloring	E6C973
+241	9d23866c-0d03-57c1-99f2-1ab2334f1933	Parchment Coloring	FFEFBF
+242	c0bb756c-37ff-5c82-af4a-56c4079aeeaf	Cream Coloring	F5F5DC
+243	a585cc0b-4e84-5924-838d-7e83f068802d	Brick Coloring	994326
+244	aaaa6c3b-797b-5ed6-8d84-80a7beb3a5ed	Tangerine Coloring	FFA424
+245	975fb7f3-2f68-50e5-ad97-1d6f4a508d8c	Gold Coloring	FFC000
+246	c13b821b-2ca0-5798-b163-55425a9eac48	Mustard Coloring	F0F032
+247	01f2c99c-aabe-538e-b07f-6ffc00136dc8	Craggy-Dew Coloring	B3E912
+248	b77850d7-eba7-5a2b-b210-a3a64d4f8d81	Grass Coloring	227330
+249	6e3246c5-159e-511c-a6d3-fa3778795797	Stream Coloring	2AC6B6
+250	a042ec83-298e-5ae6-80b9-a6ad64e45817	Marine Coloring	007189
+251	7328f6aa-3854-584b-9fc2-fc09dd061b02	Haze Coloring	535872
+252	1be097bd-4ba4-5a3b-9288-030d7ac72fa3	Dusk Coloring	8F4EA5
+253	85ceac4a-d62e-5ae7-90cd-5a9a21e904f3	Thistle Coloring	E6C3DD
+254	cdc68b85-2bb9-56c8-ace8-bfcda3a8dc3d	Bubblegum Coloring	FFBFCF

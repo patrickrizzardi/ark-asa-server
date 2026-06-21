@@ -1,0 +1,89 @@
+content_pack_id	game_id	marketplace	marketplace_id	name	console_safe	default_enabled	type	last_update	required
+b2362c68-abcf-4dc2-93b1-5d39074e48b3	ArkSA			Ark: Survival Ascended User Content	1	1	1	1782067747.211	0
+ef2ebfe1-960b-4535-8b12-ab64b59306b8	ArkSA	CurseForge	1151725	AdditionalStructures	0	0	4	1753624947	0
+e0ac7f42-77bb-491c-81a2-5ede565984ae	ArkSA	CurseForge	939991	Advanced Incubator	0	0	4	1713718801	0
+e556d5c4-d68c-444f-a7ce-5cb65d6f9ac0	ArkSA	CurseForge	942661	AoA Cluster	0	0	4	1733255102	0
+1af6a2a0-a5ea-4cec-91bb-d7b83b8d8cc0	ArkSA	CurseForge	1128480	AoARewardTest	0	0	4	1740789403	0
+c50221b1-ced5-4f48-a1c1-f5e965c5bedd	ArkSA	CurseForge	1245549	Applez QOL	0	0	4	1746138902	0
+e328ed8f-5594-41cd-824a-62e623ee1ebf	ArkSA	CurseForge	1188410	Ark Asylum Chibi	0	0	4	1754361617	0
+b32a3d73-9406-56f2-bd8f-936ee0275249	ArkSA	Steam	2399830	Ark Official	1	1	2	1766164215	1
+620a2b2e-532e-4915-8045-6b09c6deb6ca	ArkSA	CurseForge	939055	ARKomatic	0	0	4	1719708411	0
+e377137f-1816-4e44-a76b-9e04976a0aa0	ArkSA	CurseForge	1168889	ArksDream Extinction Clustermod	0	0	4	1735663021	0
+a79aa7b1-88c2-4e46-a236-5ee5340a7f8a	ArkSA	CurseForge	987756	Arks Dream Server Cluster Mod	0	0	4	1722793322	0
+7dacaf6e-5962-4e73-988d-8beaa8313512	ArkSA	CurseForge	1193015	Beacon Sentinel Assistant	0	0	4	1746219422	0
+22ec3001-a9cb-4dec-89b6-c59bb7d75cdf	ArkSA	CurseForge	1153589	Better Cages	0	0	4	1733415362	0
+36735322-a7cf-4e73-ae2c-26d282778959	ArkSA	CurseForge	1010248	Better Horses	0	0	4	1715124316	0
+7ca623f6-a10c-4a51-9c19-201047525906	ArkSA	CurseForge	1018728	Better Rocket Launcher	0	0	4	1726528802	0
+58890bb4-ef5b-4309-8d61-e7a2d670be64	ArkSA	CurseForge	1008968	Better Rock Golem	0	0	4	1731027902	0
+0d580ca6-a3ba-4a78-8283-2457b54b658d	ArkSA	CurseForge	1002596	Better Trains	0	0	4	1713463022	0
+9daa79ca-1452-4a45-8092-361afe640024	ArkSA	CurseForge	1019652	Black Pearl Pick	0	0	4	1726528202	0
+ee9d5cd6-051a-4139-8ec2-bb2dd98190e9	ArkSA	CurseForge	977153	BloodStalker	0	0	4	1739235913	0
+b552ba65-2707-41ec-a748-e246921be8c6	ArkSA	CurseForge	961106	BS Additions	0	0	4	1715956431	0
+bd76a3c3-0a89-4321-bd9b-1cffb53086f5	ArkSA	CurseForge	982674	Casual Community Mod	0	0	4	1716162299	0
+0152290e-e618-4b48-906d-a233b9aa9de9	ArkSA	CurseForge	1095976	ClayMe Chibis	0	0	4	1755836516	0
+5e15a0f6-f739-4dd9-a5fc-3cc306510086	ArkSA	CurseForge	1161692	Configurable Club ARK	0	0	4	1735505102	0
+43d00a81-b15f-4519-8c26-9dd8c23a8c92	ArkSA	CurseForge	929169	Configurable Cryopods	0	0	4	1734874262	0
+1ec5c5a8-f2ad-4881-aeeb-ba6185422737	ArkSA	CurseForge	1118146	Core Choices	0	0	4	1736427298	0
+d57b86ae-9851-4bd0-937d-35f78ccb6aaa	ArkSA	CurseForge	965732	Craft Black Pearls	0	0	4	1717984204	0
+b7d3760c-5597-4457-9e8f-0db3975631b7	ArkSA	CurseForge	1158443	Crates Of Chaos	0	0	4	1735403702	0
+9fea3c2f-d38e-4f37-baec-5d900cc348c8	ArkSA	CurseForge	952828	Creature Management Tool (Cull Dino/Dinos, Breed, Cryo etc.)	0	0	4	1719661985	0
+a1588d68-3297-42cb-b5e9-057f933f0a46	ArkSA	CurseForge	1241533	Crystal Wyverns	0	0	4	1744501022	0
+bc3323a3-1c5f-41e0-94da-fadfe72070dc	ArkSA	CurseForge	940975	Cybers Structures QoL+	0	0	4	1754335823	0
+8a9fcc84-4a49-416d-92b6-72e381033d05	ArkSA	CurseForge	1293221	DearDollie	0	0	4	1750808702	0
+24d59ccb-edba-425b-b7c1-5dcea1b58510	ArkSA	CurseForge	1092232	DeathFridge	0	0	4	1726525861	0
+3e85a3e4-be6c-4436-a971-32e7bb4a31ee	ArkSA	CurseForge	1301606	Devast8tion Community Mod	0	0	4	1755074436	0
+3201c559-490c-4234-9900-7712c8617e0f	ArkSA	CurseForge	942024	Dino Depot	0	0	4	1746732722	0
+2f19b518-5050-4490-b797-6482d383b5f2	ArkSA	CurseForge	938805	Discovery World	0	0	4	1732479011	0
+4f837d90-3a19-4996-933c-9c9f9b052785	ArkSA	CurseForge	1027806	Discovery World Structures	0	0	4	1722533349	0
+75caff3c-8ce2-4937-a9c8-2b419f10cde6	ArkSA	CurseForge	988084	Dodo Loot	0	0	4	1725690891	0
+2137a23c-64c4-46bc-a623-44056b770276	ArkSA	CurseForge	929489	Draconic Chronicles	0	0	4	1754335823	0
+8fbf8aac-5e5c-4bcc-b0d3-596d3222fc03	ArkSA	CurseForge	976972	Draconic Chronicles: Legends	0	0	4	1721398443	0
+aac853f5-f1ed-4e14-b742-c3fb68a3113d	ArkSA	CurseForge	1247231	Draconis Prime	0	0	4	1753819806	0
+64279502-2d2c-406c-b7cf-d8947ae9e469	ArkSA	CurseForge	1173600	Easy Element	0	0	4	1736537402	0
+30c41135-0945-4d69-a102-b09e5550e2ef	ArkSA	CurseForge	928603	Easy Mutations	0	0	4	1729672935	0
+50db851e-a58a-44f8-84a9-fa6fce643901	ArkSA	CurseForge	1205560	FMsmiley	0	0	4	1743078302	0
+8c79310f-29dd-4c8a-a16c-663ad118a167	ArkSA	CurseForge	1293088	FRM Waterless Intakes	0	0	4	1750986362	0
+56dde6ea-eb88-47d2-9ee5-e2e061f1e549	ArkSA	CurseForge	997262	GON Creature Charms	0	0	4	1753791903	0
+b58bfe9a-34b6-478d-a884-fc27c3147b5d	ArkSA	CurseForge	1251231	Hank	0	0	4	1745723102	0
+b76b1758-e0f0-40f4-abbe-385c7108e232	ArkSA	CurseForge	1104426	Improved Gene Scanner	0	0	4	1749252902	0
+6f2378ed-8268-476a-b564-1234fd7422ba	ArkSA	CurseForge	997879	Improved Phoenix	0	0	4	1731397228	0
+2ed00694-282b-44cc-bc6a-bd55e1bad28b	ArkSA	CurseForge	937184	JVH Landscaping	0	0	4	1715999540	0
+9f19a514-7d73-4c0b-be99-414201f7219d	ArkSA	CurseForge	946694	Klinger Additional Rustic Building	0	0	4	1737231877	0
+02a5b1be-3939-4a56-bcc0-496f7284fa7b	ArkSA	CurseForge	1029315	Knockout Rockout	0	0	4	1726525922	0
+fe5fd08d-a830-4b48-930d-de52d324e6c1	ArkSA	CurseForge	1179640	Loadout Mannequin	0	0	4	1737043848	0
+8f878db9-71f0-4293-bfd8-f048789ea226	ArkSA	CurseForge	947907	Master Crafting Table	0	0	4	1719662102	0
+859a879c-8a90-4622-aff0-6881668a0f0c	ArkSA	CurseForge	1387531	Modded SOTF Rebalancing	0	0	4	1765351863	0
+7c128b98-ffb3-40a8-b018-f6de1feb40b7	ArkSA	CurseForge	1058390	MoreGates	0	0	4	1736310152	0
+3592ad79-ed6d-48a5-b498-865a54f83a43	ArkSA	CurseForge	963492	Mystery Crates	0	0	4	1730051497	0
+dcaca193-8c0b-44df-8047-a64aae005946	ArkSA	CurseForge	1067454	NetGun	0	0	4	1749915170	0
+b6b7b76a-d52c-446d-93d6-0f1d3cd2e3de	ArkSA	CurseForge	1019389	Net Pro	0	0	4	1726532762	0
+63dfec2e-1f3b-42fc-8173-2efb91b088ce	ArkSA	CurseForge	1250431	Odin's Playground PVPVE Server Mod	0	0	4	1747438862	0
+3569dfb4-9be0-47d1-862b-223d39888460	ArkSA	CurseForge	928793	Pelayori's Cryo Storage	0	0	4	1750971962	0
+b95c09d2-79d9-41ac-a4fc-9b686d4b52ae	ArkSA	CurseForge	1266467	Piggle's Lycosuchus	0	0	4	1748898602	0
+9c5c297d-1be8-454c-8de6-ac3c5c3d10eb	ArkSA	CurseForge	1086824	Ported Fjordhawk	0	0	4	1725137496	0
+e97e71ef-07e2-4b01-93a3-2e0470716395	ArkSA	CurseForge	964032	PsycoKillah's Decay Mod	0	0	4	1714358849	0
+82775910-a252-4786-89c1-8e33141ff991	ArkSA	CurseForge	1244187	Pygmy Hippo	0	0	4	1745216102	0
+7fa07a5f-8080-4acb-b8a3-6463b32cd5a5	ArkSA	CurseForge	1103049	Realm of Valhalla Community Extras	0	0	4	1727402679	0
+ce54b3ba-f0a3-4c69-b52a-7e6c8c71bc55	ArkSA	CurseForge	932365	Resource Gatherers	0	0	4	1738349594	0
+c35e444e-f352-496b-8625-ac57634a9111	ArkSA	CurseForge	1291061	Robo Roonie	0	0	4	1750602902	0
+c05c7d19-ac14-49cc-8c97-548f6050e0a7	ArkSA	CurseForge	1106965	Rocket Cannon Ball	0	0	4	1731027602	0
+079cf9bb-2ef2-48a0-87f1-4193996d011a	ArkSA	CurseForge	932066	RP: Advanced Dino Tools	0	0	4	1736796062	0
+3b68f428-45e0-4529-8c97-2276262b1cda	ArkSA	CurseForge	974884	Runic Wyverns	0	0	4	1757611563	0
+9d609415-24cd-401c-bf36-e89e9ee794f8	ArkSA	CurseForge	1003065	Schwifty's Dino Variants	0	0	4	1764795182	0
+7e6af302-96a8-4612-b583-6106e06498de	ArkSA	CurseForge	1207609	SeedPlus	0	0	4	1749382438	0
+f592e316-ea1a-44d6-9851-dabe2238c36c	ArkSA	CurseForge	1377709	Shinigami Systems	0	0	4	1762462997	0
+e0a2ad2a-f1d4-423f-a804-9c76190d2134	ArkSA	CurseForge	1197005	Shins Better Structures	0	0	4	1758456724	0
+773ad0c5-338f-476c-9c2b-a1b5d2123c4d	ArkSA	CurseForge	1096860	Skugwyrm	0	0	4	1728743701	0
+d86d14b5-85a8-4d18-bc88-452713e06dcd	ArkSA	CurseForge	1108025	Speedy's Alphas	0	0	4	1745341013	0
+8ba0aeac-3423-40a2-bc90-d3460ff34fbe	ArkSA	CurseForge	955451	Structure Management Tool (Quick Stack, Pickup Structures, Transfer Inventory etc.)	0	0	4	1719662003	0
+23a27076-27f9-4e46-ba72-084c42724c38	ArkSA	CurseForge	1335627	Stuff N Somes	0	0	4	1757098998	0
+7f4f3be5-d742-452d-b97b-111b6c5bf413	ArkSA	CurseForge	1147540	Tek Powered Forge	0	0	4	1732627262	0
+43204f0c-7a61-4b3b-94e2-bceaf21059e0	ArkSA	CurseForge	1262880	TGP's GOAT MOD	0	0	4	1753737362	0
+ca8ee192-4bf4-496e-8c8e-73aa1a95724a	ArkSA	CurseForge	1189608	The Kings Table Essentials	0	0	4	1738350002	0
+57374aa7-7be4-45d4-ade2-2f61bae52834	ArkSA	CurseForge	1292880	The Silent Sting (Tranqs) (beta)	0	0	4	1757159354	0
+821498f4-cddb-400a-b3d2-6e43b7ef33f1	ArkSA	CurseForge	978862	The Sunken World Additions	0	0	4	1748890612	0
+f097e487-1eb6-4fc3-a861-487f962ca4a8	ArkSA	CurseForge	1197006	TLS Companion	0	0	4	1748203242	0
+6f538877-923a-491d-9e30-0170244cc5b8	ArkSA	CurseForge	1015965	Tranq Turrets (Fully Automated)	0	0	4	1726525021	0
+df70a783-9354-48d8-906a-f57e612573db	ArkSA	CurseForge	991004	Utilities 4ALLArk	0	0	4	1725630688	0
+d6f877f3-f60a-4bcf-ba24-e813a23848db	ArkSA	CurseForge	1085481	White Flag	0	0	4	1732291981	0
+b1b251bc-7adb-4a50-998d-1c54575e0240	ArkSA	CurseForge	927090	Winter Wonderland	1	0	2	1703318897	0
