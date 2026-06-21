@@ -10,10 +10,11 @@
 
 <!-- RADAR-START -->
 ### Active Roadmaps
-- ark-asa-server (Patrick) — 0 plans — 2026-06-20
+- ark-asa-server (Patrick) — 1 plans — 2026-06-20
 
 ### Active Workstreams
 - [ark-asa-server] initiative
+  - m2-shared-economy-store (Patrick) — 9 files touched — 0/87 done — roadmap: ark-asa-server — 2026-06-20
 <!-- RADAR-END -->
 
 ---
@@ -74,6 +75,11 @@ confirmed fast-boot (skips Steam).
 - **Informal roadmap**: M1 lean fast image (current) → M2 AsaApi + ArkShop + MySQL **shared store** (the thing Nitrado can't do — needs a real `/plan` + an ADR for the shared-economy schema) → M3 cluster (store shared across maps) → M4 config tooling / backups / TS CLI → VPS deploy. Real PvP server lives on a VPS; WSL stays the config sandbox.
 - **Process note**: M1 was built as a fast casual slice (no formal `/plan`), so the plan's Documentation-Impact step was skipped — acceptable at M1's "small tool → README" doc tier. M2 is multi-service + has hard-to-reverse schema decisions → run full `/plan` (incl. docs step + ADR) before building it.
 
+- **PLANNING IN PROGRESS (2026-06-20): M2 `m2-shared-economy-store`** (initiative child of `ark-asa-server`). Research done; awaiting Patrick's OK on a 5-phase shape, then writing `.claude/plans/active/ark-asa-server/m2-shared-economy-store/plan.md` + plan-reviewer. Key research findings:
+  - **AsaApi pinned = v1.21** (Apr 2026). Installs to `ShooterGame/Binaries/Win64`; plugins → `Win64/ArkApi/Plugins/<name>/` (DLL name must match folder); log at `ShooterGame/Win64/logs/ArkApi.log`. Launch `AsaApiLoader.exe` w/ same params as `ArkAscendedServer.exe`. **Requires MS VC++ 2019 redist.**
+  - **Two build-vs-runtime tensions, both resolved the same rule-faithful way** (prefix AND `Win64` live on the `ark-game` volume, so by the rule's 3-question test → runtime/entrypoint, not Dockerfile): (a) **VC++ redist** installs in the container at runtime (bake the `.exe` in `/opt`, entrypoint runs it into the volume prefix, marker-guarded) — Patrick's explicit call, own phase; (b) **plugins** bake to `/opt/asaapi/` in the image (pinned) and the entrypoint syncs them onto the volume's `Win64` each boot (same pattern as `steamclient.so`). Phase 3 also **amends `build-time-vs-runtime.md`** so its table matches the volume-backed-prefix reality.
+  - **ArkShop** deps: **Permissions** plugin (baked) + **ASA API Utils** CurseForge *mod* (rides existing `MODS=` → needs its mod ID at exec; absence = `Singleton not found`). Config `Mysql` block: `UseMysql/MysqlHost/User/Pass/DB/Port`. **MySQL 8.0.28+ rejected; MariaDB any version** → propose `mariadb:11.4` LTS.
+  - Proposed phases: 1 MariaDB svc+secrets · 2 bake plugins (/opt + sync) · 3 VC++ in container (+rule amend) · 4 flip→AsaApiLoader (AsaApi loads = HIGH-risk gate) · 5 ArkShop↔MariaDB end-to-end (HIGH). Plugin-binary distribution channel (GitHub releases vs auth-gated ark-server-api.com) = open exec risk for Phase 2.
 - **WHERE WE LEFT OFF (2026-06-20)**: **M1 DONE — server boots and advertises on `dell`.** The exit-21 blocker was NOT WSL2 (exonerated): it was missing `steamclient.so` for Proton's lsteamclient (see Active Decisions). Four real bugs fixed this session: (1) missing steamclient.so → bake at build + symlink at boot; (2) deep config bind root-owning the volume → shallow bind + symlink; (3) missing `+@sSteamCmdForcePlatformType windows` → "Missing configuration"; (4) install marker trusting steamcmd's lying exit code → gate on the exe existing. All four are in Dockerfile/entrypoint/compose. Verified: full startup ~20s, advertising, port bound, fast-boot restart loop works, config writes through to host `./config`.
   - **Image ownership / leanness (RESOLVED)**: keeping `FROM parkervcp/steamcmd:proton` as-is. Patrick cares about RAM/CPU, not image MB — a bookworm-slim/from-scratch base only trims disk, not runtime RAM/CPU (the cost is GE-Proton + Wine + the game, identical regardless of base). Not worth the rebuild.
   - **NEXT (M2)**: AsaApi + ArkShop + MySQL shared store — run full `/plan` + ADR before building (multi-service, hard-to-reverse schema). When AsaApi lands, launch `AsaApiLoader.exe` (not `ArkAscendedServer.exe`) per `build-time-vs-runtime.md`.
