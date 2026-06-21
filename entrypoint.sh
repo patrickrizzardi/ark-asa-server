@@ -255,14 +255,18 @@ ensure_modded_pdb() {
 }
 
 setup_plugin_configs() {
-  # Bind plugin config dirs onto the host via ./plugins-config/<PluginName>/ so operators can
-  # edit configs on the host and pick up changes on restart. Each plugin dir is symlinked into
-  # ArkApi/Plugins/<name>/ the same way ./config is symlinked into the engine's WindowsServer path.
+  # Bind each plugin's config.json onto the host via ./plugins-config/<PluginName>/config.json so
+  # operators can edit configs on the host and pick them up on restart — mirrors the ./config →
+  # WindowsServer symlink for engine INI.
   #
-  # Seed-if-absent: if the host dir has no config.json, copy the image default from the deployed
-  # plugin dir before symlinking. Never overwrite a file the operator has already edited.
-  # The symlink replaces the deployed plugin dir, so inject_plugin_db_config() writes into the
-  # host-bound path and the change survives a deploy_plugins() clean-replace next boot.
+  # ONLY the config.json FILE is symlinked, never the whole plugin dir: the deployed plugin dir
+  # also holds the plugin DLL (ArkShop.dll etc.) that AsaApi loads, so replacing the dir with a
+  # symlink to a config-only host dir would delete the DLL and AsaApi would log "Plugin … does not
+  # exist" (it did — that's the bug this shape fixes). The DLL + everything else stay in the
+  # deploy_plugins()-managed dir; just config.json points at the host bind.
+  #
+  # Seed-if-absent: if the host has no config.json yet, copy the image default before linking;
+  # never overwrite a config the operator already edited.
   #
   # Time: O(p) where p = plugin count (2 in practice — ArkShop + Permissions)  Space: O(1)
   local win64="${ARK_DIR}/ShooterGame/Binaries/Win64"
@@ -273,22 +277,26 @@ setup_plugin_configs() {
   for plugin in ArkShop Permissions; do
     local plugin_dir="${win64}/ArkApi/Plugins/${plugin}"
     local host_dir="${host_root}/${plugin}"
+
+    # The plugin dir (with its DLL) must already exist from deploy_plugins(); if it doesn't, the
+    # plugin wasn't deployed — skip rather than create a dangling config symlink.
+    if [[ ! -d "${plugin_dir}" ]]; then
+      echo "[entrypoint] WARN: ${plugin} not deployed (no ${plugin_dir}); skipping config bind." >&2
+      continue
+    fi
     mkdir -p "${host_dir}"
 
-    # Seed the host dir from the deployed image default if config.json is absent.
-    # deploy_plugins() has already run, so the image-default config is at plugin_dir/config.json.
+    # Seed the host config.json from the deployed image default if absent.
     if [[ ! -f "${host_dir}/config.json" && -f "${plugin_dir}/config.json" ]]; then
       cp "${plugin_dir}/config.json" "${host_dir}/config.json"
       echo "[entrypoint] Seeded ${plugin} config.json from image default."
     fi
 
-    # Symlink the deployed plugin dir → host bind. Remove the dir first (deploy_plugins left a
-    # real dir there); -sfn updates an existing symlink safely.
-    rm -rf "${plugin_dir}"
-    ln -sfn "${host_dir}" "${plugin_dir}"
+    # Symlink ONLY the config.json file → host bind; the DLL and siblings stay in the deployed dir.
+    ln -sfn "${host_dir}/config.json" "${plugin_dir}/config.json"
   done
 
-  echo "[entrypoint] Plugin config dirs bound: $(ls "${host_root}" 2>/dev/null | tr '\n' ' ')"
+  echo "[entrypoint] Plugin config.json bound to host: $(ls "${host_root}" 2>/dev/null | tr '\n' ' ')"
 }
 
 _inject_mysql_block() {
@@ -303,8 +311,14 @@ _inject_mysql_block() {
   # false success against an unwritten config. The handler is the list's final element, so its
   # exit fires unconditionally.
   #
-  # Time: O(1)  Space: O(1)   Side effect: rewrites ${cfg} in place (atomic via mktemp + mv).
-  local cfg="$1"
+  # Time: O(1)  Space: O(1)   Side effect: rewrites the file ${cfg} resolves to, in place.
+  # ${cfg} is a symlink (setup_plugin_configs points plugin_dir/config.json → the host bind), so we
+  # resolve it and mv onto the real target — a bare `mv tmp symlink` would REPLACE the symlink with
+  # a regular file and orphan the host-bound config the operator edits. Resolving keeps the link.
+  local cfg dest
+  cfg="$1"
+  dest="${cfg}"
+  [[ -L "${cfg}" ]] && dest="$(readlink -f "${cfg}")"
   local tmp
   tmp="$(mktemp)"
   jq --arg host "${ARKSHOP_DB_HOST}" \
@@ -319,7 +333,7 @@ _inject_mysql_block() {
     | .Mysql.MysqlDB   = $db
     | .Mysql.MysqlPort = ($port | tonumber)' \
      "${cfg}" > "${tmp}" || { rm -f "${tmp}"; echo "[entrypoint] FATAL: jq failed to write DB config into ${cfg}." >&2; exit 1; }
-  mv "${tmp}" "${cfg}"
+  mv "${tmp}" "${dest}"
 }
 
 inject_plugin_db_config() {

@@ -182,3 +182,26 @@ findings, decision drains, override rationales.
 3. code-reviewer C1 → dropped the dead `MARIADB_HOST`/`MARIADB_PORT` fallback tier (never defined anywhere) → HOST/PORT default to literals; fixed the misleading FATAL message.
 4. code-reviewer C2 → comment corrected: password reaches jq via a `--arg` command-line argument (argv), not "env substitution".
 `bash -n` clean; `_inject_mysql_block` defined once + called twice; git grep confirms zero remaining auth-plugin refs.
+
+## Phase 5 — round 2 gate GREEN + commit + DataGrip resolution (2026-06-21)
+
+**Round 2 re-gate (code lanes) — ALL PASS:** code-reviewer PASS (|| exit 1 swallow-close empirically verified, _inject_mysql_block DRY clean), rules-compliance PASS (DRY resolved), plan-adherence PASS (scope-escape CLEAR — auth-plugin line deleted), deviation-judge#6 PASS (port guard + || exit 1 both hold). Carried: design PASS; judges #1(OVERRIDE: keep jq, python3 premise unverified), #2/#3/#4/#5/#7 PASS. acceptance = runtime-pending (AC1/AC3/AC4/AC5 need dell boot — coordinator-driven, NOT a code defect).
+
+**Code committed `72171a9` + pushed** `feat/m2-5-arkshop-mariadb`. Staged: entrypoint.sh, docker-compose.yml, Dockerfile, .gitignore, .env.*.example, README.md, plugins-config/.gitkeep, notes.md, scratch/. (phase5-runtime-evidence.md held back — committed filled after the dell boot.)
+
+**DataGrip root cause — NOT the ark-asa DB.** dell has a separate `mifi-mysql` (mysql:8.4) container on `0.0.0.0:3306` (LAN-exposed). MySQL 8.4 defaults to caching_sha2_password → that IS the `sha256_password` DataGrip error. The ark-asa economy mariadb is internal-only (no host port) and verified clean: `arkshop@%`, `root@%` all `mysql_native_password` on dell's live volume. So DataGrip was hitting the wrong DB; the Sonnet chat's `--default-authentication-plugin` edit was misdirected (and a no-op anyway). **Setup:** gitignored `docker-compose.override.yml` on dell (in `.git/info/exclude`) publishes ark-asa mariadb on `3307` (3306 taken by mifi); LAN-bound to match Patrick's mifi workflow. DataGrip: MariaDB driver → `10.1.4.4:3307`, user arkshop, db arkshop, password from dell `.env`. Committed compose stays internal-only (Phase-1 AC intact for prod).
+
+**Dell boot IN PROGRESS:** dell on `feat/m2-5-arkshop-mariadb` @ 72171a9, override persisted, ENABLE_ASAAPI=1, MARIADB_PASSWORD set, jq confirmed missing in old image → rebuilding the-island image (background). Next: boot modded → verify AC1 (ArkApi.log clean, no Singleton-not-found now mod 955333 wired, no MySQL error), AC3 (RCON points→DB row), AC4 (edit-on-host), AC5 (mod 955333 downloaded) → fill phase5-runtime-evidence.md → re-run acceptance → end-of-plan cumulative sweep → flip status: done.
+
+## Phase 5 — RUNTIME BUG caught by dell boot (2026-06-21)
+
+**Bug:** modded boot succeeded (AsaApi loaded, server advertising) but ArkApi log: `Plugin ArkShop does not exist` / `Plugin Permissions does not exist`, and `SHOW TABLES` in arkshop = empty (ArkShop never connected).
+- Observed: `ArkApi/Plugins/ArkShop` was a symlink → `/home/container/plugins-config/ArkShop`, whose only content was `config.json` (no `ArkShop.dll`).
+- Cause: `setup_plugin_configs()` did `rm -rf "${plugin_dir}"` then symlinked the WHOLE plugin dir → a config-only host dir, DELETING the deployed DLL. AsaApi then couldn't find the plugin.
+- Static gate missed it: judge #5 reasoned about *config* survival, not *DLL* survival; no runtime "plugin does not exist" signal at static-evidence time. This is exactly the regression class the dell runtime gate exists to catch.
+
+**Fix (entrypoint.sh):**
+1. `setup_plugin_configs()` now symlinks ONLY `config.json` (the FILE) into the deployed plugin dir — `ln -sfn host/config.json plugin_dir/config.json` — leaving the DLL + siblings in place. Added a not-deployed guard (skip + WARN rather than dangling link).
+2. `_inject_mysql_block()` now resolves the symlink (`readlink -f`) and `mv`s onto the real target — a bare `mv tmp symlink` would replace the link with a regular file and orphan the host-bound config. jq still READS through the symlink; the resolved-target mv keeps the link intact so edit-on-host + creds stay consistent.
+
+Reboot self-heals the volume: `deploy_plugins()` clean-replace restores fresh plugin dirs (with DLLs) before `setup_plugin_configs()` re-links config.json. Re-verifying on dell.
