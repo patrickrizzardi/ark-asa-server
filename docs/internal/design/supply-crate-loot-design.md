@@ -1,7 +1,7 @@
 # Supply Crate Loot Redesign — Design Spec
 
 **Date:** 2026-06-21
-**Status:** DRAFT — for Patrick's review/tweak
+**Status:** APPROVED 2026-06-21 — ready for implementation plan
 **Owner:** Patrick
 **Target file:** `config/Game.ini` (shared host-volume config; applies to every map in the cluster)
 
