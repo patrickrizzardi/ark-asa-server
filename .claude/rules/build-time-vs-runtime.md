@@ -25,7 +25,7 @@ Ask three questions about any step. **Any "yes" → entrypoint. All "no" → Doc
 |---|---|---|
 | OS packages, Proton/Wine, winetricks, libs, curl | **Dockerfile** | fixed deps, cached layer, identical every run |
 | SteamCMD — **the tool binary** | **Dockerfile** | the downloader doesn't change; bake it |
-| Wine prefix + VC++ redist install | **Dockerfile** | pre-warm once → reproducible + fast boot |
+| Wine prefix + VC++ redist install | **entrypoint** (volume-backed prefix — see note) | Q1 yes: prefix lives on the mounted ark-game volume → entrypoint |
 | AsaApi loader/framework — **pinned version** | **Dockerfile** | version-controlled; you choose when it updates |
 | The entrypoint script itself | **Dockerfile** (`COPY`) | it's a build artifact |
 | **ARK game files** (`steamcmd +app_update 2430930`) | **entrypoint** | ~30GB, patches constantly, lives on a volume |
@@ -33,6 +33,13 @@ Ask three questions about any step. **Any "yes" → entrypoint. All "no" → Doc
 | `tail -F` log streaming → stdout | **entrypoint** | runtime, every boot |
 | Launch `AsaApiLoader.exe` (NOT `ArkAscendedServer.exe`) | **entrypoint** | runtime, params from env |
 | `mkdir -p` / touch logfiles | **entrypoint** | prep on the live volume |
+
+**Note on VC++ redist placement**: the table row above was originally "Dockerfile" when this rule
+was first written, assuming a Wine prefix baked into the image. This project's Proton prefix is
+volume-backed (created at first boot under `STEAM_COMPAT_DATA_PATH`); the Dockerfile row was stale.
+The 3-question test resolves it correctly: Q1 ("depends on a mounted volume?") = yes → entrypoint.
+The installer binary itself is baked in the image at `/opt/vcredist/` (immutable); it runs against
+the live prefix at runtime. See ADR 0002.
 
 ---
 

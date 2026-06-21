@@ -12,6 +12,12 @@ FROM ghcr.io/parkervcp/steamcmd:proton
 # Base sets USER container; switch to root only to install SteamCMD + drop in our entrypoint.
 USER root
 
+# unzip is needed to extract the AsaApi + ArkShop zips below; the steamcmd:proton base
+# ships curl/tar but not unzip. Fixed build dependency → image layer (build-time-vs-runtime.md).
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends unzip jq \
+ && rm -rf /var/lib/apt/lists/*
+
 ARG STEAMCMD_DIR=/opt/steamcmd
 # Run steamcmd once at build so it self-updates and bakes its native client libs
 # (linux32/linux64/steamclient.so) into the image. Proton's lsteamclient loads steamclient.so
@@ -22,6 +28,46 @@ RUN mkdir -p ${STEAMCMD_DIR} \
       | tar -xz -C ${STEAMCMD_DIR} \
  && "${STEAMCMD_DIR}/steamcmd.sh" +login anonymous +quit \
  && chown -R container:container ${STEAMCMD_DIR}
+
+# Bake pinned AsaApi + ArkShop + Permissions into the image at a neutral /opt path.
+# The game's Binaries/Win64 lives on the ark-game volume (installed at runtime), so we
+# can't COPY there directly — the entrypoint syncs /opt/asaapi/* onto Win64 each boot.
+# Rebuild the image to update versions (no auto-latest; bad upstream = silent server breakage).
+# Lib/ (developer import lib) and the ONLY FOR DEVELOPERS dir are excluded — not needed at
+# runtime. Per build-time-vs-runtime.md: immutable + version-pinned → Dockerfile.
+ARG ASAAPI_VERSION=1.21
+ARG ARKSHOP_VERSION=1.4
+ARG PERMISSIONS_VERSION=1.1  # doc-pin only — Permissions ships bundled in the AsaApi zip; no separate download, no URL interpolation. Records which Permissions version the pinned AsaApi (ASAAPI_VERSION) carries.
+RUN mkdir -p /opt/asaapi/ArkApi/Plugins/ArkShop \
+ && curl -fsSL "https://ark-server-api.com/resources/asa-server-api.31/download?version=${ASAAPI_VERSION}" \
+      -o /tmp/asaapi.zip \
+ && unzip -q /tmp/asaapi.zip -d /tmp/asaapi_src \
+ && cp -r /tmp/asaapi_src/ArkApi /opt/asaapi/ \
+ && rm -rf "/opt/asaapi/ArkApi/Plugins/Permissions/ONLY FOR DEVELOPERS" \
+ && cp /tmp/asaapi_src/AsaApiLoader.exe \
+       /tmp/asaapi_src/msvcp140.dll \
+       /tmp/asaapi_src/msdia140.dll \
+       /tmp/asaapi_src/libcrypto-3-x64.dll \
+       /tmp/asaapi_src/libssl-3-x64.dll \
+       /tmp/asaapi_src/config.json \
+       /opt/asaapi/ \
+ && curl -fsSL "https://ark-server-api.com/resources/asa-arkshop.34/download?version=${ARKSHOP_VERSION}" \
+      -o /tmp/arkshop.zip \
+ && unzip -q /tmp/arkshop.zip -d /tmp/arkshop_src \
+ && cp -r /tmp/arkshop_src/ArkShop/. /opt/asaapi/ArkApi/Plugins/ArkShop/ \
+ && rm -rf /tmp/asaapi.zip /tmp/asaapi_src /tmp/arkshop.zip /tmp/arkshop_src \
+ && find /opt/asaapi -name '*.pdb' -delete \
+ && chown -R container:container /opt/asaapi
+
+# Bake the VC++ 2019 redist installer into the image. The Proton Wine prefix lives on the
+# ark-game volume (created at first boot), so the redist CANNOT be run at build time — the
+# prefix does not exist yet. The image stores the immutable installer at /opt/vcredist/;
+# the entrypoint installs it into the volume prefix on first boot (marker-guarded, idempotent).
+# Per build-time-vs-runtime.md 3-question test: Q1 yes (depends on the mounted volume) → entrypoint.
+RUN mkdir -p /opt/vcredist \
+ && curl -fsSL "https://aka.ms/vs/16/release/vc_redist.x64.exe" \
+      -o /opt/vcredist/VC_redist.x64.exe \
+ && chown -R container:container /opt/vcredist
 
 # Pre-create the game dir owned by container so the named volume mounted here inherits that
 # ownership on first use (Docker seeds an empty named volume from the image dir's perms).
