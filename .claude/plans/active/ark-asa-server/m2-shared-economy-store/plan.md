@@ -253,16 +253,16 @@ it up + verifying it independently isolates DB problems from plugin problems.
 6. README: update the "Database" wording (M1 said "none yet / MySQL") to MariaDB; note the DB comes up with the stack.
 7. Write ADR `0001-db-engine-mariadb.md` (context, the MySQL ≥8.0.28 rejection, rejected alternatives: pinned MySQL 8.0.27 / SQLite-only).
 **Acceptance criteria**:
-- [ ] `docker compose --env-file .env.test up` starts `mariadb` and it reaches `healthy` before `the-island` starts
-  - Evidence: (filled at phase completion)
-- [ ] The app user can connect to the `arkshop` DB on `mariadb:3306` from within the compose network (verify via `docker compose exec`)
-  - Evidence: (filled at phase completion)
-- [ ] DB data persists across `docker compose restart mariadb` (a test table/row survives)
-  - Evidence: (filled at phase completion)
-- [ ] No host port is published for MariaDB (internal-only); `docker compose ps` shows no `0.0.0.0:3306`
-  - Evidence: (filled at phase completion)
-- [ ] `docs/internal/decisions/0001-db-engine-mariadb.md` exists with context + rejected alternatives; README "Database" wording updated to MariaDB
-  - Evidence: (filled at phase completion)
+- [x] `docker compose --env-file .env.test up` starts `mariadb` and it reaches `healthy` before `the-island` starts
+  - Evidence: `phase1-runtime-evidence.md` §AC1 — `poll 3: health=healthy` + `docker compose ps` shows `Up 15 seconds (healthy)` (local WSL-docker boot; host-agnostic for stock `mariadb:11.4`, no Proton). Ordering guaranteed by `docker-compose.yml` `the-island.depends_on.mariadb: condition: service_healthy` (Compose v2 hard guarantee); full-stack ordering empirically confirmed on dell in Phase 4/5. acceptance-verifier round 2: MET.
+- [x] The app user can connect to the `arkshop` DB on `mariadb:3306` from within the compose network (verify via `docker compose exec`)
+  - Evidence: `phase1-runtime-evidence.md` §AC2 — `docker compose exec -T mariadb mariadb -u arkshop -p… arkshop -e 'SELECT 1 AS app_user_connects;'` → `1` (exit 0), run inside the compose network. acceptance-verifier round 2: MET.
+- [x] DB data persists across `docker compose restart mariadb` (a test table/row survives)
+  - Evidence: `phase1-runtime-evidence.md` §AC3 — INSERT `42` into `_phase1_persist` → `docker compose restart mariadb` → poll healthy → `SELECT * FROM _phase1_persist` returns `42` (exit 0). Backed by `ark-db:/var/lib/mysql` named volume (`docker-compose.yml`). acceptance-verifier round 2: MET.
+- [x] No host port is published for MariaDB (internal-only); `docker compose ps` shows no `0.0.0.0:3306`
+  - Evidence: `docker-compose.yml` — `mariadb` service has no `ports:` key (structural guarantee); `phase1-runtime-evidence.md` §AC1 `docker compose ps` PORTS column shows `3306/tcp` with no `0.0.0.0:` prefix. acceptance-verifier round 2: MET.
+- [x] `docs/internal/decisions/0001-db-engine-mariadb.md` exists with context + rejected alternatives; README "Database" wording updated to MariaDB
+  - Evidence: `docs/internal/decisions/0001-db-engine-mariadb.md` created (+77 lines) — Context (ArkShop client lib constraint), Decision (`mariadb:11.4`), Rationale (MySQL ≥8.0.28 rejection), Rejected alternatives (MySQL 8.0.27 EOL; SQLite-only build-twice), + 4-field backup deferral anchored to `capability-ledger.md` `m4-ops-tooling` row. `README.md` `## Database` section added + roadmap line MySQL→MariaDB. acceptance-verifier round 2: MET.
 **Quality gate**:
 - [ ] Creds only in `.env*` (gitignored) + placeholders in `.example`; no secret committed
 - [ ] DB not exposed to the host network
@@ -271,11 +271,12 @@ it up + verifying it independently isolates DB problems from plugin problems.
 **Verification**: `docker compose --env-file .env.test up -d mariadb` → `docker compose ps` shows healthy → `docker compose exec mariadb mariadb -u arkshop -p arkshop -e 'SELECT 1;'` succeeds.
 
 **Phase Review Gates**:
-- [ ] code-reviewer: <verdict + ISO timestamp>
-- [ ] rules-compliance-reviewer: <verdict + ISO timestamp>
-- [ ] plan-adherence-verifier: <verdict + ISO timestamp>
-- [ ] acceptance-verifier: <verdict + ISO timestamp>
-- [ ] design-compliance-reviewer: <verdict + ISO timestamp>
+- [x] code-reviewer: PASS 2026-06-20T20:42 (round 2)
+- [x] rules-compliance-reviewer: PASS 2026-06-20T20:42 (round 2; round 1 BLOCK on 3 comment/doc fixes resolved)
+- [x] plan-adherence-verifier: PASS 2026-06-20T20:42 (round 2; Scope-escape CLEAR, 7/7 Steps MET)
+- [x] acceptance-verifier: PASS 2026-06-20T20:42 (round 2; 5/5 ACs MET with runtime receipts; round 1 BLOCK on AC1/2/3 WEAK resolved)
+- [x] design-compliance-reviewer: PASS 2026-06-20T20:42 (round 2; loud-fallback — registry created in Phase 3)
+- [x] deviation-judge #1 (scope: phase1-runtime-evidence.md evidence receipt): PASS 2026-06-20T20:42
 - [ ] Committed: <commit SHA>
 
 ### Phase 2: Bake AsaApi + ArkShop + Permissions into the image (pinned) + entrypoint deploy

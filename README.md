@@ -64,10 +64,20 @@ not WSL) — but the verified test box is bare-metal Linux (`dell`). To join fro
 client when running under WSL2, set `networkingMode=mirrored` in `.wslconfig`, or use the console
 `open localhost:7777`.
 
+## Database
+
+The compose stack includes **MariaDB 11.4** (M2+). It starts automatically alongside the game
+server and the game service waits for it to be healthy before launching. ArkShop connects to it
+via the compose-internal service name `mariadb:3306` — no host port is published.
+
+DB creds live in `.env.test` / `.env.prod` (gitignored). See `.env.test.example` for the
+required `MARIADB_*` vars.
+
 ## Roadmap
 
-M1 lean image (this) → **M2** AsaApi + ArkShop + MySQL shared store → **M3** cluster (one
+M1 lean image → **M2 (current)** AsaApi + ArkShop + MariaDB shared store → **M3** cluster (one
 economy across maps) → **M4** config tooling / backups / CLI → VPS deploy.
 
 Design decisions live in `.claude/state.md`; build-vs-runtime split in
-`.claude/rules/build-time-vs-runtime.md`.
+`.claude/rules/build-time-vs-runtime.md`; DB engine rationale in
+`docs/internal/decisions/0001-db-engine-mariadb.md`.

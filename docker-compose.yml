@@ -1,6 +1,5 @@
-# ARK: Survival Ascended — M1: lean single-server image for FAST local config testing.
-# Scope is deliberately just this. MySQL / shared store / AsaApi plugins / clustering
-# come back in later milestones (M2+) once this image boots fast and clean.
+# ARK: Survival Ascended — shared-economy server stack.
+# MariaDB backs the ArkShop shared economy store; the modded AsaApi + plugin services are not present yet.
 #
 # The config dir is a HOST bind mount on purpose: edit ./config/GameUserSettings.ini,
 # restart, and you're back in ~1 min. That's the whole point of the local sandbox.
@@ -16,6 +15,32 @@ services:
     network_mode: none
     restart: "no"
 
+  # MariaDB 11.4 (LTS) backs the ArkShop shared economy store. Internal to the compose
+  # network only — no host port published. ArkShop connects via service name `mariadb:3306`.
+  # MariaDB is required over MySQL ≥8.0.28: ArkShop's client lib rejects that version range
+  # (see docs/internal/decisions/0001-db-engine-mariadb.md).
+  mariadb:
+    image: mariadb:11.4
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?set MARIADB_ROOT_PASSWORD in your env file}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-arkshop}
+      MARIADB_USER: ${MARIADB_USER:-arkshop}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?set MARIADB_PASSWORD in your env file}
+    volumes:
+      - ark-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   the-island:
     build: .
     image: ark-asa:latest
@@ -23,6 +48,8 @@ services:
     depends_on:
       sysctl:
         condition: service_completed_successfully
+      mariadb:
+        condition: service_healthy
     ports:
       - "7777:7777/udp"      # game + query
       - "27020:27020/tcp"    # RCON
@@ -53,3 +80,5 @@ services:
 volumes:
   ark-game:
     name: ark-game
+  ark-db:
+    name: ark-db
