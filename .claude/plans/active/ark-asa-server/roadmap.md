@@ -96,11 +96,11 @@ incomplete as designed seams: no plugins (M2 capability "AsaApi loader baked + l
 (M2 "self-contained MariaDB service"), no cluster (M3). Launches `ArkAscendedServer.exe`; M2 flips
 that to `AsaApiLoader.exe`.
 
-### Milestone 2: Shared economy store (AsaApi + ArkShop + MariaDB) — NEXT
+### Milestone 2: Shared economy store (AsaApi + ArkShop + MariaDB) — ✅ DONE (2026-06-21)
 **Value delivered**: A single modded server with a working in-game shop and points economy backed
 by a real shared database — the operator can sell items/dinos/commands and players earn points by
 playtime. The "shared store" foundation is proven end-to-end on one server; M3 adds more maps.
-**Execution plan**: `m2-shared-economy-store` (status: planned)
+**Execution plan**: `m2-shared-economy-store` (status: shipped)
 **Depends on**: Milestone 1.
 **Rough scope**: Bake AsaApi + ArkShop + Permissions into the image at pinned versions; install
 VC++ 2019 redist into the Proton prefix; flip the launch to `AsaApiLoader.exe`; add a
@@ -113,7 +113,7 @@ economy", "ASA cluster transfer", "Shared cluster save dir"). Building the DB as
 service now (not SQLite) is what lets M3 add servers with zero teardown — re-sequencing the DB
 later would force a migration, so it's correctly here.
 
-### Milestone 3: Cluster (one economy + one config across maps)
+### Milestone 3: Cluster (one economy + one config across maps) — NEXT
 **Value delivered**: Two or more map servers (e.g. The Island + Scorched Earth) sharing the one
 MariaDB economy AND ASA's native cluster transfer AND a single shared configuration, so players
 move characters/dinos/items between maps, keep one points balance, and every map runs identical
