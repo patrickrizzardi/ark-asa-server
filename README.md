@@ -73,6 +73,46 @@ via the compose-internal service name `mariadb:3306` — no host port is publish
 DB creds live in `.env.test` / `.env.prod` (gitignored). See `.env.test.example` for the
 required `MARIADB_*` vars.
 
+## Shared store (ArkShop + points economy)
+
+The server runs **ArkShop** (a server-side economy plugin) backed by MariaDB. Players earn
+points via playtime; operators stock a shop with items, dinos, and commands.
+
+### Plugin config edit loop
+
+Plugin configs live in `./plugins-config/<PluginName>/config.json` on the host. The first boot
+seeds them from the plugin's image defaults; subsequent boots never overwrite your edits.
+
+```
+./plugins-config/
+  ArkShop/config.json        ← item prices, shop layout, point rates
+  Permissions/config.json    ← group definitions, permission grants
+```
+
+Edit on the host → `docker compose restart the-island` → plugin reloads the config on the next
+server start. No image rebuild needed.
+
+### DB credentials
+
+ArkShop's DB connection is injected at boot from the `MARIADB_*` env vars (or the
+`ARKSHOP_DB_*` overrides if you use a separate ArkShop DB user). The password is written into
+`ArkShop/config.json` at runtime and never committed to git.
+
+### Where economy data lives
+
+All points balances, shop transactions, and player records are stored in the `arkshop` MariaDB
+database on the `ark-db` named volume. Query it directly:
+
+```bash
+docker compose exec mariadb mariadb -u arkshop -p arkshop -e 'SHOW TABLES;' arkshop
+```
+
+### Required mod
+
+**ASA API Utils** (CurseForge mod ID `955333`) is a server-side mod required by ArkShop — it
+provides the singleton hooks ArkShop registers into. The entrypoint adds it to the mod list
+automatically when `ENABLE_ASAAPI=1`; you do not need to list it in `MODS` yourself.
+
 ## Roadmap
 
 M1 lean image → **M2 (current)** AsaApi + ArkShop + MariaDB shared store → **M3** cluster (one

@@ -15,7 +15,7 @@ USER root
 # unzip is needed to extract the AsaApi + ArkShop zips below; the steamcmd:proton base
 # ships curl/tar but not unzip. Fixed build dependency → image layer (build-time-vs-runtime.md).
 RUN apt-get update \
- && apt-get install -y --no-install-recommends unzip \
+ && apt-get install -y --no-install-recommends unzip jq \
  && rm -rf /var/lib/apt/lists/*
 
 ARG STEAMCMD_DIR=/opt/steamcmd

@@ -147,3 +147,38 @@ findings, decision drains, override rationales.
 - pdb retention is now ENABLE_ASAAPI-gated, not unconditional-shed. WHY: AsaApi hard-requires ArkAscendedServer.pdb (offset-cache key); the M1 disk optimization was incompatible with the modded stack. The ~2.0 GB pdb is the cost of a functioning modded server — named tradeoff, not duct tape.
 - Xvfb is gated to the loader branch (not always-on). WHY: keeps ENABLE_ASAAPI=0 byte-for-byte M1 (AC3 rollback guarantee).
 - Dockerfile `unzip` fix made in Phase 4 rather than re-opening Phase 2. WHY: it's a Phase-2 defect but it blocks the Phase-4 gate; fixing at the point of discovery (no-duct-tape) and documenting as a scope deviation is correct. Phase 2's static "coordinator probe" that claimed unzip worked was run on a host with unzip, not in the image build — a lesson for /learn.
+
+## Phase 5 — execution notes (2026-06-20)
+
+**ASA API Utils mod ID confirmed**: `955333` — discovered in Phase 4 boot (ArkShop optional-mod warning). Recorded here per plan Step 3 requirement.
+
+**Distribution decisions:**
+- Plugin-config host home = `./plugins-config/` (separate from `./config/` which holds INI files). WHY: separate concerns (engine config vs plugin config), cleaner operator mental model. Pattern mirrors `./config` → WindowsServer symlink.
+- `jq` added to Dockerfile apt layer for safe JSON mutation. WHY: shell sed on JSON is fragile (special chars in passwords, nested structure); jq's `--arg` passes values as plain strings without shell interpolation risk. Alternative (Python `json.load`) would work but jq is the idiomatic tool and more legible.
+- ARKSHOP_DB_PASS gitignore: `plugins-config/**` added to `.gitignore` (! except `.gitkeep`). WHY: `inject_plugin_db_config()` writes the live password into `./plugins-config/ArkShop/config.json` at runtime on the host bind; without the gitignore the operator could accidentally commit the injected creds.
+- ARKSHOP_DB_* fallback chain uses `${VAR:-${MARIADB_VAR:-default}}` (not `:=` pattern used by other vars). WHY: compose always passes env vars as set-but-empty when the .env file omits ARKSHOP_DB_* overrides; both `:-` and `:=` handle empty strings the same in bash, but the direct assignment form makes the two-level fallback more legible (no `: "..."` quoting needed with nested expansion).
+- `deploy_plugins()` stash-restore is now a warm-boot no-op for symlinked plugins (stashes from host-bind, restores into real dir, then setup_plugin_configs() rm+symlinks over it). Host-bind file is never corrupted. Left as-is (Phase 2 code, not in Phase 5 scope); the redundancy is harmless.
+
+**Static-evidence ceiling:** AC1 (ArkApi.log clean), AC3 (points persist to DB), and the edit-on-host half of AC4 require a live dell boot. `phase5-runtime-evidence.md` scaffolded with exact verification commands per plan instructions. ACs 2/5/6 are code-complete + statically verifiable.
+
+## Phase 5 — coordinator probes (pre-gate, 3.c.1)
+- 2026-06-21 — coordinator probe (pre-gate): suspected setup_plugin_configs() might run before deploy_plugins(), which would make its image-default seed read a non-existent config.json. Command: `grep -nE 'install_or_update|deploy_plugins|setup_plugin_configs|inject_plugin_db_config' entrypoint.sh` (main() body). Result: REFUTED — order is install_or_update(398) → deploy_plugins(399) → install_vcredist(400) → [ENABLE_ASAAPI=1: ensure_modded_pdb(402) → setup_plugin_configs(403) → inject_plugin_db_config(404)]. Seed source exists. Routing: proceeding to full fan-out.
+- 2026-06-21 — coordinator probe (pre-gate): suspected warm-boot deploy_plugins() `rm -rf ArkApi` could destroy the host plugin config created by a prior boot's symlink. Command: traced via the same main() grep + entrypoint.sh:284-287 (rm_rf removes the symlink-as-link; host target lives at /home/container/plugins-config, outside ArkApi/). Result: REFUTED — `rm -rf` on a dir containing a symlink removes the link, not the symlinked target's contents; host config survives; setup re-symlinks each boot. Routing: proceeding to full fan-out.
+
+## Phase 5 — round 1 gate verdicts + fix round (2026-06-21)
+
+**Gate (5 reviewers + 7 judges):** code-reviewer PASS (concerns), design-compliance PASS, rules-compliance BLOCK (jq DRY dup), plan-adherence BLOCK (undocumented `--default-authentication-plugin` in mariadb service), acceptance BLOCK (runtime ACs pending dell boot — NOT code defects), judge#1 BLOCK (jq→python3), judge#6 BLOCK (port tonumber `set -e` swallow), judges #2/#3/#4/#5/#7 PASS.
+
+**Judge #1 (jq→python3) — OVERRIDDEN to PASS (coordinator, verification-grounded).** Judge argued python3 (cited from phase5-runtime-evidence.md) makes the jq Dockerfile dep gratuitous. Premise UNVERIFIED — could not confirm python3 in `parkervcp/steamcmd:proton` from WSL; the evidence-file python3 commands are unrun scaffold. jq is plan-sanctioned ("placeholder or jq approach"), design-compliance-approved as a build-time dep (3-question test), and judge#6 confirmed `--arg` defeats credential injection. Patrick chose KEEP JQ. Switching to an unverified python3 to save one apt package risks breaking a known-good path. Override logged per `no-duct-tape`/Rule-11 (named rationale, not priority deflection).
+
+**Auth-plugin removal — EMPIRICALLY GROUNDED (not just "undocumented").** The `command: --default-authentication-plugin=mysql_native_password` on the mariadb service was added by a prior Sonnet chat (for DataGrip access), NOT the Phase 5 executor. Probed `mariadb:11.4` directly:
+- `docker run mariadb:11.4 --default-authentication-plugin=… --verbose --help` → `[Warning] 'default-authentication-plugin' is MySQL 5.6 / 5.7 compatible option. To be implemented in later versions.` → **the option is parsed-but-ignored (no-op).**
+- Fresh `mariadb:11.4` boot with the compose's exact `MARIADB_USER=arkshop` setup → `SELECT User,Host,plugin FROM mysql.user`: **arkshop@% = mysql_native_password**, root@% = mysql_native_password; only mysql_native_password plugin ACTIVE (no sha256/caching_sha2 loaded). arkshop connects over TCP (`CURRENT_USER()=arkshop@%`).
+→ MariaDB 11.4 already defaults to mysql_native_password; the directive's comment ("defaults to caching_sha2_password") is false; the line does nothing. REMOVED it (speculative no-op per verification.md). De-risks ArkShop auth at the dell boot (AC1/AC3). Patrick's DataGrip `sha256_password` error therefore = a TAINTED dell ark-db volume (initialized by a MySQL image at some point), not MariaDB-11.4 default behavior — separate operator fix (nuke the pre-launch ark-db volume OR ALTER USER; use the MariaDB driver in DataGrip).
+
+**Fix round (coordinator inline — all fixes fully-specified + mechanical):**
+1. rules DRY + judge#6 → extracted `_inject_mysql_block <cfg>` helper (entrypoint.sh:294); both ArkShop + Permissions call it. Helper ends the jq pipe with `|| { rm -f tmp; …; exit 1; }` so a jq failure aborts (closes the `set -e` `&&`-list swallow). Added a numeric `ARKSHOP_DB_PORT` guard in the fail-fast.
+2. plan-adherence → removed the no-op auth-plugin line + false comment from docker-compose.yml.
+3. code-reviewer C1 → dropped the dead `MARIADB_HOST`/`MARIADB_PORT` fallback tier (never defined anywhere) → HOST/PORT default to literals; fixed the misleading FATAL message.
+4. code-reviewer C2 → comment corrected: password reaches jq via a `--arg` command-line argument (argv), not "env substitution".
+`bash -n` clean; `_inject_mysql_block` defined once + called twice; git grep confirms zero remaining auth-plugin refs.

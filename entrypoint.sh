@@ -15,6 +15,16 @@ set -euo pipefail
 : "${ARK_ADMIN_PASSWORD:=changeme}"
 : "${SERVER_PASSWORD:=}"
 : "${MODS:=}"                          # comma-separated CurseForge mod IDs, e.g. 928988
+# ArkShop DB connection. NAME/USER/PASS fall back to their MARIADB_* peers (the same vars the
+# mariadb service is created from), so the common compose setup works with no ARKSHOP_DB_*
+# overrides. HOST/PORT have no MARIADB_* peer — the DB is always reached at the internal compose
+# service `mariadb:3306` — so they default to literals; override ARKSHOP_DB_HOST/PORT only for an
+# external DB. Only used when ENABLE_ASAAPI=1; ignored on the vanilla (ENABLE_ASAAPI=0) path.
+ARKSHOP_DB_HOST="${ARKSHOP_DB_HOST:-mariadb}"
+ARKSHOP_DB_PORT="${ARKSHOP_DB_PORT:-3306}"
+ARKSHOP_DB_NAME="${ARKSHOP_DB_NAME:-${MARIADB_DATABASE:-arkshop}}"
+ARKSHOP_DB_USER="${ARKSHOP_DB_USER:-${MARIADB_USER:-arkshop}}"
+ARKSHOP_DB_PASS="${ARKSHOP_DB_PASS:-${MARIADB_PASSWORD:-}}"
 : "${UPDATE_ON_BOOT:=0}"              # 1 = check for an ASA update this boot (slower)
 : "${SAVE_ON_STOP:=1}"               # 1 = RCON SaveWorld on stop; 0 = instant kill (test loops)
 : "${ENABLE_BATTLEYE:=0}"            # 1 = BattlEye anti-cheat ON (prod PvP); 0 = off (testing)
@@ -244,6 +254,128 @@ ensure_modded_pdb() {
   fi
 }
 
+setup_plugin_configs() {
+  # Bind plugin config dirs onto the host via ./plugins-config/<PluginName>/ so operators can
+  # edit configs on the host and pick up changes on restart. Each plugin dir is symlinked into
+  # ArkApi/Plugins/<name>/ the same way ./config is symlinked into the engine's WindowsServer path.
+  #
+  # Seed-if-absent: if the host dir has no config.json, copy the image default from the deployed
+  # plugin dir before symlinking. Never overwrite a file the operator has already edited.
+  # The symlink replaces the deployed plugin dir, so inject_plugin_db_config() writes into the
+  # host-bound path and the change survives a deploy_plugins() clean-replace next boot.
+  #
+  # Time: O(p) where p = plugin count (2 in practice — ArkShop + Permissions)  Space: O(1)
+  local win64="${ARK_DIR}/ShooterGame/Binaries/Win64"
+  local host_root="/home/container/plugins-config"
+  mkdir -p "${host_root}"
+
+  local plugin
+  for plugin in ArkShop Permissions; do
+    local plugin_dir="${win64}/ArkApi/Plugins/${plugin}"
+    local host_dir="${host_root}/${plugin}"
+    mkdir -p "${host_dir}"
+
+    # Seed the host dir from the deployed image default if config.json is absent.
+    # deploy_plugins() has already run, so the image-default config is at plugin_dir/config.json.
+    if [[ ! -f "${host_dir}/config.json" && -f "${plugin_dir}/config.json" ]]; then
+      cp "${plugin_dir}/config.json" "${host_dir}/config.json"
+      echo "[entrypoint] Seeded ${plugin} config.json from image default."
+    fi
+
+    # Symlink the deployed plugin dir → host bind. Remove the dir first (deploy_plugins left a
+    # real dir there); -sfn updates an existing symlink safely.
+    rm -rf "${plugin_dir}"
+    ln -sfn "${host_dir}" "${plugin_dir}"
+  done
+
+  echo "[entrypoint] Plugin config dirs bound: $(ls "${host_root}" 2>/dev/null | tr '\n' ' ')"
+}
+
+_inject_mysql_block() {
+  # Write the DB connection block into one plugin's config.json via jq.
+  # jq --arg passes each value as a plain string (not evaluated as a jq filter expression), so
+  # special characters in creds are safe. MysqlPort coerces via tonumber so the JSON type stays
+  # integer, matching ArkShop's expected schema.
+  #
+  # The `|| { … exit 1; }` is load-bearing: in `jq … > tmp && mv tmp cfg`, jq sits in a non-final
+  # position of an && list, where `set -e` does NOT abort on its failure. Without the explicit
+  # exit, a jq failure (e.g. a bad value reaching tonumber) is swallowed and the caller logs a
+  # false success against an unwritten config. The handler is the list's final element, so its
+  # exit fires unconditionally.
+  #
+  # Time: O(1)  Space: O(1)   Side effect: rewrites ${cfg} in place (atomic via mktemp + mv).
+  local cfg="$1"
+  local tmp
+  tmp="$(mktemp)"
+  jq --arg host "${ARKSHOP_DB_HOST}" \
+     --arg user "${ARKSHOP_DB_USER}" \
+     --arg pass "${ARKSHOP_DB_PASS}" \
+     --arg db   "${ARKSHOP_DB_NAME}" \
+     --arg port "${ARKSHOP_DB_PORT}" \
+     '.Mysql.UseMysql  = true
+    | .Mysql.MysqlHost = $host
+    | .Mysql.MysqlUser = $user
+    | .Mysql.MysqlPass = $pass
+    | .Mysql.MysqlDB   = $db
+    | .Mysql.MysqlPort = ($port | tonumber)' \
+     "${cfg}" > "${tmp}" || { rm -f "${tmp}"; echo "[entrypoint] FATAL: jq failed to write DB config into ${cfg}." >&2; exit 1; }
+  mv "${tmp}" "${cfg}"
+}
+
+inject_plugin_db_config() {
+  # Inject DB connection credentials into the ArkShop (and Permissions) config.json.
+  # Credentials come from env vars (ARKSHOP_DB_*), never from a literal in this script. The
+  # password is passed to jq as a --arg command-line argument (transiently visible in this
+  # container's own /proc/<pid>/cmdline during the jq exec — acceptable in a single-user game
+  # container) and is never echoed to stdout or the logs.
+  #
+  # Fail-fast on missing/empty creds: a partially-configured ArkShop connects to the wrong host
+  # or fails silently, which is harder to diagnose than an explicit boot-time fatal.
+  #
+  # The config.json was seeded from the image default by setup_plugin_configs() and is now at the
+  # host-bound path via the symlink.
+  #
+  # Time: O(1)  Space: O(1)
+  # Side effects: mutates ArkShop/config.json (and Permissions/config.json if it has a Mysql block)
+  #               on the plugins-config host bind each boot. The write is idempotent — re-running
+  #               produces the same file content (creds from env are constant within a boot).
+  local win64="${ARK_DIR}/ShooterGame/Binaries/Win64"
+
+  # Fail fast on missing/empty creds — no half-configured shop.
+  if [[ -z "${ARKSHOP_DB_HOST}" || -z "${ARKSHOP_DB_USER}" || -z "${ARKSHOP_DB_PASS}" || -z "${ARKSHOP_DB_NAME}" ]]; then
+    echo "[entrypoint] FATAL: ArkShop DB credentials are missing or empty." >&2
+    echo "  Required: ARKSHOP_DB_HOST, ARKSHOP_DB_USER, ARKSHOP_DB_PASS, ARKSHOP_DB_NAME" >&2
+    echo "  (HOST defaults to 'mariadb', PORT to 3306; NAME/USER/PASS default to" >&2
+    echo "   MARIADB_DATABASE/MARIADB_USER/MARIADB_PASSWORD — check your .env file)" >&2
+    exit 1
+  fi
+  # Port reaches jq's tonumber, which errors on a non-numeric value — validate up front for a
+  # clearer message than a raw jq failure.
+  if ! [[ "${ARKSHOP_DB_PORT}" =~ ^[0-9]+$ ]]; then
+    echo "[entrypoint] FATAL: ARKSHOP_DB_PORT must be numeric, got '${ARKSHOP_DB_PORT}'." >&2
+    exit 1
+  fi
+
+  local arkshop_cfg="${win64}/ArkApi/Plugins/ArkShop/config.json"
+  if [[ ! -f "${arkshop_cfg}" ]]; then
+    echo "[entrypoint] FATAL: ArkShop config.json not found at ${arkshop_cfg}." >&2
+    echo "  setup_plugin_configs() should have seeded it — check that deploy_plugins() completed." >&2
+    exit 1
+  fi
+
+  _inject_mysql_block "${arkshop_cfg}"
+  echo "[entrypoint] ArkShop DB config injected (host=${ARKSHOP_DB_HOST}, db=${ARKSHOP_DB_NAME}, user=${ARKSHOP_DB_USER})."
+  # Password intentionally omitted from the log line above.
+
+  # Permissions plugin: inject the same MySQL block if its config.json has one.
+  # Permissions manages in-game role grants and is an ArkShop dependency — it needs the same DB.
+  local perms_cfg="${win64}/ArkApi/Plugins/Permissions/config.json"
+  if [[ -f "${perms_cfg}" ]] && jq -e 'has("Mysql")' "${perms_cfg}" >/dev/null 2>&1; then
+    _inject_mysql_block "${perms_cfg}"
+    echo "[entrypoint] Permissions DB config injected."
+  fi
+}
+
 main() {
   # Time: O(1) compute; boot is I/O-dominated (steamcmd update + pdb restore up to 3 calls,
   #       Proton game load, Xvfb socket poll bounded to 50 × 0.1s)  Space: O(1)
@@ -275,6 +407,17 @@ main() {
   install_vcredist
   if [[ "${ENABLE_ASAAPI}" == "1" ]]; then
     ensure_modded_pdb
+    setup_plugin_configs
+    inject_plugin_db_config
+    # ASA API Utils (CurseForge mod 955333) is required by ArkShop — without it AsaApi logs
+    # "Singleton not found" and ArkShop's economy hooks don't fire. Append the mod ID to MODS
+    # automatically so operators don't need to remember it; de-duplicate to handle the case
+    # where the operator already listed it in their .env MODS value.
+    if [[ -z "${MODS}" ]]; then
+      MODS="955333"
+    elif [[ ",${MODS}," != *",955333,"* ]]; then
+      MODS="${MODS},955333"
+    fi
   fi
   : > "$LOG_FILE"
 
