@@ -108,6 +108,7 @@ deploy_plugins() {
   # Dockerfile bake. The entrypoint now follows whatever the image ships; the two can't drift.
   local root_artifacts=() entry base
   for entry in "${src}"/*; do
+    [[ -e "${entry}" ]] || continue   # guard the degenerate empty-dir glob (no nullglob): skip a literal "*"
     base="$(basename "${entry}")"
     [[ "${base}" == "ArkApi" || "${base}" == "config.json" ]] && continue
     root_artifacts+=("${base}")
