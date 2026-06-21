@@ -223,3 +223,8 @@ Reboot self-heals the volume: `deploy_plugins()` clean-replace restores fresh pl
 **Follow-on (Patrick request, after Phase 5 closes):** add an ArkShop UI mod to MODS so he can play on dell. Candidates: official ArkShopUI Ascended (ark-server-api resource 13) or MX-E Ark Shop UI (CurseForge mod 942249, needs ArkShop 1.00+ — we run V1.4). One-line MODS change; confirm which + verify ID when adding.
 
 **Still TODO before status:done:** confirm restart-survival test PASS → fill phase5-runtime-evidence.md with receipts + commit → re-gate the 2 runtime fixes (code-reviewer + judge#5 own setup_plugin_configs; rules/plan-adherence) → re-run acceptance with real receipts → end-of-plan cumulative sweep → flip status:done. Then add the UI mod.
+
+## M2 end-of-plan cumulative sweep (2026-06-21)
+- Phase 5 done + committed (03264a5); all 6 ACs MET with live dell receipts; 2 runtime bugs caught+fixed by the dell gate (042bef4 symlink-DLL, 96e3813 Xvfb-restart).
+- UI mod added: official ArkShopUI Ascended = MX-E Ark Shop UI (CurseForge 942249); MODS=942249 in dell .env → launch `-mods=942249,955333`; server up. (Operator config, not committed plan work.)
+- Cumulative sweep: BASE=873509a (parent of phase 1) .. HEAD. Judge-count gate: D_cumulative=15 (>4) → CONSOLIDATED (cumulative site default; each deviation already phase-judged; cross-phase interaction is the consolidated judge's job). 5 Opus reviewers + 1 consolidated Opus judge.

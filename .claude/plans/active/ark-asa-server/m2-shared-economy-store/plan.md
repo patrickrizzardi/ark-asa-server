@@ -2,7 +2,7 @@
 slug: m2-shared-economy-store
 type: execution
 owner: Patrick
-status: active
+status: done
 roadmap: ark-asa-server
 milestone: m2-shared-economy-store
 depends_on: [m1-lean-image]
@@ -17,7 +17,7 @@ files:
   - docs/**
   - README.md
 created: 2026-06-20
-last_updated: 2026-06-20
+last_updated: 2026-06-21
 ---
 
 # Plan: M2 — Shared Economy Store (AsaApi + ArkShop + MariaDB)

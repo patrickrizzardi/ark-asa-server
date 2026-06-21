@@ -14,7 +14,7 @@
 
 ### Active Workstreams
 - [ark-asa-server] initiative
-  - m2-shared-economy-store (Patrick) — 9 files touched — 37/92 done — roadmap: ark-asa-server — 2026-06-20
+  - m2-shared-economy-store (Patrick) — 9 files touched — 72/102 done — roadmap: ark-asa-server — 2026-06-20
 <!-- RADAR-END -->
 
 ---
@@ -50,6 +50,10 @@ confirmed fast-boot (skips Steam).
 
 ## Active Decisions (append with WHY)
 
+- [2026-06-21] **M2 shared-economy store — DONE pending final flip; modded ArkShop economy verified LIVE on dell**: `ENABLE_ASAAPI=1` launches AsaApiLoader → AsaApi 1.21 + ArkShop V1.4 + Permissions V1.1 load; ArkShop connects to MariaDB (`mariadb:11.4`, `mariadb:3306` service name, `mysql_native_password`) and creates its schema; RCON `SetPoints <eosid> <amount>` persists a row (verified Points 0→250 + in-game); edit-on-host plugin config survives restart; `ENABLE_ASAAPI=0` = byte-for-byte M1 vanilla rollback. All 6 Phase-5 ACs + 22/22 cumulative ACs MET; full cumulative sweep all-green. Plugin config = host bind `./plugins-config/<Plugin>/config.json` (entrypoint symlinks the FILE only, re-injects the `.Mysql` block from `.env` each boot). ASA API Utils mod **955333** auto-appended to `-mods` when modded.
+- [2026-06-21] **Two runtime bugs the dell gate caught (not the static reviewers)**: (1) `setup_plugin_configs` symlinked the whole plugin dir → deleted `ArkShop.dll` ("Plugin does not exist"); fix = symlink only `config.json`. (2) Modded server crash-looped on `docker compose restart` — stale `/tmp` Xvfb lock+socket raced `kill -0` into a false-pass → loader launched against a dead display; fix = `rm -f /tmp/.X0-lock /tmp/.X11-unix/X0` before Xvfb. Lesson: the config-loop `restart` path MUST be runtime-tested, not just `up -d`.
+- [2026-06-21] **deploy_plugins derives its root-artifact set from `/opt/asaapi/*`** (not hand-listed rm+cp): a version bump that adds/drops a root DLL is picked up automatically; entrypoint can't drift from the Dockerfile bake. (Closed M2 cumulative code-review concern #1.)
+- [2026-06-21] **dell operational facts**: DataGrip → ark-asa DB via gitignored `docker-compose.override.yml` publishing `mariadb` on host port **3307** (3306 is taken by an unrelated `mifi-mysql` MySQL-8.4 container — THAT was the source of the `sha256_password` DataGrip error, not the ark-asa DB). Use the **MariaDB** driver. ArkShop UI = MX-E Ark Shop UI / "official ArkShopUI Ascended" = CurseForge mod **942249**; `MODS=942249` in dell `.env` → `-mods=942249,955333`. Committed compose stays internal-only (no host port) for prod.
 - [2026-06-20] **Image = immutable stack only; game installs at runtime onto a volume**: per `.claude/rules/build-time-vs-runtime.md`. Baking the ~30GB game into the image would force a rebuild every ASA patch. Image holds SteamCMD/GE-Proton/rcon/tini; game + Proton prefix live on the `ark-game` volume, installed by the entrypoint (skip-validate after first install = fast boot).
 - [2026-06-20] **Prod/test env profiles; BattlEye is a toggle**: `.env.test` = fast boot + instant kill + anti-cheat OFF; `.env.prod` = update-on-boot + SaveWorld + BattlEye ON. Splitting them caught that the entrypoint had `-NoBattlEye` hardcoded — prod would otherwise have shipped a cheatable PvP server. (This is the env note Patrick asked to record.)
 - [2026-06-20] **M1 single-server: no shared volumes yet**: sharing only earns its keep with a 2nd consumer. `steam` / cluster / MySQL / shared-config sharing arrives additively in M2/M3 (per-server game volume + shared steam + shared cluster + MySQL) — no teardown. Avoids speculative single-consumer "shared" volumes.
