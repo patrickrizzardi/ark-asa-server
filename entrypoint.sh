@@ -458,6 +458,13 @@ main() {
     # a virtual framebuffer. Vanilla (ENABLE_ASAAPI=0) skips this — its launch stays byte-for-byte M1.
     # Geometry 1024x768x24 is an arbitrary conventional minimum: the loader only needs a valid display
     # to create its init window; ASA/Wine render nothing (headless), so the actual resolution is ignored.
+    #
+    # `docker compose restart` reuses the container, so /tmp survives — a prior boot's X lock +
+    # socket linger after Xvfb is gone. Xvfb then refuses display :0 ("server already active") and
+    # exits, but the stale socket makes the readiness loop below break instantly and races kill -0
+    # into a false pass, launching the loader against a dead display → instant crash / restart loop.
+    # On a restart the old Xvfb is already gone (fresh PID namespace), so clearing these is safe.
+    rm -f /tmp/.X0-lock /tmp/.X11-unix/X0 2>/dev/null || true
     Xvfb :0 -screen 0 1024x768x24 -nolisten tcp >/dev/null 2>&1 &
     xvfb_pid=$!
     export DISPLAY=:0
