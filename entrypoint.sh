@@ -52,6 +52,81 @@ install_or_update() {
   fi
 }
 
+deploy_plugins() {
+  # Sync the image-baked AsaApi + plugin binaries onto the volume's Win64 tree.
+  # The game installs at runtime (install_or_update above), so we can't COPY during the
+  # build — the image is the version source-of-truth; this sync makes it so on the volume.
+  #
+  # Clean-replace strategy: stash operator-edited config.json files from ArkApi/Plugins/*/,
+  # remove the AsaApi-owned paths (so stale binaries from a prior version can't linger),
+  # copy fresh from the image, then restore the saved configs. Paths not owned by AsaApi
+  # (everything else in Win64) are never touched. Config files that didn't exist before
+  # are seeded from the image defaults (seed-if-absent).
+  #
+  # Time: O(n)  Space: O(n) where n = plugin count (2-5 in practice)
+  local win64="${ARK_DIR}/ShooterGame/Binaries/Win64"
+  local src="/opt/asaapi"
+  local cfg_stash
+  cfg_stash="$(mktemp -d)"
+
+  echo "[entrypoint] Deploying AsaApi + plugins from image to volume…"
+
+  # Stash any operator-edited plugin config.json files before we wipe the tree.
+  # We only stash files that already exist on the volume — new plugins get the image default.
+  if [[ -d "${win64}/ArkApi/Plugins" ]]; then
+    for cfg in "${win64}/ArkApi/Plugins"/*/config.json; do
+      [[ -f "${cfg}" ]] || continue
+      local plugin_name
+      plugin_name="$(basename "$(dirname "${cfg}")")"
+      cp "${cfg}" "${cfg_stash}/${plugin_name}_config.json"
+    done
+  fi
+
+  # Remove AsaApi-owned paths. ArkApi/ holds the framework DLL + all plugins. The
+  # root-level DLLs and loader are listed explicitly to avoid touching game-owned files.
+  rm -rf "${win64}/ArkApi" \
+         "${win64}/AsaApiLoader.exe" \
+         "${win64}/AsaApiLoader.pdb" \
+         "${win64}/msdia140.dll" \
+         "${win64}/libcrypto-3-x64.dll" \
+         "${win64}/libssl-3-x64.dll" \
+         "${win64}/msvcp140.dll"
+
+  # Copy the full ArkApi tree (framework DLL + all plugin dirs with their default configs).
+  cp -r "${src}/ArkApi" "${win64}/"
+
+  # Copy root-level binaries and runtime DLLs.
+  cp "${src}/AsaApiLoader.exe" \
+     "${src}/msdia140.dll" \
+     "${src}/libcrypto-3-x64.dll" \
+     "${src}/libssl-3-x64.dll" \
+     "${src}/msvcp140.dll" \
+     "${win64}/"
+
+  # Restore stashed operator configs, overwriting the image defaults.
+  # A plugin dir that existed before gets its operator config back; a new plugin dir
+  # (first boot or new plugin added) keeps the image default (seed-if-absent satisfied).
+  for stashed in "${cfg_stash}"/*_config.json; do
+    [[ -f "${stashed}" ]] || continue
+    local plugin_name
+    plugin_name="${stashed##*/}"
+    plugin_name="${plugin_name%_config.json}"
+    local target="${win64}/ArkApi/Plugins/${plugin_name}/config.json"
+    if [[ -d "${win64}/ArkApi/Plugins/${plugin_name}" ]]; then
+      cp "${stashed}" "${target}"
+    fi
+  done
+  rm -rf "${cfg_stash}"
+
+  # Seed the AsaApi framework config.json only if absent — never overwrite, so operator/injector edits survive restarts.
+  local asaapi_cfg="${win64}/config.json"
+  if [[ ! -f "${asaapi_cfg}" ]]; then
+    cp "${src}/config.json" "${asaapi_cfg}"
+  fi
+
+  echo "[entrypoint] AsaApi deploy done — $(ls "${win64}/ArkApi/Plugins/" 2>/dev/null | tr '\n' ' ')"
+}
+
 main() {
   export HOME="${HOME:-/home/container}"
   export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/xdg-$(id -u)}"
@@ -77,6 +152,7 @@ main() {
   ln -sf "${STEAMCMD_DIR}/linux32/steamclient.so" "${HOME}/.steam/sdk32/steamclient.so"
 
   install_or_update
+  deploy_plugins
   : > "$LOG_FILE"
 
   echo "[entrypoint] vm.max_map_count = $(cat /proc/sys/vm/max_map_count) (ASA needs >= 262144)"

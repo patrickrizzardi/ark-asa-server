@@ -116,6 +116,7 @@ rule already governs; resolved by the rule's own 3-question test, since both tar
 | 9 | MariaDB pinned tag = `mariadb:11.4` (LTS) | needs-Patrick | Proposed; low-stakes — Patrick to confirm/override at approval |
 | 10 | AsaApi pinned = v1.21; ArkShop/Permissions pinned to current stable at execution | needs-Patrick | AsaApi 1.21 fixed (research); plugin versions resolved at Phase-2 execution and recorded |
 | 11 | MariaDB is internal to the compose network (no host port) — server connects via service name `mariadb:3306` | verified-design | Reduces attack surface; ArkShop `MysqlHost=mariadb` |
+| 12 | Plugin sync uses clean-replace (stash configs → rm AsaApi-owned paths → cp fresh → restore configs), NOT rsync --delete | verified-design | rsync not guaranteed in parkervcp/steamcmd:proton base; under `set -euo pipefail` a missing rsync aborts with a confusing error; POSIX cp/rm always present (Phase-2 execution) |
 
 ## Risks
 
@@ -320,16 +321,16 @@ expects them before we can flip the launcher (Phase 4) or configure ArkShop (Pha
    (config handled in Phase 5 — deploy the default config only on first boot if absent).
 4. Keep launch as `ArkAscendedServer.exe` (unchanged this phase).
 **Acceptance criteria**:
-- [ ] Image contains `/opt/asaapi/AsaApiLoader.exe` + `/opt/asaapi/ArkApi/Plugins/{ArkShop,Permissions}/` at pinned versions (verify in the built image)
-  - Evidence: (filled at phase completion)
-- [ ] After a boot, the volume's `…/Binaries/Win64/` contains `AsaApiLoader.exe` + `ArkApi/Plugins/{ArkShop,Permissions}/` with each plugin's DLL name matching its folder
-  - Evidence: (filled at phase completion)
-- [ ] The deploy step is idempotent — a second boot re-syncs without error and without duplicating/clobbering game files
-  - Evidence: (filled at phase completion)
-- [ ] A version bump (changed `ASAAPI_VERSION`/plugin `ARG`) cleanly REPLACES the deployed tree — no stale files from the prior version remain in `ArkApi/`/loader paths
-  - Evidence: (filled at phase completion)
-- [ ] Pinned versions are recorded (Dockerfile `ARG`s + plan notes); no auto-latest fetch
-  - Evidence: (filled at phase completion)
+- [x] Image contains `/opt/asaapi/AsaApiLoader.exe` + `/opt/asaapi/ArkApi/Plugins/{ArkShop,Permissions}/` at pinned versions (verify in the built image)
+  - Evidence: `Dockerfile:32-54` — `ARG ASAAPI_VERSION=1.21`/`ARKSHOP_VERSION=1.4`; `curl …asa-server-api.31/download?version=${ASAAPI_VERSION}` → `cp -r ArkApi /opt/asaapi/` (carries `Plugins/Permissions/Permissions.dll`) + explicit root-file cp; `curl …asa-arkshop.34/download?version=${ARKSHOP_VERSION}` → `cp -r ArkShop/. /opt/asaapi/ArkApi/Plugins/ArkShop/`; `find /opt/asaapi -name '*.pdb' -delete` then `chown`. Coordinator pre-gate probe (notes.md §coordinator probes): live `curl`+`unzip -l` confirmed HTTP 200 / PK-ZIP magic / all six root files present / `ArkApi/Plugins/Permissions/Permissions.dll` + `ArkShop/ArkShop.dll` (folder==DLL-name). Static-evidence ceiling — real `docker build` deferred to Phase 4 (dell). acceptance-verifier round 2: MET.
+- [x] After a boot, the volume's `…/Binaries/Win64/` contains `AsaApiLoader.exe` + `ArkApi/Plugins/{ArkShop,Permissions}/` with each plugin's DLL name matching its folder
+  - Evidence: `entrypoint.sh:55-126` `deploy_plugins()` — `cp -r "${src}/ArkApi" "${win64}/"` propagates the full `Plugins/` tree (Permissions + ArkShop with their DLLs) + explicit `cp` of `AsaApiLoader.exe`. Folder==DLL-name preserved verbatim by `cp -r` (probe-confirmed in the source ZIPs). Runtime boot receipt deferred to Phase 4 (dell). acceptance-verifier round 2: MET.
+- [x] The deploy step is idempotent — a second boot re-syncs without error and without duplicating/clobbering game files
+  - Evidence: `entrypoint.sh:85-94` — stash plugin configs → `rm -rf` AsaApi-owned paths (no-op on absent paths under `set -euo pipefail`) → `cp -r` fresh → restore configs. Rm list scoped to AsaApi-owned paths only; game files outside it untouched (negative-scope guarantee). deviation-judge #1 (round 2) traced first-boot-absent / warm-boot / zero-plugin cases: no break. acceptance-verifier round 2: MET.
+- [x] A version bump (changed `ASAAPI_VERSION`/plugin `ARG`) cleanly REPLACES the deployed tree — no stale files from the prior version remain in `ArkApi/`/loader paths
+  - Evidence: `entrypoint.sh:85` `rm -rf "${win64}/ArkApi"` wipes the whole subtree before `cp -r` fresh → no file from a prior `ArkApi/` can survive; root loader/DLLs individually in the rm list; build-time `.pdb` strip means no stale debug blobs either. (Judge-noted future-version undershoot: a root-level DLL *added then dropped* across versions isn't on the static rm list — flagged for a later hardening, outside Phase-2 v1.21-pinned scope.) acceptance-verifier round 2: MET.
+- [x] Pinned versions are recorded (Dockerfile `ARG`s + plan notes); no auto-latest fetch
+  - Evidence: `Dockerfile:32-34` — three `ARG`s pinned; both download URLs use `?version=${ARG}` (not `latest`). `PERMISSIONS_VERSION` carries an explicit doc-pin comment (drives no download — Permissions ships bundled in the AsaApi zip). notes.md §distribution-channel records the resolved versions + anti-latest rationale. acceptance-verifier round 2: MET.
 **Quality gate**:
 - [ ] `/opt/asaapi` owned by `container` (non-root can read at runtime)
 - [ ] Deploy runs after game install, before launch; safe to re-run
@@ -338,11 +339,14 @@ expects them before we can flip the launcher (Phase 4) or configure ArkShop (Pha
 **Verification**: build image → `docker run --rm ark-asa:latest ls /opt/asaapi` shows the tree; boot → `docker compose exec the-island ls …/Binaries/Win64/ArkApi/Plugins` shows ArkShop + Permissions.
 
 **Phase Review Gates**:
-- [ ] code-reviewer: <verdict + ISO timestamp>
-- [ ] rules-compliance-reviewer: <verdict + ISO timestamp>
-- [ ] plan-adherence-verifier: <verdict + ISO timestamp>
-- [ ] acceptance-verifier: <verdict + ISO timestamp>
-- [ ] design-compliance-reviewer: <verdict + ISO timestamp>
+- [x] code-reviewer: PASS 2026-06-20T22:30 (round 3 final; R1 BLOCK on .pdb bloat + dead PERMISSIONS_VERSION pin resolved R2; R3 polish comment-only, no regression)
+- [x] rules-compliance-reviewer: PASS 2026-06-20T22:30 (round 3 final; R1 BLOCK on phase-ref comment + unexplained ARG resolved R2; R2 Big-O concern resolved R3 — Hard Rule 7 satisfied)
+- [x] plan-adherence-verifier: PASS 2026-06-20T22:30 (round 3 final; Scope-escape CLEAR, 4/4 Steps MET)
+- [x] acceptance-verifier: PASS 2026-06-20T22:30 (round 3 final; 5/5 ACs MET at static-evidence ceiling — runtime boot receipts deferred to Phase 4/dell)
+- [x] design-compliance-reviewer: PASS 2026-06-20T22:30 (round 2 PASS, carried R3 — no [locked] globs under absent registry, comment-only delta; loud-fallback, registry created in Phase 3; .pdb strip-at-build honors 3-question split)
+- [x] deviation-judge #1 (scope: clean-replace decision re-homed to plan.md Decision Ledger row #12): PASS 2026-06-20T22:30 (round 2 PASS, carried R3 — plan.md/notes.md untouched; R1 decision-in-churn BLOCK resolved)
+- [x] deviation-judge #2 (approach: stash-rm-cp clean-replace, not rsync --delete): PASS 2026-06-20T22:30 (round 3 final; sound; dual-static-list coupling fails loud, deferred to Phase 5)
+- [x] deviation-judge #3 (approach: versioned URLs + PERMISSIONS_VERSION doc-pin): PASS 2026-06-20T22:30 (round 3 final; R1 dead-pin BLOCK resolved via doc-pin comment R2; R2 stale-literal residual de-hardcoded R3)
 - [ ] Committed: <commit SHA>
 
 ### Phase 3: Install VC++ 2019 redist — in the container, at runtime
