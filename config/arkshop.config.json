@@ -39,39 +39,39 @@
   },
   "Kits": {
     "starter": {
-      "DefaultAmount": 1,
+      "DefaultAmount": 3,
       "Price": 0,
-      "Description": "Free starter kit (claim once) — fast-start gatherers + a flak set",
+      "Description": "Free survival kit — one loadout per claim, 3 claims total (re-claim after a death).",
       "OnlyFromSpawn": false,
       "Items": [
         {
           "Quality": 4,
           "ForceBlueprint": false,
-          "Amount": 3,
+          "Amount": 1,
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Metal/PrimalItemArmor_MetalHelmet.PrimalItemArmor_MetalHelmet'"
         },
         {
           "Quality": 4,
           "ForceBlueprint": false,
-          "Amount": 3,
+          "Amount": 1,
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Metal/PrimalItemArmor_MetalShirt.PrimalItemArmor_MetalShirt'"
         },
         {
           "Quality": 4,
           "ForceBlueprint": false,
-          "Amount": 3,
+          "Amount": 1,
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Metal/PrimalItemArmor_MetalPants.PrimalItemArmor_MetalPants'"
         },
         {
           "Quality": 4,
           "ForceBlueprint": false,
-          "Amount": 3,
+          "Amount": 1,
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Metal/PrimalItemArmor_MetalGloves.PrimalItemArmor_MetalGloves'"
         },
         {
           "Quality": 4,
           "ForceBlueprint": false,
-          "Amount": 3,
+          "Amount": 1,
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Metal/PrimalItemArmor_MetalBoots.PrimalItemArmor_MetalBoots'"
         }
       ],
@@ -83,26 +83,6 @@
         },
         {
           "Level": 150,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'",
-          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_PteroSaddle.PrimalItemArmor_PteroSaddle'"
-        },
-        {
-          "Level": 150,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'",
-          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_PteroSaddle.PrimalItemArmor_PteroSaddle'"
-        },
-        {
-          "Level": 150,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Doedicurus/Doed_Character_BP.Doed_Character_BP'",
-          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_DoedSaddle.PrimalItemArmor_DoedSaddle'"
-        },
-        {
-          "Level": 150,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Doedicurus/Doed_Character_BP.Doed_Character_BP'",
-          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_DoedSaddle.PrimalItemArmor_DoedSaddle'"
-        },
-        {
-          "Level": 150,
           "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Doedicurus/Doed_Character_BP.Doed_Character_BP'",
           "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_DoedSaddle.PrimalItemArmor_DoedSaddle'"
         },
@@ -110,26 +90,6 @@
           "Level": 150,
           "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ankylo/Ankylo_Character_BP.Ankylo_Character_BP'",
           "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_AnkyloSaddle.PrimalItemArmor_AnkyloSaddle'"
-        },
-        {
-          "Level": 150,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ankylo/Ankylo_Character_BP.Ankylo_Character_BP'",
-          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_AnkyloSaddle.PrimalItemArmor_AnkyloSaddle'"
-        },
-        {
-          "Level": 150,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ankylo/Ankylo_Character_BP.Ankylo_Character_BP'",
-          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_AnkyloSaddle.PrimalItemArmor_AnkyloSaddle'"
-        },
-        {
-          "Level": 150,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Beaver/Beaver_Character_BP.Beaver_Character_BP'",
-          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_BeaverSaddle.PrimalItemArmor_BeaverSaddle'"
-        },
-        {
-          "Level": 150,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Beaver/Beaver_Character_BP.Beaver_Character_BP'",
-          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_BeaverSaddle.PrimalItemArmor_BeaverSaddle'"
         },
         {
           "Level": 150,

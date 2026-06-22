@@ -8,7 +8,7 @@ Global cross-workstream items only. Granular per-chat work lives in:
 
 ## Now (active cross-workstream items)
 
-- [ ] {item}
+- [ ] **Shop economy — IN-GAME verify** (deployed + server-verified on dell 2026-06-22, commit 890f659): ArkShop V1.4 loads the generated catalog, server advertising. Patrick to confirm in-game: `/shop` lists catalog, buy a dino (spawns at level), `/buykit starter` claim-once, +250 pts/6min tick. Then: draft boss-tribute kits (`bossKits: []` in `tools/shop-design.ts`, from Beacon) + optional ADR for the ArkShop deploy-from-repo model change. Design SoT: `docs/internal/design/economy/shop.md`. Tweak loop: edit `tools/shop-design.ts` → `cd tools && bun run gen-shop.ts --write` → push → dell pull + restart.
 
 ## Soon (committed, not started)
 

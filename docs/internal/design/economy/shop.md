@@ -85,18 +85,22 @@ No resource caps for now (revisit if a resource turns out to be abused).
 
 ---
 
-## 5. Free starter kit (claim once, all level 150)
+## 5. Free survival kit — claimable 3× (`DefaultAmount: 3`), all dinos level 150
 
-| Item | Qty |
+**One loadout per claim** (not all at once — a single death shouldn't wipe everything):
+
+| Item (per claim) | Qty |
 |---|---|
-| Pteranodon | 3 |
-| Doedicurus | 3 |
-| Ankylosaurus | 3 |
-| Castoroides | 3 |
-| Metal Armor set (Mastercraft) | 3 |
+| Pteranodon | 1 |
+| Doedicurus | 1 |
+| Ankylosaurus | 1 |
+| Castoroides | 1 |
+| Metal Armor set (Mastercraft) | 1 |
 
-Purpose: skip the painful first hour + don't get one-shot on spawn by established PvPers. A level-150
-with no breeding/imprint is **not** endgame.
+**3 chances to survive**: claim → die → re-claim (chance 2) → die → re-claim (chance 3) → then you're
+on your own. Each claim is one rideable loadout (dinos come with saddles). Purpose: skip the painful
+first hour + survive early deaths against established PvPers, without becoming a permanent crutch — a
+level-150 with no breeding/imprint is **not** endgame.
 
 ---
 

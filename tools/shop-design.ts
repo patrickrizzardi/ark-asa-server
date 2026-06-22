@@ -99,17 +99,17 @@ export const MASTERCRAFT_QUALITY = 4; // ArkShop quality index: 0 prim,1 ram,2 a
 export const flakSet = ['Flak Helmet', 'Flak Chestpiece', 'Flak Leggings', 'Flak Gauntlets', 'Flak Boots'];
 export const starterKit = {
   id: 'starter',
-  defaultAmount: 1,
+  defaultAmount: 3, // 3 claims = 3 SURVIVAL CHANCES: re-claim after each death, then you're on your own.
   price: 0,
   onlyFromSpawn: false,
-  description: 'Free starter kit (claim once) — fast-start gatherers + a flak set',
-  armorQty: 3,
-  // dino label → primitive saddle label (so they're rideable); count each.
+  description: 'Free survival kit — one loadout per claim, 3 claims total (re-claim after a death).',
+  armorQty: 1, // one flak set per claim (not all 3 at once → a single death doesn't wipe everything)
+  // dino label → primitive saddle label (so they're rideable); ONE of each per claim.
   dinos: [
-    { label: 'Pteranodon', saddle: 'Pteranodon Saddle', count: 3 },
-    { label: 'Doedicurus', saddle: 'Doedicurus Saddle', count: 3 },
-    { label: 'Ankylosaurus', saddle: 'Ankylosaurus Saddle', count: 3 },
-    { label: 'Castoroides', saddle: 'Castoroides Saddle', count: 3 },
+    { label: 'Pteranodon', saddle: 'Pteranodon Saddle', count: 1 },
+    { label: 'Doedicurus', saddle: 'Doedicurus Saddle', count: 1 },
+    { label: 'Ankylosaurus', saddle: 'Ankylosaurus Saddle', count: 1 },
+    { label: 'Castoroides', saddle: 'Castoroides Saddle', count: 1 },
   ],
 } as const;
 
