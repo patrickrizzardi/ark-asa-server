@@ -117,16 +117,19 @@ export const turretQty: Pull = { min: 1, max: 2 };
 export const resourceScale: Record<Tier, number> = {
   white: 0.1, green: 0.2, blue: 0.35, purple: 0.5, yellow: 0.75, red: 1.0,
 };
-export const resources: { label: string; weights: Record<Tier, number>; maxQty: number }[] = [
-  { label: 'Metal Ingot', weights: w(15, 15, 15, 15, 15, 15), maxQty: 300 },
-  { label: 'Silica Pearls', weights: w(12, 12, 12, 12, 12, 12), maxQty: 200 },
-  { label: 'Oil', weights: w(10, 10, 10, 10, 10, 10), maxQty: 200 },
-  { label: 'Polymer', weights: w(10, 10, 10, 10, 10, 10), maxQty: 150 },
-  { label: 'Electronics', weights: w(10, 10, 10, 10, 10, 10), maxQty: 150 },
-  { label: 'Crystal', weights: w(10, 10, 10, 10, 10, 10), maxQty: 200 },
-  { label: 'Cementing Paste', weights: w(10, 10, 10, 10, 10, 10), maxQty: 200 },
-  { label: 'Black Pearl', weights: w(0, 0, 0, 6, 6, 6), maxQty: 50 },       // purple+
-  { label: 'Element', weights: w(0, 0, 0, 0, 0, 8), maxQty: 150 },          // red only
+// qtyLo = amount at the item's first available tier; qtyHi = amount at red. Interpolated
+// per item (see interpQty) — each item has its own curve. Lowered 2026-06-22 (Patrick:
+// too much per drop).
+export const resources: { label: string; weights: Record<Tier, number>; qtyLo: number; qtyHi: number }[] = [
+  { label: 'Metal Ingot', weights: w(15, 15, 15, 15, 15, 15), qtyLo: 10, qtyHi: 100 },
+  { label: 'Silica Pearls', weights: w(12, 12, 12, 12, 12, 12), qtyLo: 10, qtyHi: 50 },
+  { label: 'Oil', weights: w(10, 10, 10, 10, 10, 10), qtyLo: 10, qtyHi: 50 },
+  { label: 'Polymer', weights: w(10, 10, 10, 10, 10, 10), qtyLo: 10, qtyHi: 150 },
+  { label: 'Electronics', weights: w(10, 10, 10, 10, 10, 10), qtyLo: 10, qtyHi: 150 },
+  { label: 'Crystal', weights: w(10, 10, 10, 10, 10, 10), qtyLo: 10, qtyHi: 100 },
+  { label: 'Cementing Paste', weights: w(10, 10, 10, 10, 10, 10), qtyLo: 10, qtyHi: 50 },
+  { label: 'Black Pearl', weights: w(0, 0, 0, 6, 6, 6), qtyLo: 5, qtyHi: 20 },   // purple+
+  { label: 'Element', weights: w(0, 0, 0, 0, 0, 8), qtyLo: 75, qtyHi: 75 },      // red only
 ];
 // Ammo bundle: label varies by tier (arrows -> ARB -> rockets).
 export const ammoByTier: Record<Tier, { label: string; maxQty: number; weight: number }> = {
@@ -139,15 +142,26 @@ export const ammoByTier: Record<Tier, { label: string; maxQty: number; weight: n
 };
 
 // --- GROUP 5: STRUCTURES (item-only; stone white/green -> metal blue+; qty scales) ---
-export const structures: { name: string; stone: string; metal: string; maxQty: number; metalOnly: boolean }[] = [
-  { name: 'Foundation', stone: 'Stone Foundation', metal: 'Metal Foundation', maxQty: 50, metalOnly: false },
-  { name: 'Wall', stone: 'Stone Wall, Doorways & Windowframe', metal: 'Metal Wall, Doorways & Windowframe', maxQty: 80, metalOnly: false },
-  { name: 'Ceiling', stone: 'Stone Ceiling & Hatchframe', metal: 'Metal Ceiling & Hatchframe', maxQty: 50, metalOnly: false },
-  { name: 'Dino Gate', stone: 'Stone Gateway', metal: 'Metal Gateway', maxQty: 4, metalOnly: false },
-  { name: 'Behemoth Gate', stone: 'Stone Behemoth Gateway', metal: 'Metal Behemoth Gateway', maxQty: 2, metalOnly: true },
+// qtyLo = first-tier amount, qtyHi = red amount (interpolated). Lowered 2026-06-22
+// (Patrick: don't want 50 foundations after a couple drops).
+export const structures: { name: string; stone: string; metal: string; qtyLo: number; qtyHi: number; metalOnly: boolean }[] = [
+  { name: 'Foundation', stone: 'Stone Foundation', metal: 'Metal Foundation', qtyLo: 4, qtyHi: 9, metalOnly: false },
+  { name: 'Wall', stone: 'Stone Wall, Doorways & Windowframe', metal: 'Metal Wall, Doorways & Windowframe', qtyLo: 8, qtyHi: 12, metalOnly: false },
+  { name: 'Ceiling', stone: 'Stone Ceiling & Hatchframe', metal: 'Metal Ceiling & Hatchframe', qtyLo: 4, qtyHi: 9, metalOnly: false },
+  { name: 'Dino Gate', stone: 'Stone Gateway', metal: 'Metal Gateway', qtyLo: 1, qtyHi: 4, metalOnly: false },
+  { name: 'Behemoth Gate', stone: 'Stone Behemoth Gateway', metal: 'Metal Behemoth Gateway', qtyLo: 1, qtyHi: 2, metalOnly: true },
 ];
 
 export const isStoneTier = (t: Tier): boolean => t === 'white' || t === 'green';
+// Per-tier amount interpolated from qtyLo (at firstTier) to qtyHi (at red).
+export const interpQty = (qtyLo: number, qtyHi: number, tier: Tier, firstTier: Tier): number => {
+  const span = tierIndex('red') - tierIndex(firstTier);
+  if (span <= 0) return qtyHi;
+  const frac = (tierIndex(tier) - tierIndex(firstTier)) / span;
+  return Math.max(1, Math.round(qtyLo + (qtyHi - qtyLo) * frac));
+};
+export const firstActiveTier = (weights: Record<Tier, number>): Tier => tiers.find((t) => weights[t] > 0) ?? 'red';
+// scaleQty still used for the ammo bundle (ammoByTier carries per-tier amounts).
 export const scaleQty = (maxQty: number, tier: Tier, table: Record<Tier, number>): number =>
   Math.max(1, Math.round(maxQty * table[tier]));
 export { tierIndex };

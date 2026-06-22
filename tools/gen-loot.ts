@@ -134,7 +134,7 @@ const buildSets = (tier: D.Tier, ring: boolean): Set[] => {
   for (const r of D.resources) {
     const wt = r.weights[tier];
     if (wt <= 0) continue;
-    const qty = D.scaleQty(r.maxQty, tier, D.resourceScale);
+    const qty = D.interpQty(r.qtyLo, r.qtyHi, tier, D.firstActiveTier(r.weights));
     resEntries.push({ name: r.label, classes: [resolve(r.label)], weight: wt, qMin: Math.max(1, Math.round(qty * 0.6)), qMax: qty, qlMin: 0, qlMax: 0, bp: 0 });
   }
   const ammo = D.ammoByTier[tier];
@@ -148,7 +148,7 @@ const buildSets = (tier: D.Tier, ring: boolean): Set[] => {
   for (const s of D.structures) {
     if (s.metalOnly && stone) continue;
     const label = stone ? s.stone : s.metal;
-    const qty = D.scaleQty(s.maxQty, tier, D.resourceScale);
+    const qty = D.interpQty(s.qtyLo, s.qtyHi, tier, s.metalOnly ? 'blue' : 'white');
     stEntries.push({ name: s.name, classes: [resolve(label)], weight: 10, qMin: Math.max(1, Math.round(qty * 0.6)), qMax: qty, qlMin: 0, qlMax: 0, bp: 0 });
   }
   sets.push({ name: 'Structures', min: D.structurePull.min, max: D.structurePull.max + (ring ? 1 : 0), entries: stEntries });

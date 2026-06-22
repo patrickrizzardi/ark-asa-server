@@ -178,17 +178,17 @@ Weights pick *which* mats; quantity grows up the ladder. Black pearls gated purp
 
 | Resource | Weight | Qty ⚪→🔴 | Tiers |
 |----------|---:|---|---|
-| Metal Ingot     | 15 | 30 → 300 | all |
-| Silica Pearls   | 12 | 20 → 200 | all |
-| Oil             | 10 | 20 → 200 | all |
+| Metal Ingot     | 15 | 10 → 100 | all |
+| Silica Pearls   | 12 | 10 → 50 | all |
+| Oil             | 10 | 10 → 50 | all |
 | Polymer         | 10 | 10 → 150 | all |
 | Electronics     | 10 | 10 → 150 | all |
-| Crystal         | 10 | 20 → 200 | all |
-| Cementing Paste | 10 | 20 → 200 | all |
+| Crystal         | 10 | 10 → 100 | all |
+| Cementing Paste | 10 | 10 → 50 | all |
 | Ammo bundle*    | 13 | scales | all |
 | Kibble (variety)|  8 | 3 → 15  | green+ |
-| Black Pearls    |  6 | 5 → 50  | **purple+** |
-| Element         |  8 | ~150 (red) / ~200 (ring) | **red** |
+| Black Pearls    |  6 | 5 → 20  | **purple+** |
+| Element         |  8 | ~75 (red) / ~150 (ring) | **red** |
 
 *Ammo bundle scales: Stone Arrows / Simple ammo (white–green) → Advanced Rifle Bullets
 (blue–yellow) → ARB + Rockets (red). Not coupled to the dropped weapon (ARK entries roll
@@ -203,10 +203,10 @@ Stone at white/green, metal at blue+ (behemoth gates are metal-only → blue+).
 
 | Structure | ⚪/🟢 (stone) | 🔵→🔴 (metal) | Qty ⚪→🔴 |
 |-----------|:---:|:---:|---|
-| Foundation | ✔ | ✔ | 10 → 50 |
-| Wall       | ✔ | ✔ | 20 → 80 |
-| Ceiling    | ✔ | ✔ | 10 → 50 |
-| Doorframe + Door | ✔ | ✔ | 2 → 10 |
+| Foundation | ✔ | ✔ | 4 → 9 |
+| Wall       | ✔ | ✔ | 8 → 12 |
+| Ceiling    | ✔ | ✔ | 4 → 9 |
+| Doorframe + Door | ✔ | ✔ | 1 → 2 |
 | Dinosaur Gateway + Gate | ✔ | ✔ | 1 → 4 |
 | Behemoth Gateway + Gate | — | ✔ (blue+) | 1 → 2 |
 
