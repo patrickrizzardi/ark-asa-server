@@ -109,33 +109,20 @@ const kits: Record<string, Kit> = {
   },
 };
 
-// --- assemble config (General defaults from ArkShop's shipped config.json; NO Mysql — boot injects) ---
-const config = {
-  General: {
-    Discord: { Enabled: false, SenderName: 'ArkShop', URL: '' },
-    TimedPointsReward: {
-      Enabled: true,
-      Interval: D.income.intervalMinutes,
-      StackRewards: false,
-      Groups: { Default: { Amount: D.income.amountPerInterval } },
-    },
-    ItemsPerPage: 15,
-    ShopDisplayTime: 15.0,
-    ShopTextSize: 1.3,
-    DbPathOverride: '',
-    DefaultKit: '',
-    GiveDinosInCryopods: true,
-    UseSoulTraps: false,
-    CryoLimitedTime: false,
-    UseOriginalTradeCommandWithUI: false,
-    PreventUseNoglin: true,
-    PreventUseUnconscious: true,
-    PreventUseHandcuffed: true,
-    PreventUseCarried: true,
-  },
-  ShopItems: shopItems,
-  Kits: kits,
+// --- assemble config: OVERLAY onto the real ArkShop default (arkshop-config.base.json) ---
+// The base carries every key ArkShop reads — incl. Messages + SellItems (omitting them caused a
+// `json.exception.type_error.306 cannot use value() with null` load failure). We replace ONLY the
+// three blocks we own: General.TimedPointsReward (income), ShopItems, Kits. Mysql stays the base's
+// placeholder (UseMysql:false, empty creds) — the entrypoint injects real creds at boot.
+const config = JSON.parse(readFileSync(join(here, 'arkshop-config.base.json'), 'utf8'));
+config.General.TimedPointsReward = {
+  ...config.General.TimedPointsReward,
+  Enabled: true,
+  Interval: D.income.intervalMinutes,
+  Groups: { Default: { Amount: D.income.amountPerInterval } },
 };
+config.ShopItems = shopItems;
+config.Kits = kits;
 
 // --- write outputs ---
 mkdirSync(outDir, { recursive: true });
