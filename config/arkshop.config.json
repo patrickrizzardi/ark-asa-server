@@ -79,21 +79,25 @@
         {
           "Level": 150,
           "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'",
+          "Neutered": true,
           "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_PteroSaddle.PrimalItemArmor_PteroSaddle'"
         },
         {
           "Level": 150,
           "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Doedicurus/Doed_Character_BP.Doed_Character_BP'",
+          "Neutered": true,
           "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_DoedSaddle.PrimalItemArmor_DoedSaddle'"
         },
         {
           "Level": 150,
           "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ankylo/Ankylo_Character_BP.Ankylo_Character_BP'",
+          "Neutered": true,
           "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_AnkyloSaddle.PrimalItemArmor_AnkyloSaddle'"
         },
         {
           "Level": 150,
           "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Beaver/Beaver_Character_BP.Beaver_Character_BP'",
+          "Neutered": true,
           "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_BeaverSaddle.PrimalItemArmor_BeaverSaddle'"
         }
       ]
@@ -119,7 +123,7 @@
         {
           "Quality": 0,
           "ForceBlueprint": false,
-          "Amount": 3,
+          "Amount": 10,
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponBola.PrimalItem_WeaponBola'"
         },
         {
@@ -170,8 +174,38 @@
         {
           "Quality": 0,
           "ForceBlueprint": false,
-          "Amount": 20,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_XSmall.PrimalItemConsumable_Kibble_Base_XSmall'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Small.PrimalItemConsumable_Kibble_Base_Small'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Medium.PrimalItemConsumable_Kibble_Base_Medium'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Large.PrimalItemConsumable_Kibble_Base_Large'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_XLarge.PrimalItemConsumable_Kibble_Base_XLarge'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Special.PrimalItemConsumable_Kibble_Base_Special'"
         }
       ],
       "Dinos": []
@@ -278,8 +312,38 @@
         {
           "Quality": 0,
           "ForceBlueprint": false,
-          "Amount": 20,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_XSmall.PrimalItemConsumable_Kibble_Base_XSmall'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Small.PrimalItemConsumable_Kibble_Base_Small'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Medium.PrimalItemConsumable_Kibble_Base_Medium'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Large.PrimalItemConsumable_Kibble_Base_Large'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_XLarge.PrimalItemConsumable_Kibble_Base_XLarge'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Special.PrimalItemConsumable_Kibble_Base_Special'"
         }
       ],
       "Dinos": []
@@ -291,7 +355,7 @@
       "Description": "Featherlight (lvl 300)",
       "Level": 300,
       "Price": 1000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/Aberration/Dinos/LanternBird/LanternBird_Character_BP.LanternBird_Character_BP'"
     },
     "bulbdog": {
@@ -299,7 +363,7 @@
       "Description": "Bulbdog (lvl 300)",
       "Level": 300,
       "Price": 1000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/Aberration/Dinos/LanternPug/LanternPug_Character_BP.LanternPug_Character_BP'"
     },
     "glowtail": {
@@ -307,7 +371,7 @@
       "Description": "Glowtail (lvl 300)",
       "Level": 300,
       "Price": 1000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/Aberration/Dinos/LanternLizard/LanternLizard_Character_BP.LanternLizard_Character_BP'"
     },
     "shinehorn": {
@@ -315,7 +379,7 @@
       "Description": "Shinehorn (lvl 300)",
       "Level": 300,
       "Price": 1000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/Aberration/Dinos/LanternGoat/LanternGoat_Character_BP.LanternGoat_Character_BP'"
     },
     "sinomacrops": {
@@ -323,7 +387,7 @@
       "Description": "Sinomacrops (lvl 300)",
       "Level": 300,
       "Price": 1500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/DinosaurDiscovery/Dino/Sino/Sinomacrops_Character_BP_ASA.Sinomacrops_Character_BP_ASA'"
     },
     "otter": {
@@ -331,7 +395,7 @@
       "Description": "Otter (lvl 300)",
       "Level": 300,
       "Price": 1500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Otter/Otter_Character_BP.Otter_Character_BP'"
     },
     "parasaur": {
@@ -339,7 +403,7 @@
       "Description": "Parasaurolophus (lvl 225)",
       "Level": 225,
       "Price": 1000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Para/Para_Character_BP.Para_Character_BP'"
     },
     "raptor": {
@@ -347,7 +411,7 @@
       "Description": "Raptor (lvl 225)",
       "Level": 225,
       "Price": 1500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Raptor/Raptor_Character_BP.Raptor_Character_BP'"
     },
     "trike": {
@@ -355,7 +419,7 @@
       "Description": "Triceratops (lvl 225)",
       "Level": 225,
       "Price": 1500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Trike/Trike_Character_BP.Trike_Character_BP'"
     },
     "ptera": {
@@ -363,7 +427,7 @@
       "Description": "Pteranodon (lvl 225)",
       "Level": 225,
       "Price": 2000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'"
     },
     "diplo": {
@@ -371,7 +435,7 @@
       "Description": "Diplocaulus (lvl 225)",
       "Level": 225,
       "Price": 2000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Diplocaulus/Diplocaulus_Character_BP.Diplocaulus_Character_BP'"
     },
     "saber": {
@@ -379,7 +443,7 @@
       "Description": "Sabertooth (lvl 225)",
       "Level": 225,
       "Price": 2500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Saber/Saber_Character_BP.Saber_Character_BP'"
     },
     "anky": {
@@ -387,7 +451,7 @@
       "Description": "Ankylosaurus (lvl 225)",
       "Level": 225,
       "Price": 2500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ankylo/Ankylo_Character_BP.Ankylo_Character_BP'"
     },
     "doed": {
@@ -395,7 +459,7 @@
       "Description": "Doedicurus (lvl 225)",
       "Level": 225,
       "Price": 2500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Doedicurus/Doed_Character_BP.Doed_Character_BP'"
     },
     "carno": {
@@ -403,7 +467,7 @@
       "Description": "Carnotaurus (lvl 225)",
       "Level": 225,
       "Price": 3000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'"
     },
     "megalodon": {
@@ -411,7 +475,7 @@
       "Description": "Megalodon (lvl 225)",
       "Level": 225,
       "Price": 3000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Megalodon/Megalodon_Character_BP.Megalodon_Character_BP'"
     },
     "bary": {
@@ -419,7 +483,7 @@
       "Description": "Baryonyx (lvl 225)",
       "Level": 225,
       "Price": 3500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Baryonyx/Baryonyx_Character_BP.Baryonyx_Character_BP'"
     },
     "direbear": {
@@ -427,7 +491,7 @@
       "Description": "Direbear (lvl 225)",
       "Level": 225,
       "Price": 3500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Direbear/Direbear_Character_BP.Direbear_Character_BP'"
     },
     "dunkle": {
@@ -435,7 +499,7 @@
       "Description": "Dunkleosteus (lvl 225)",
       "Level": 225,
       "Price": 3500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Dunkleosteus/Dunkle_Character_BP.Dunkle_Character_BP'"
     },
     "argy": {
@@ -443,7 +507,7 @@
       "Description": "Argentavis (lvl 225)",
       "Level": 225,
       "Price": 4000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Argentavis/Argent_Character_BP.Argent_Character_BP'"
     },
     "mammoth": {
@@ -451,7 +515,7 @@
       "Description": "Mammoth (lvl 225)",
       "Level": 225,
       "Price": 4500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Mammoth/Mammoth_Character_BP.Mammoth_Character_BP'"
     },
     "megatherium": {
@@ -459,7 +523,7 @@
       "Description": "Megatherium (lvl 225)",
       "Level": 225,
       "Price": 5000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Megatherium/Megatherium_Character_BP.Megatherium_Character_BP'"
     },
     "daeodon": {
@@ -467,7 +531,7 @@
       "Description": "Daeodon (lvl 225)",
       "Level": 225,
       "Price": 5000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Daeodon/Daeodon_Character_BP.Daeodon_Character_BP'"
     },
     "spino": {
@@ -475,7 +539,7 @@
       "Description": "Spinosaurus (lvl 225)",
       "Level": 225,
       "Price": 5500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Spino/Spino_Character_BP.Spino_Character_BP'"
     },
     "snowowl": {
@@ -483,7 +547,7 @@
       "Description": "Snow Owl (lvl 225)",
       "Level": 225,
       "Price": 6000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/Extinction/Dinos/Owl/Owl_Character_BP.Owl_Character_BP'"
     },
     "theri": {
@@ -491,7 +555,7 @@
       "Description": "Therizinosaurus (lvl 225)",
       "Level": 225,
       "Price": 6000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Therizinosaurus/Therizino_Character_BP.Therizino_Character_BP'"
     },
     "yuty": {
@@ -499,7 +563,7 @@
       "Description": "Yutyrannus (lvl 225)",
       "Level": 225,
       "Price": 6500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Yutyrannus/Yutyrannus_Character_BP.Yutyrannus_Character_BP'"
     },
     "quetz": {
@@ -507,7 +571,7 @@
       "Description": "Quetzalcoatlus (lvl 225)",
       "Level": 225,
       "Price": 7500,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Quetzalcoatlus/Quetz_Character_BP.Quetz_Character_BP'"
     },
     "allo": {
@@ -515,7 +579,7 @@
       "Description": "Allosaurus (lvl 225)",
       "Level": 225,
       "Price": 8000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Allosaurus/Allo_Character_BP.Allo_Character_BP'"
     },
     "basilo": {
@@ -523,7 +587,7 @@
       "Description": "Basilosaurus (lvl 225)",
       "Level": 225,
       "Price": 8000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Basilosaurus/Basilosaurus_Character_BP.Basilosaurus_Character_BP'"
     },
     "rex": {
@@ -531,7 +595,7 @@
       "Description": "Rex (lvl 225)",
       "Level": 225,
       "Price": 10000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Rex/Rex_Character_BP.Rex_Character_BP'"
     },
     "carcharo": {
@@ -539,7 +603,7 @@
       "Description": "Carcharodontosaurus (lvl 225)",
       "Level": 225,
       "Price": 10000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Carcharodontosaurus/Carcha_Character_BP.Carcha_Character_BP'"
     },
     "mosa": {
@@ -547,7 +611,7 @@
       "Description": "Mosasaurus (lvl 225)",
       "Level": 225,
       "Price": 12000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Mosasaurus/Mosa_Character_BP.Mosa_Character_BP'"
     },
     "wyvern": {
@@ -555,7 +619,7 @@
       "Description": "Fire Wyvern (lvl 225)",
       "Level": 225,
       "Price": 13000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/ScorchedEarth/Dinos/Wyvern/Wyvern_Character_BP_Fire.Wyvern_Character_BP_Fire'"
     },
     "tuso": {
@@ -563,7 +627,7 @@
       "Description": "Tusoteuthis (lvl 225)",
       "Level": 225,
       "Price": 13000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Tusoteuthis/Tusoteuthis_Character_BP.Tusoteuthis_Character_BP'"
     },
     "rockdrake": {
@@ -571,7 +635,7 @@
       "Description": "Rock Drake (lvl 225)",
       "Level": 225,
       "Price": 13000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/Aberration/Dinos/RockDrake/RockDrake_Character_BP.RockDrake_Character_BP'"
     },
     "giga": {
@@ -579,7 +643,7 @@
       "Description": "Giganotosaurus (lvl 225)",
       "Level": 225,
       "Price": 15000,
-      "Neutered": false,
+      "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Giganotosaurus/Gigant_Character_BP.Gigant_Character_BP'"
     },
     "hide": {

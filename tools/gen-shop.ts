@@ -54,7 +54,7 @@ type ItemEntry = { Quality: number; ForceBlueprint: boolean; Amount: number; Blu
 type ShopItem =
   | { Type: 'item'; Description: string; Price: number; Items: ItemEntry[] }
   | { Type: 'dino'; Description: string; Level: number; Price: number; Neutered: boolean; Blueprint: string };
-type KitDino = { Level: number; Blueprint: string; SaddleBlueprint?: string };
+type KitDino = { Level: number; Blueprint: string; SaddleBlueprint?: string; Neutered?: boolean };
 type Kit = { DefaultAmount: number; Price: number; Description: string; OnlyFromSpawn: boolean; Items: ItemEntry[]; Dinos: KitDino[] };
 
 // --- build ShopItems: dinos (price-only gate; MinLevel/MaxLevel omitted = default 1/999) ---
@@ -65,7 +65,7 @@ for (const d of D.dinos) {
     Description: `${d.label} (lvl ${D.capForRole(d.role)})`,
     Level: D.capForRole(d.role),
     Price: d.price,
-    Neutered: false,
+    Neutered: D.NEUTER_STORE_DINOS,
     Blueprint: dinoBp(d.label),
   };
 }
@@ -94,7 +94,7 @@ for (const k of D.kits) {
   const dinos: KitDino[] = [];
   for (const d of k.dinos) {
     for (let i = 0; i < d.count; i++) {
-      const entry: KitDino = { Level: d.level, Blueprint: dinoBp(d.label) };
+      const entry: KitDino = { Level: d.level, Blueprint: dinoBp(d.label), Neutered: D.NEUTER_STORE_DINOS };
       if (d.saddle) entry.SaddleBlueprint = itemBp(d.saddle);
       dinos.push(entry);
     }

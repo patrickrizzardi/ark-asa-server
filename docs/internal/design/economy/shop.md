@@ -96,9 +96,9 @@ they're purchase-limited (`DefaultAmount`). ArkShop quality index: 0 prim · 1 r
 |---|---|---|---|
 | **starter** (survival) | free | 3 | 1 Ptera + 1 Doed + 1 Anky + 1 Castoroides (all lvl 150, w/ saddles) + 1 Mastercraft flak set |
 | **weapons** | free | 3 | Crossbow ×1, Spear ×2, Bola ×3, Stone Arrow ×100, Tranq Arrow ×50 (all primitive) |
-| **taming** | 3,000 | 5 | Journeyman Longneck ×1, Tranq Dart ×500, Bola ×50, Narcotic ×200, Superior Kibble ×20 |
+| **taming** | 3,000 | 5 | Journeyman Longneck ×1, Tranq Dart ×500, Bola ×50, Narcotic ×200, 10× each kibble tier |
 | **defense** | 5,000 | 5 | Heavy Turret ×5, ARB ×2,500 (500/turret), Metal Spike Wall ×10, Mastercraft Riot set |
-| **taming_water** | 4,000 | 5 | SCUBA set (4pc, Q2), Harpoon Gun (Q3), Tranq Spear Bolt ×200, Superior Kibble ×20 |
+| **taming_water** | 4,000 | 5 | SCUBA set (4pc, Q2), Harpoon Gun (Q3), Tranq Spear Bolt ×200, 10× each kibble tier |
 
 **The two free kits use the 3-claim survival model**: claim → die → re-claim, 3× then on your own
 (one death shouldn't wipe everything). Riot > Flak (~15% more armor, Beacon-verified) so the paid
@@ -111,6 +111,10 @@ defense kit upgrades the free flak. Free dinos are flat lvl-150 — a leg-up, no
 Two axes: **price tier** (white→red ladder = how valuable/rare/hard-to-get → sets points) and
 **role** (sets the level cap). No `MinLevel` wall — boosted XP makes a player-level gate meaningless
 (everyone's ~60 within an hour), so price is the only gate.
+
+**All store dinos — shop items AND kits — are neutered** (`NEUTER_STORE_DINOS`): usable but not
+breedable. Closes the bypass where a bought flat-225 gets bred into imprinted (strong) offspring —
+breeding stays gated behind dinos you tamed yourself.
 
 | Dino | Role | Tier | Price | Lvl cap |
 |---|---|---|---|---|

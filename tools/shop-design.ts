@@ -116,6 +116,10 @@ export const consumables: ShopResource[] = [
 // they're purchase-limited (DefaultAmount). ArkShop quality index: 0 prim,1 ram,2 app,3 journ,4 master,5 asc.
 export const STARTER_LEVEL = 150;
 export const MASTERCRAFT_QUALITY = 4;
+// ALL store-bought dinos (shop items AND kits) are neutered — you can use them but NOT breed them.
+// Closes the bypass where a bought flat-225 could be bred into imprinted (strong) offspring; breeding
+// stays gated behind dinos you tamed yourself. Gender doesn't matter, neutering does.
+export const NEUTER_STORE_DINOS = true;
 // "Metal armor" in ARK = Flak (metal-tier set); Riot = higher-armor set (paid defense upgrade).
 export const flakSet = ['Flak Helmet', 'Flak Chestpiece', 'Flak Leggings', 'Flak Gauntlets', 'Flak Boots'];
 export const riotSet = ['Riot Helmet', 'Riot Chestpiece', 'Riot Leggings', 'Riot Gauntlets', 'Riot Boots'];
@@ -129,6 +133,8 @@ export type Kit = {
 // expand an armor set (5 pieces) into per-piece kit items
 const armor = (set: string[], quality: number, amount: number): KitItem[] =>
   set.map((label) => ({ label, quality, amount }));
+// all 6 kibble tiers at `amount` each (for the taming kits)
+const allKibble = (amount: number): KitItem[] => kibble.map((k) => ({ label: k.label, quality: 0, amount }));
 
 export const kits: Kit[] = [
   // FREE survival kit — 3 claims (re-claim after a death), one loadout each; dinos lvl 150 w/ saddles.
@@ -151,7 +157,7 @@ export const kits: Kit[] = [
     items: [
       { label: 'Crossbow', quality: 0, amount: 1 },
       { label: 'Spear', quality: 0, amount: 2 },
-      { label: 'Bola', quality: 0, amount: 3 },
+      { label: 'Bola', quality: 0, amount: 10 },
       { label: 'Stone Arrow', quality: 0, amount: 100 },
       { label: 'Tranquilizer Arrow', quality: 0, amount: 50 },
     ],
@@ -166,7 +172,7 @@ export const kits: Kit[] = [
       { label: 'Tranquilizer Dart', quality: 0, amount: 500 },
       { label: 'Bola', quality: 0, amount: 50 }, // cheap to craft anyway
       { label: 'Narcotic', quality: 0, amount: 200 },
-      { label: 'Superior Kibble', quality: 0, amount: 20 },
+      ...allKibble(10), // 10 of each of the 6 kibble tiers
     ],
   },
   // PAID defense kit — buy up to 5; heavy turrets (NOT tek), 500 ARB/turret, metal spikes, a Riot set.
@@ -193,7 +199,7 @@ export const kits: Kit[] = [
       { label: 'SCUBA Leggings', quality: 2, amount: 1 },
       { label: 'Harpoon Gun', quality: 3, amount: 1 },
       { label: 'Tranq Spear Bolt', quality: 0, amount: 200 },
-      { label: 'Superior Kibble', quality: 0, amount: 20 },
+      ...allKibble(10), // 10 of each of the 6 kibble tiers
     ],
   },
 ];
