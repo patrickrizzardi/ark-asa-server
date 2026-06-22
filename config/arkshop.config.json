@@ -1,0 +1,679 @@
+{
+  "General": {
+    "Discord": {
+      "Enabled": false,
+      "SenderName": "ArkShop",
+      "URL": ""
+    },
+    "TimedPointsReward": {
+      "Enabled": true,
+      "Interval": 6,
+      "StackRewards": false,
+      "Groups": {
+        "Default": {
+          "Amount": 250
+        }
+      }
+    },
+    "ItemsPerPage": 15,
+    "ShopDisplayTime": 15,
+    "ShopTextSize": 1.3,
+    "DbPathOverride": "",
+    "DefaultKit": "",
+    "GiveDinosInCryopods": true,
+    "UseSoulTraps": false,
+    "CryoLimitedTime": false,
+    "UseOriginalTradeCommandWithUI": false,
+    "PreventUseNoglin": true,
+    "PreventUseUnconscious": true,
+    "PreventUseHandcuffed": true,
+    "PreventUseCarried": true
+  },
+  "ShopItems": {
+    "featherlight": {
+      "Type": "dino",
+      "Description": "Featherlight (lvl 300)",
+      "Level": 300,
+      "Price": 1000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/Aberration/Dinos/LanternBird/LanternBird_Character_BP.LanternBird_Character_BP'"
+    },
+    "bulbdog": {
+      "Type": "dino",
+      "Description": "Bulbdog (lvl 300)",
+      "Level": 300,
+      "Price": 1000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/Aberration/Dinos/LanternPug/LanternPug_Character_BP.LanternPug_Character_BP'"
+    },
+    "glowtail": {
+      "Type": "dino",
+      "Description": "Glowtail (lvl 300)",
+      "Level": 300,
+      "Price": 1000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/Aberration/Dinos/LanternLizard/LanternLizard_Character_BP.LanternLizard_Character_BP'"
+    },
+    "shinehorn": {
+      "Type": "dino",
+      "Description": "Shinehorn (lvl 300)",
+      "Level": 300,
+      "Price": 1000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/Aberration/Dinos/LanternGoat/LanternGoat_Character_BP.LanternGoat_Character_BP'"
+    },
+    "sinomacrops": {
+      "Type": "dino",
+      "Description": "Sinomacrops (lvl 300)",
+      "Level": 300,
+      "Price": 1500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/DinosaurDiscovery/Dino/Sino/Sinomacrops_Character_BP_ASA.Sinomacrops_Character_BP_ASA'"
+    },
+    "otter": {
+      "Type": "dino",
+      "Description": "Otter (lvl 300)",
+      "Level": 300,
+      "Price": 1500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Otter/Otter_Character_BP.Otter_Character_BP'"
+    },
+    "parasaur": {
+      "Type": "dino",
+      "Description": "Parasaurolophus (lvl 225)",
+      "Level": 225,
+      "Price": 1000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Para/Para_Character_BP.Para_Character_BP'"
+    },
+    "raptor": {
+      "Type": "dino",
+      "Description": "Raptor (lvl 225)",
+      "Level": 225,
+      "Price": 1500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Raptor/Raptor_Character_BP.Raptor_Character_BP'"
+    },
+    "trike": {
+      "Type": "dino",
+      "Description": "Triceratops (lvl 225)",
+      "Level": 225,
+      "Price": 1500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Trike/Trike_Character_BP.Trike_Character_BP'"
+    },
+    "ptera": {
+      "Type": "dino",
+      "Description": "Pteranodon (lvl 225)",
+      "Level": 225,
+      "Price": 2000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'"
+    },
+    "diplo": {
+      "Type": "dino",
+      "Description": "Diplocaulus (lvl 225)",
+      "Level": 225,
+      "Price": 2000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Diplocaulus/Diplocaulus_Character_BP.Diplocaulus_Character_BP'"
+    },
+    "saber": {
+      "Type": "dino",
+      "Description": "Sabertooth (lvl 225)",
+      "Level": 225,
+      "Price": 2500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Saber/Saber_Character_BP.Saber_Character_BP'"
+    },
+    "anky": {
+      "Type": "dino",
+      "Description": "Ankylosaurus (lvl 225)",
+      "Level": 225,
+      "Price": 2500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ankylo/Ankylo_Character_BP.Ankylo_Character_BP'"
+    },
+    "doed": {
+      "Type": "dino",
+      "Description": "Doedicurus (lvl 225)",
+      "Level": 225,
+      "Price": 2500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Doedicurus/Doed_Character_BP.Doed_Character_BP'"
+    },
+    "carno": {
+      "Type": "dino",
+      "Description": "Carnotaurus (lvl 225)",
+      "Level": 225,
+      "Price": 3000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'"
+    },
+    "megalodon": {
+      "Type": "dino",
+      "Description": "Megalodon (lvl 225)",
+      "Level": 225,
+      "Price": 3000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Megalodon/Megalodon_Character_BP.Megalodon_Character_BP'"
+    },
+    "bary": {
+      "Type": "dino",
+      "Description": "Baryonyx (lvl 225)",
+      "Level": 225,
+      "Price": 3500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Baryonyx/Baryonyx_Character_BP.Baryonyx_Character_BP'"
+    },
+    "direbear": {
+      "Type": "dino",
+      "Description": "Direbear (lvl 225)",
+      "Level": 225,
+      "Price": 3500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Direbear/Direbear_Character_BP.Direbear_Character_BP'"
+    },
+    "dunkle": {
+      "Type": "dino",
+      "Description": "Dunkleosteus (lvl 225)",
+      "Level": 225,
+      "Price": 3500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Dunkleosteus/Dunkle_Character_BP.Dunkle_Character_BP'"
+    },
+    "argy": {
+      "Type": "dino",
+      "Description": "Argentavis (lvl 225)",
+      "Level": 225,
+      "Price": 4000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Argentavis/Argent_Character_BP.Argent_Character_BP'"
+    },
+    "mammoth": {
+      "Type": "dino",
+      "Description": "Mammoth (lvl 225)",
+      "Level": 225,
+      "Price": 4500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Mammoth/Mammoth_Character_BP.Mammoth_Character_BP'"
+    },
+    "megatherium": {
+      "Type": "dino",
+      "Description": "Megatherium (lvl 225)",
+      "Level": 225,
+      "Price": 5000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Megatherium/Megatherium_Character_BP.Megatherium_Character_BP'"
+    },
+    "daeodon": {
+      "Type": "dino",
+      "Description": "Daeodon (lvl 225)",
+      "Level": 225,
+      "Price": 5000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Daeodon/Daeodon_Character_BP.Daeodon_Character_BP'"
+    },
+    "spino": {
+      "Type": "dino",
+      "Description": "Spinosaurus (lvl 225)",
+      "Level": 225,
+      "Price": 5500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Spino/Spino_Character_BP.Spino_Character_BP'"
+    },
+    "snowowl": {
+      "Type": "dino",
+      "Description": "Snow Owl (lvl 225)",
+      "Level": 225,
+      "Price": 6000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/Extinction/Dinos/Owl/Owl_Character_BP.Owl_Character_BP'"
+    },
+    "theri": {
+      "Type": "dino",
+      "Description": "Therizinosaurus (lvl 225)",
+      "Level": 225,
+      "Price": 6000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Therizinosaurus/Therizino_Character_BP.Therizino_Character_BP'"
+    },
+    "yuty": {
+      "Type": "dino",
+      "Description": "Yutyrannus (lvl 225)",
+      "Level": 225,
+      "Price": 6500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Yutyrannus/Yutyrannus_Character_BP.Yutyrannus_Character_BP'"
+    },
+    "quetz": {
+      "Type": "dino",
+      "Description": "Quetzalcoatlus (lvl 225)",
+      "Level": 225,
+      "Price": 7500,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Quetzalcoatlus/Quetz_Character_BP.Quetz_Character_BP'"
+    },
+    "allo": {
+      "Type": "dino",
+      "Description": "Allosaurus (lvl 225)",
+      "Level": 225,
+      "Price": 8000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Allosaurus/Allo_Character_BP.Allo_Character_BP'"
+    },
+    "basilo": {
+      "Type": "dino",
+      "Description": "Basilosaurus (lvl 225)",
+      "Level": 225,
+      "Price": 8000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Basilosaurus/Basilosaurus_Character_BP.Basilosaurus_Character_BP'"
+    },
+    "rex": {
+      "Type": "dino",
+      "Description": "Rex (lvl 225)",
+      "Level": 225,
+      "Price": 10000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Rex/Rex_Character_BP.Rex_Character_BP'"
+    },
+    "carcharo": {
+      "Type": "dino",
+      "Description": "Carcharodontosaurus (lvl 225)",
+      "Level": 225,
+      "Price": 10000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Carcharodontosaurus/Carcha_Character_BP.Carcha_Character_BP'"
+    },
+    "mosa": {
+      "Type": "dino",
+      "Description": "Mosasaurus (lvl 225)",
+      "Level": 225,
+      "Price": 12000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Mosasaurus/Mosa_Character_BP.Mosa_Character_BP'"
+    },
+    "wyvern": {
+      "Type": "dino",
+      "Description": "Fire Wyvern (lvl 225)",
+      "Level": 225,
+      "Price": 13000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/ScorchedEarth/Dinos/Wyvern/Wyvern_Character_BP_Fire.Wyvern_Character_BP_Fire'"
+    },
+    "tuso": {
+      "Type": "dino",
+      "Description": "Tusoteuthis (lvl 225)",
+      "Level": 225,
+      "Price": 13000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Tusoteuthis/Tusoteuthis_Character_BP.Tusoteuthis_Character_BP'"
+    },
+    "rockdrake": {
+      "Type": "dino",
+      "Description": "Rock Drake (lvl 225)",
+      "Level": 225,
+      "Price": 13000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/Aberration/Dinos/RockDrake/RockDrake_Character_BP.RockDrake_Character_BP'"
+    },
+    "giga": {
+      "Type": "dino",
+      "Description": "Giganotosaurus (lvl 225)",
+      "Level": 225,
+      "Price": 15000,
+      "Neutered": false,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Giganotosaurus/Gigant_Character_BP.Gigant_Character_BP'"
+    },
+    "hide": {
+      "Type": "item",
+      "Description": "Hide (300x)",
+      "Price": 250,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 300,
+          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_Hide.PrimalItemConsumable_Hide'"
+        }
+      ]
+    },
+    "keratin": {
+      "Type": "item",
+      "Description": "Keratin (250x)",
+      "Price": 300,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 250,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Keratin.PrimalItemResource_Keratin'"
+        }
+      ]
+    },
+    "chitin": {
+      "Type": "item",
+      "Description": "Chitin (250x)",
+      "Price": 300,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 250,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Chitin.PrimalItemResource_Chitin'"
+        }
+      ]
+    },
+    "metal": {
+      "Type": "item",
+      "Description": "Metal (500x)",
+      "Price": 1000,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 500,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Metal.PrimalItemResource_Metal'"
+        }
+      ]
+    },
+    "pearls": {
+      "Type": "item",
+      "Description": "Silica Pearls (500x)",
+      "Price": 1000,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 500,
+          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_SilicaPearls.PrimalItemConsumable_SilicaPearls'"
+        }
+      ]
+    },
+    "crystal": {
+      "Type": "item",
+      "Description": "Crystal (500x)",
+      "Price": 800,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 500,
+          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_Crystal.PrimalItemConsumable_Crystal'"
+        }
+      ]
+    },
+    "oil": {
+      "Type": "item",
+      "Description": "Oil (300x)",
+      "Price": 800,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 300,
+          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_Oil.PrimalItemConsumable_Oil'"
+        }
+      ]
+    },
+    "obsidian": {
+      "Type": "item",
+      "Description": "Obsidian (500x)",
+      "Price": 800,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 500,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Obsidian.PrimalItemResource_Obsidian'"
+        }
+      ]
+    },
+    "paste": {
+      "Type": "item",
+      "Description": "Cementing Paste (300x)",
+      "Price": 800,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 300,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_ChitinPaste.PrimalItemResource_ChitinPaste'"
+        }
+      ]
+    },
+    "sulfur": {
+      "Type": "item",
+      "Description": "Sulfur (300x)",
+      "Price": 700,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 300,
+          "Blueprint": "Blueprint'/Game/ScorchedEarth/CoreBlueprints/Resources/PrimalItemResource_Sulfur.PrimalItemResource_Sulfur'"
+        }
+      ]
+    },
+    "polymer": {
+      "Type": "item",
+      "Description": "Organic Polymer (300x)",
+      "Price": 1000,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 300,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Polymer_Organic.PrimalItemResource_Polymer_Organic'"
+        }
+      ]
+    },
+    "pelt": {
+      "Type": "item",
+      "Description": "Pelt (200x)",
+      "Price": 300,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 200,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Pelt.PrimalItemResource_Pelt'"
+        }
+      ]
+    },
+    "sap": {
+      "Type": "item",
+      "Description": "Sap (50x)",
+      "Price": 400,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 50,
+          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_Sap.PrimalItemConsumable_Sap'"
+        }
+      ]
+    },
+    "blackpearls": {
+      "Type": "item",
+      "Description": "Black Pearl (100x)",
+      "Price": 2500,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 100,
+          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_BlackPearl.PrimalItemConsumable_BlackPearl'"
+        }
+      ]
+    },
+    "elementdust": {
+      "Type": "item",
+      "Description": "Element Dust (50000x)",
+      "Price": 3000,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 50000,
+          "Blueprint": "Blueprint'/Game/Extinction/CoreBlueprints/Resources/PrimalItemResource_ElementDust.PrimalItemResource_ElementDust'"
+        }
+      ]
+    },
+    "redgem": {
+      "Type": "item",
+      "Description": "Red Gem (100x)",
+      "Price": 1200,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 100,
+          "Blueprint": "Blueprint'/Game/Aberration/CoreBlueprints/Resources/PrimalItemResource_Gem_Element.PrimalItemResource_Gem_Element'"
+        }
+      ]
+    },
+    "bluegem": {
+      "Type": "item",
+      "Description": "Blue Gem (100x)",
+      "Price": 1200,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 100,
+          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_BlueGem.PrimalItemConsumable_BlueGem'"
+        }
+      ]
+    },
+    "greengem": {
+      "Type": "item",
+      "Description": "Green Gem (100x)",
+      "Price": 1200,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 100,
+          "Blueprint": "Blueprint'/Game/Aberration/CoreBlueprints/Resources/PrimalItemResource_Gem_Fertile.PrimalItemResource_Gem_Fertile'"
+        }
+      ]
+    },
+    "gasball": {
+      "Type": "item",
+      "Description": "Congealed Gas Ball (50x)",
+      "Price": 800,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 50,
+          "Blueprint": "Blueprint'/Game/Aberration/CoreBlueprints/Resources/PrimalItemResource_Gas.PrimalItemResource_Gas'"
+        }
+      ]
+    }
+  },
+  "Kits": {
+    "starter": {
+      "DefaultAmount": 1,
+      "Price": 0,
+      "Description": "Free starter kit (claim once) — fast-start gatherers + a flak set",
+      "OnlyFromSpawn": false,
+      "Items": [
+        {
+          "Quality": 4,
+          "ForceBlueprint": false,
+          "Amount": 3,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Metal/PrimalItemArmor_MetalHelmet.PrimalItemArmor_MetalHelmet'"
+        },
+        {
+          "Quality": 4,
+          "ForceBlueprint": false,
+          "Amount": 3,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Metal/PrimalItemArmor_MetalShirt.PrimalItemArmor_MetalShirt'"
+        },
+        {
+          "Quality": 4,
+          "ForceBlueprint": false,
+          "Amount": 3,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Metal/PrimalItemArmor_MetalPants.PrimalItemArmor_MetalPants'"
+        },
+        {
+          "Quality": 4,
+          "ForceBlueprint": false,
+          "Amount": 3,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Metal/PrimalItemArmor_MetalGloves.PrimalItemArmor_MetalGloves'"
+        },
+        {
+          "Quality": 4,
+          "ForceBlueprint": false,
+          "Amount": 3,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Metal/PrimalItemArmor_MetalBoots.PrimalItemArmor_MetalBoots'"
+        }
+      ],
+      "Dinos": [
+        {
+          "Level": 150,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'",
+          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_PteroSaddle.PrimalItemArmor_PteroSaddle'"
+        },
+        {
+          "Level": 150,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'",
+          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_PteroSaddle.PrimalItemArmor_PteroSaddle'"
+        },
+        {
+          "Level": 150,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'",
+          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_PteroSaddle.PrimalItemArmor_PteroSaddle'"
+        },
+        {
+          "Level": 150,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Doedicurus/Doed_Character_BP.Doed_Character_BP'",
+          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_DoedSaddle.PrimalItemArmor_DoedSaddle'"
+        },
+        {
+          "Level": 150,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Doedicurus/Doed_Character_BP.Doed_Character_BP'",
+          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_DoedSaddle.PrimalItemArmor_DoedSaddle'"
+        },
+        {
+          "Level": 150,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Doedicurus/Doed_Character_BP.Doed_Character_BP'",
+          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_DoedSaddle.PrimalItemArmor_DoedSaddle'"
+        },
+        {
+          "Level": 150,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ankylo/Ankylo_Character_BP.Ankylo_Character_BP'",
+          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_AnkyloSaddle.PrimalItemArmor_AnkyloSaddle'"
+        },
+        {
+          "Level": 150,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ankylo/Ankylo_Character_BP.Ankylo_Character_BP'",
+          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_AnkyloSaddle.PrimalItemArmor_AnkyloSaddle'"
+        },
+        {
+          "Level": 150,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ankylo/Ankylo_Character_BP.Ankylo_Character_BP'",
+          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_AnkyloSaddle.PrimalItemArmor_AnkyloSaddle'"
+        },
+        {
+          "Level": 150,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Beaver/Beaver_Character_BP.Beaver_Character_BP'",
+          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_BeaverSaddle.PrimalItemArmor_BeaverSaddle'"
+        },
+        {
+          "Level": 150,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Beaver/Beaver_Character_BP.Beaver_Character_BP'",
+          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_BeaverSaddle.PrimalItemArmor_BeaverSaddle'"
+        },
+        {
+          "Level": 150,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Beaver/Beaver_Character_BP.Beaver_Character_BP'",
+          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_BeaverSaddle.PrimalItemArmor_BeaverSaddle'"
+        }
+      ]
+    }
+  }
+}

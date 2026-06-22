@@ -1,5 +1,5 @@
 // Loot design — the tweakable spec, encoded from
-// docs/internal/design/supply-crate-loot-design.md (APPROVED 2026-06-21).
+// docs/internal/design/economy/loot-crates.md (APPROVED 2026-06-21).
 // The engine (gen-loot.ts) turns this + Beacon's class-string data into Game.ini.
 // Edit weights/quantities/quality here, then re-run `bun run gen-loot.ts`.
 

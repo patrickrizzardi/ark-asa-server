@@ -273,8 +273,14 @@ setup_plugin_configs() {
   # ("Plugin … does not exist"). The DLL + everything else stay in the deploy_plugins()-managed
   # dir; only config.json points at the host bind.
   #
-  # Seed-if-absent: if the host has no config.json yet, copy the image default before linking;
-  # never overwrite a config the operator already edited.
+  # Config source differs per plugin:
+  #   - ArkShop: the catalog (ShopItems/Kits/points) is GENERATED + tracked at
+  #     config/arkshop.config.json (tools/gen-shop.ts; the repo is the source of truth). Deploy that
+  #     seed onto the host config every boot, overwriting — so a `git pull` + restart updates the
+  #     shop, mirroring how config/Game.ini drives loot. The seed carries NO secrets; the Mysql block
+  #     is injected AFTER this (inject_plugin_db_config), onto the runtime host copy only.
+  #   - Permissions (and ArkShop if the seed is missing): seed-if-absent from the image default,
+  #     never overwriting an operator-edited config.
   #
   # Time: O(p) where p = plugin count (2 in practice — ArkShop + Permissions)  Space: O(1)
   local win64="${ARK_DIR}/ShooterGame/Binaries/Win64"
@@ -294,8 +300,14 @@ setup_plugin_configs() {
     fi
     mkdir -p "${host_dir}"
 
-    # Seed the host config.json from the deployed image default if absent.
-    if [[ ! -f "${host_dir}/config.json" && -f "${plugin_dir}/config.json" ]]; then
+    # ArkShop: deploy the generated, tracked catalog seed each boot (repo = source of truth).
+    # Mysql is injected onto this host copy afterwards (inject_plugin_db_config), so the tracked
+    # seed stays secret-free. Falls back to seed-if-absent if the seed isn't present.
+    local shop_seed="/home/container/config/arkshop.config.json"
+    if [[ "${plugin}" == "ArkShop" && -f "${shop_seed}" ]]; then
+      cp "${shop_seed}" "${host_dir}/config.json"
+      echo "[entrypoint] Deployed ArkShop catalog from tracked seed (config/arkshop.config.json)."
+    elif [[ ! -f "${host_dir}/config.json" && -f "${plugin_dir}/config.json" ]]; then
       cp "${plugin_dir}/config.json" "${host_dir}/config.json"
       echo "[entrypoint] Seeded ${plugin} config.json from image default."
     fi
