@@ -8,7 +8,7 @@ Global cross-workstream items only. Granular per-chat work lives in:
 
 ## Now (active cross-workstream items)
 
-- [ ] **Deploy + verify the supply-crate loot redesign** (built/integrated 2026-06-21, commit eb26ba9; design `docs/internal/design/supply-crate-loot-design.md`, generator `tools/gen-loot.ts`). Pending Patrick home: (1) push → pull on dell → restart; (2) boot/syntax check (watch logs, settles Game.ini comment-survival); (3) in-game: pop crates per tier, confirm loot matches the design (only proof class strings resolve live). Then tune weights in `tools/loot-design.ts` → `bun run gen-loot.ts --write` → redeploy.
+- [ ] {item}
 
 ## Soon (committed, not started)
 
@@ -20,4 +20,5 @@ Global cross-workstream items only. Granular per-chat work lives in:
 
 ## Done (recent)
 
+- [x] **Supply-crate loot redesign — SHIPPED** (2026-06-22): all-8-maps custom loot via `tools/gen-loot.ts` (reads Beacon class-string snapshots in `docs/internal/reference/beacon-asa/`), 111 crate overrides in `config/Game.ini`, deployed + boot-verified clean on dell, playtested + amounts tuned down. Tweak loop: edit `tools/loot-design.ts` → `cd tools && bun run gen-loot.ts --write` → push → dell pull + restart. Design: `docs/internal/design/supply-crate-loot-design.md`. (Optional ongoing: in-game weight tuning to taste.)
 - [x] {item} (2026-06-20)

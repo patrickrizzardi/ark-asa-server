@@ -1,7 +1,7 @@
 # Supply Crate Loot Redesign — Design Spec
 
 **Date:** 2026-06-21
-**Status:** APPROVED 2026-06-21 — ready for implementation plan
+**Status:** SHIPPED 2026-06-22 — generated into `config/Game.ini` + deployed/boot-verified on dell. Tune via `tools/loot-design.ts` → `cd tools && bun run gen-loot.ts --write`.
 **Owner:** Patrick
 **Target file:** `config/Game.ini` (shared host-volume config; applies to every map in the cluster)
 
