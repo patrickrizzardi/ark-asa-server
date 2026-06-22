@@ -12,42 +12,22 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { beacon } from './beacon.ts';
 import * as D from './shop-design.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const refDir = join(here, '..', 'docs', 'internal', 'reference', 'beacon-asa');
+const refDir = beacon.refDir(here);
 const outDir = join(here, 'out');
 
-type Row = Record<string, string>;
-const parseTsv = (path: string): Row[] => {
-  const lines = readFileSync(path, 'utf8').split('\n').filter((l) => l.length > 0);
-  const header = (lines[0] ?? '').split('\t');
-  return lines.slice(1).map((line) => {
-    const cells = line.split('\t');
-    const row: Row = {};
-    header.forEach((h, i) => { row[h] = cells[i] ?? ''; });
-    return row;
-  });
-};
-
-// --- label -> blueprint path (exact label; first occurrence wins, so base variant beats Aberrant) ---
-const buildIndex = (rows: Row[]): Map<string, string> => {
-  const m = new Map<string, string>();
-  for (const r of rows) if (r.label && r.path && !m.has(r.label)) m.set(r.label, r.path);
-  return m;
-};
-const dinoPath = buildIndex(parseTsv(join(refDir, 'creatures.tsv')));
-const itemPath = buildIndex(parseTsv(join(refDir, 'engrams.tsv')));
-
+// --- label -> Blueprint'<path>' (ArkShop wants the full UE reference form; first occurrence wins) ---
 const misses = new Set<string>();
-// ArkShop wants the full UE reference form: Blueprint'/Game/....X.X'
-const bp = (index: Map<string, string>, label: string, kind: string): string => {
-  const path = index.get(label);
-  if (path === undefined) { misses.add(`${kind}: ${label}`); return `UNRESOLVED:${label}`; }
-  return `Blueprint'${path}'`;
-};
-const dinoBp = (label: string): string => bp(dinoPath, label, 'dino');
-const itemBp = (label: string): string => bp(itemPath, label, 'item');
+const wrapBp = (path: string): string => `Blueprint'${path}'`;
+const dinoIndex = beacon.buildIndex(beacon.parseTsv(join(refDir, 'creatures.tsv')), (r) => r.path);
+const itemIndex = beacon.buildIndex(beacon.parseTsv(join(refDir, 'engrams.tsv')), (r) => r.path);
+const resolveDino = beacon.makeResolver(dinoIndex, misses, wrapBp);
+const resolveItem = beacon.makeResolver(itemIndex, misses, wrapBp);
+const dinoBp = (label: string): string => resolveDino(label, 'dino');
+const itemBp = (label: string): string => resolveItem(label, 'item');
 
 // --- ArkShop config object shapes ---
 type ItemEntry = { Quality: number; ForceBlueprint: boolean; Amount: number; Blueprint: string };
@@ -117,7 +97,15 @@ for (const k of D.kits) {
 // `json.exception.type_error.306 cannot use value() with null` load failure). We replace ONLY the
 // three blocks we own: General.TimedPointsReward (income), ShopItems, Kits. Mysql stays the base's
 // placeholder (UseMysql:false, empty creds) — the entrypoint injects real creds at boot.
-const config = JSON.parse(readFileSync(join(here, 'arkshop-config.base.json'), 'utf8'));
+// The base file is ours (captured from ArkShop's default); `as` is justified — we know its shape and
+// only touch these three blocks. Indexer keeps Messages/SellItems/Mysql intact + untyped passthrough.
+type ArkShopConfig = {
+  General: { TimedPointsReward: Record<string, unknown> };
+  ShopItems: Record<string, ShopItem>;
+  Kits: Record<string, Kit>;
+  [key: string]: unknown;
+};
+const config = JSON.parse(readFileSync(join(here, 'arkshop-config.base.json'), 'utf8')) as ArkShopConfig;
 config.General.TimedPointsReward = {
   ...config.General.TimedPointsReward,
   Enabled: true,
@@ -132,15 +120,15 @@ mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, 'arkshop-config.json'), JSON.stringify(config, null, 2) + '\n');
 
 const report = [
-  `ShopItems: ${Object.keys(shopItems).length} (${D.dinos.length} dinos, ${D.resources.length} resources, ${D.kibble.length} kibble, ${D.bossKits.length} boss sets)`,
+  `ShopItems: ${Object.keys(shopItems).length} (${D.dinos.length} dinos, ${D.resources.length} resources, ${D.kibble.length} kibble, ${D.consumables.length} consumables, ${D.bossKits.length} boss sets)`,
   `Kits: ${Object.keys(kits).length} — ${D.kits.map((k) => `${k.id}(x${k.defaultAmount}, ${k.price}pt)`).join(', ')}`,
   `Income: ${D.income.amountPerInterval} pts / ${D.income.intervalMinutes} min (~${Math.round(D.income.amountPerInterval * (60 / D.income.intervalMinutes))}/hr)`,
   '',
   'Dinos:',
   ...D.dinos.map((d) => `  ${String(d.price).padStart(6)}  L${D.capForRole(d.role)}  ${d.label} (${d.role})`),
   '',
-  'Resources + Kibble:',
-  ...[...D.resources, ...D.kibble].map((r) => `  ${String(r.price).padStart(6)}  ${r.amount}x ${r.label}`),
+  'Resources + Kibble + Consumables:',
+  ...[...D.resources, ...D.kibble, ...D.consumables].map((r) => `  ${String(r.price).padStart(6)}  ${r.amount}x ${r.label}`),
 ].join('\n');
 writeFileSync(join(outDir, 'shop-report.txt'), report + '\n');
 

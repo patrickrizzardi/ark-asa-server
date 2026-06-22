@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Config tooling for the ark-asa server (seed of the M4 TS CLI).",
   "scripts": {
-    "gen-loot": "bun run gen-loot.ts"
+    "gen-loot": "bun run gen-loot.ts",
+    "gen-shop": "bun run gen-shop.ts"
   }
 }
