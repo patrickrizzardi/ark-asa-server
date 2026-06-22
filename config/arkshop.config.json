@@ -41,7 +41,7 @@
     "starter": {
       "DefaultAmount": 3,
       "Price": 0,
-      "Description": "Free survival kit — one loadout per claim, 3 claims total (re-claim after a death).",
+      "Description": "Free survival kit — one rideable loadout per claim, 3 claims (re-claim after a death).",
       "OnlyFromSpawn": false,
       "Items": [
         {
@@ -97,6 +97,192 @@
           "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_BeaverSaddle.PrimalItemArmor_BeaverSaddle'"
         }
       ]
+    },
+    "weapons": {
+      "DefaultAmount": 3,
+      "Price": 0,
+      "Description": "Free weapons kit — basic primitive gear, 3 claims (re-claim after a death).",
+      "OnlyFromSpawn": false,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 1,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponCrossbow.PrimalItem_WeaponCrossbow'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 2,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponSpear.PrimalItem_WeaponSpear'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 3,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponBola.PrimalItem_WeaponBola'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 100,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItemAmmo_ArrowStone.PrimalItemAmmo_ArrowStone'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 50,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItemAmmo_ArrowTranq.PrimalItemAmmo_ArrowTranq'"
+        }
+      ],
+      "Dinos": []
+    },
+    "taming": {
+      "DefaultAmount": 5,
+      "Price": 3000,
+      "Description": "Taming kit (buy up to 5) — journeyman longneck, darts, narcotics, kibble.",
+      "OnlyFromSpawn": false,
+      "Items": [
+        {
+          "Quality": 3,
+          "ForceBlueprint": false,
+          "Amount": 1,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponOneShotRifle.PrimalItem_WeaponOneShotRifle'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 500,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItemAmmo_TranqDart.PrimalItemAmmo_TranqDart'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 50,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponBola.PrimalItem_WeaponBola'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 200,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Narcotic.PrimalItemConsumable_Narcotic'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 20,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Large.PrimalItemConsumable_Kibble_Base_Large'"
+        }
+      ],
+      "Dinos": []
+    },
+    "defense": {
+      "DefaultAmount": 5,
+      "Price": 5000,
+      "Description": "Defense kit (buy up to 5) — 5 heavy turrets + ammo, metal spikes, a riot set.",
+      "OnlyFromSpawn": false,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 5,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Structures/Misc/PrimalItemStructure_HeavyTurret.PrimalItemStructure_HeavyTurret'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 2500,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItemAmmo_AdvancedRifleBullet.PrimalItemAmmo_AdvancedRifleBullet'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Structures/Metal/PrimalItemStructure_MetalSpikeWall.PrimalItemStructure_MetalSpikeWall'"
+        },
+        {
+          "Quality": 4,
+          "ForceBlueprint": false,
+          "Amount": 1,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Riot/PrimalItemArmor_RiotHelmet.PrimalItemArmor_RiotHelmet'"
+        },
+        {
+          "Quality": 4,
+          "ForceBlueprint": false,
+          "Amount": 1,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Riot/PrimalItemArmor_RiotShirt.PrimalItemArmor_RiotShirt'"
+        },
+        {
+          "Quality": 4,
+          "ForceBlueprint": false,
+          "Amount": 1,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Riot/PrimalItemArmor_RiotPants.PrimalItemArmor_RiotPants'"
+        },
+        {
+          "Quality": 4,
+          "ForceBlueprint": false,
+          "Amount": 1,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Riot/PrimalItemArmor_RiotGloves.PrimalItemArmor_RiotGloves'"
+        },
+        {
+          "Quality": 4,
+          "ForceBlueprint": false,
+          "Amount": 1,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Riot/PrimalItemArmor_RiotBoots.PrimalItemArmor_RiotBoots'"
+        }
+      ],
+      "Dinos": []
+    },
+    "taming_water": {
+      "DefaultAmount": 5,
+      "Price": 4000,
+      "Description": "Underwater taming kit (buy up to 5) — SCUBA gear, harpoon + tranq spear bolts.",
+      "OnlyFromSpawn": false,
+      "Items": [
+        {
+          "Quality": 2,
+          "ForceBlueprint": false,
+          "Amount": 1,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/SCUBA/PrimalItemArmor_ScubaShirt_SuitWithTank.PrimalItemArmor_ScubaShirt_SuitWithTank'"
+        },
+        {
+          "Quality": 2,
+          "ForceBlueprint": false,
+          "Amount": 1,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/SCUBA/PrimalItemArmor_ScubaHelmet_Goggles.PrimalItemArmor_ScubaHelmet_Goggles'"
+        },
+        {
+          "Quality": 2,
+          "ForceBlueprint": false,
+          "Amount": 1,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/SCUBA/PrimalItemArmor_ScubaBoots_Flippers.PrimalItemArmor_ScubaBoots_Flippers'"
+        },
+        {
+          "Quality": 2,
+          "ForceBlueprint": false,
+          "Amount": 1,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/SCUBA/PrimalItemArmor_ScubaPants.PrimalItemArmor_ScubaPants'"
+        },
+        {
+          "Quality": 3,
+          "ForceBlueprint": false,
+          "Amount": 1,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponHarpoon.PrimalItem_WeaponHarpoon'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 200,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItemAmmo_TranqSpearBolt.PrimalItemAmmo_TranqSpearBolt'"
+        },
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 20,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Large.PrimalItemConsumable_Kibble_Base_Large'"
+        }
+      ],
+      "Dinos": []
     }
   },
   "ShopItems": {
@@ -640,6 +826,97 @@
           "ForceBlueprint": false,
           "Amount": 50,
           "Blueprint": "Blueprint'/Game/Aberration/CoreBlueprints/Resources/PrimalItemResource_Gas.PrimalItemResource_Gas'"
+        }
+      ]
+    },
+    "kibble_basic": {
+      "Type": "item",
+      "Description": "Basic Kibble (10x)",
+      "Price": 50,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_XSmall.PrimalItemConsumable_Kibble_Base_XSmall'"
+        }
+      ]
+    },
+    "kibble_simple": {
+      "Type": "item",
+      "Description": "Simple Kibble (10x)",
+      "Price": 100,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Small.PrimalItemConsumable_Kibble_Base_Small'"
+        }
+      ]
+    },
+    "kibble_regular": {
+      "Type": "item",
+      "Description": "Regular Kibble (10x)",
+      "Price": 200,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Medium.PrimalItemConsumable_Kibble_Base_Medium'"
+        }
+      ]
+    },
+    "kibble_superior": {
+      "Type": "item",
+      "Description": "Superior Kibble (10x)",
+      "Price": 300,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Large.PrimalItemConsumable_Kibble_Base_Large'"
+        }
+      ]
+    },
+    "kibble_exceptional": {
+      "Type": "item",
+      "Description": "Exceptional Kibble (10x)",
+      "Price": 400,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_XLarge.PrimalItemConsumable_Kibble_Base_XLarge'"
+        }
+      ]
+    },
+    "kibble_extraordinary": {
+      "Type": "item",
+      "Description": "Extraordinary Kibble (10x)",
+      "Price": 500,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 10,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_Kibble_Base_Special.PrimalItemConsumable_Kibble_Base_Special'"
+        }
+      ]
+    },
+    "mindwipe": {
+      "Type": "item",
+      "Description": "Mindwipe Tonic (1x)",
+      "Price": 1000,
+      "Items": [
+        {
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Amount": 1,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/BaseBPs/PrimalItemConsumableRespecSoup.PrimalItemConsumableRespecSoup'"
         }
       ]
     }

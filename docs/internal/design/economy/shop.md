@@ -85,22 +85,24 @@ No resource caps for now (revisit if a resource turns out to be abused).
 
 ---
 
-## 5. Free survival kit — claimable 3× (`DefaultAmount: 3`), all dinos level 150
+## 5. Kits
 
-**One loadout per claim** (not all at once — a single death shouldn't wipe everything):
+Free dinos/limited gear **must** be kits (shop items can't be capped). Kits are also the **sanctioned
+exception** to "sell only raw resources / force crafting" — they may contain finished gear *because*
+they're purchase-limited (`DefaultAmount`). ArkShop quality index: 0 prim · 1 ram · 2 app · 3 journ ·
+4 master · 5 asc.
 
-| Item (per claim) | Qty |
-|---|---|
-| Pteranodon | 1 |
-| Doedicurus | 1 |
-| Ankylosaurus | 1 |
-| Castoroides | 1 |
-| Metal Armor set (Mastercraft) | 1 |
+| Kit | Price | Claims | Contents (per claim) |
+|---|---|---|---|
+| **starter** (survival) | free | 3 | 1 Ptera + 1 Doed + 1 Anky + 1 Castoroides (all lvl 150, w/ saddles) + 1 Mastercraft flak set |
+| **weapons** | free | 3 | Crossbow ×1, Spear ×2, Bola ×3, Stone Arrow ×100, Tranq Arrow ×50 (all primitive) |
+| **taming** | 3,000 | 5 | Journeyman Longneck ×1, Tranq Dart ×500, Bola ×50, Narcotic ×200, Superior Kibble ×20 |
+| **defense** | 5,000 | 5 | Heavy Turret ×5, ARB ×2,500 (500/turret), Metal Spike Wall ×10, Mastercraft Riot set |
+| **taming_water** | 4,000 | 5 | SCUBA set (4pc, Q2), Harpoon Gun (Q3), Tranq Spear Bolt ×200, Superior Kibble ×20 |
 
-**3 chances to survive**: claim → die → re-claim (chance 2) → die → re-claim (chance 3) → then you're
-on your own. Each claim is one rideable loadout (dinos come with saddles). Purpose: skip the painful
-first hour + survive early deaths against established PvPers, without becoming a permanent crutch — a
-level-150 with no breeding/imprint is **not** endgame.
+**The two free kits use the 3-claim survival model**: claim → die → re-claim, 3× then on your own
+(one death shouldn't wipe everything). Riot > Flak (~15% more armor, Beacon-verified) so the paid
+defense kit upgrades the free flak. Free dinos are flat lvl-150 — a leg-up, not endgame.
 
 ---
 
@@ -197,6 +199,18 @@ elite stuff** — so buying is a convenience tax, never the efficient path.
 > Element is sold as **Element Dust** (not element) — keeps crafting in the loop (players craft dust
 > → element / shards themselves, in-inventory). 50,000 dust = 50 element worth.
 > Gems + Gas Ball are Aberration-flavored — keep only if Ab is in rotation.
+
+### Kibble — uncapped, priced by tier (sold per 10)
+Cheap-ish but not trivial early (~2,500/hr income): Basic 50 · Simple 100 · Regular 200 · Superior
+300 · Exceptional 400 · Extraordinary 500.
+
+### Consumables — uncapped
+| Item | Qty | Price |
+|---|---|---|
+| Mindwipe Tonic | 1 | 1,000 |
+
+> No vanilla **Dino** Mindwipe Tonic exists in ASA (only mod versions) — omitted; re-add if a
+> dino-respec mod is installed.
 
 ---
 

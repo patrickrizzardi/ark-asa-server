@@ -92,26 +92,111 @@ export const resources: ShopResource[] = [
   { id: 'gasball', label: 'Congealed Gas Ball', amount: 50, price: 800 },
 ];
 
-// --- Free starter kit (claim once; all dinos lvl 150; the ONLY capped thing) ---
+// --- Kibble (uncapped shop items; priced by tier — higher kibble costs more) ---
+// Sold per 10 (a taming-sized chunk). Cheap-ish but not trivial early (income ~2,500/hr).
+export const kibble: ShopResource[] = [
+  { id: 'kibble_basic', label: 'Basic Kibble', amount: 10, price: 50 },
+  { id: 'kibble_simple', label: 'Simple Kibble', amount: 10, price: 100 },
+  { id: 'kibble_regular', label: 'Regular Kibble', amount: 10, price: 200 },
+  { id: 'kibble_superior', label: 'Superior Kibble', amount: 10, price: 300 },
+  { id: 'kibble_exceptional', label: 'Exceptional Kibble', amount: 10, price: 400 },
+  { id: 'kibble_extraordinary', label: 'Extraordinary Kibble', amount: 10, price: 500 },
+];
+
+// --- Consumables (uncapped shop items) ---
+export const consumables: ShopResource[] = [
+  { id: 'mindwipe', label: 'Mindwipe Tonic', amount: 1, price: 1000 },
+  // NOTE: no vanilla "Dino Mindwipe Tonic" exists in ASA (only mod versions, e.g. "CS Dino Mindwipe",
+  // which we don't run) — omitted. Re-add if a dino-respec mod is installed.
+];
+
+// --- Kits ---
+// Free dinos/limited gear MUST be kits (shop items can't be capped). Kits are also the SANCTIONED
+// EXCEPTION to "sell only raw resources / force crafting" — they may contain finished gear BECAUSE
+// they're purchase-limited (DefaultAmount). ArkShop quality index: 0 prim,1 ram,2 app,3 journ,4 master,5 asc.
 export const STARTER_LEVEL = 150;
-export const MASTERCRAFT_QUALITY = 4; // ArkShop quality index: 0 prim,1 ram,2 app,3 journ,4 master,5 asc
-// "Metal armor" in ARK = Flak (the metal-tier armor set). 3 full sets = qty 3 per piece.
+export const MASTERCRAFT_QUALITY = 4;
+// "Metal armor" in ARK = Flak (metal-tier set); Riot = higher-armor set (paid defense upgrade).
 export const flakSet = ['Flak Helmet', 'Flak Chestpiece', 'Flak Leggings', 'Flak Gauntlets', 'Flak Boots'];
-export const starterKit = {
-  id: 'starter',
-  defaultAmount: 3, // 3 claims = 3 SURVIVAL CHANCES: re-claim after each death, then you're on your own.
-  price: 0,
-  onlyFromSpawn: false,
-  description: 'Free survival kit — one loadout per claim, 3 claims total (re-claim after a death).',
-  armorQty: 1, // one flak set per claim (not all 3 at once → a single death doesn't wipe everything)
-  // dino label → primitive saddle label (so they're rideable); ONE of each per claim.
-  dinos: [
-    { label: 'Pteranodon', saddle: 'Pteranodon Saddle', count: 1 },
-    { label: 'Doedicurus', saddle: 'Doedicurus Saddle', count: 1 },
-    { label: 'Ankylosaurus', saddle: 'Ankylosaurus Saddle', count: 1 },
-    { label: 'Castoroides', saddle: 'Castoroides Saddle', count: 1 },
-  ],
-} as const;
+export const riotSet = ['Riot Helmet', 'Riot Chestpiece', 'Riot Leggings', 'Riot Gauntlets', 'Riot Boots'];
+
+export type KitItem = { label: string; quality: number; amount: number };
+export type KitDinoSpec = { label: string; saddle: string | null; level: number; count: number };
+export type Kit = {
+  id: string; defaultAmount: number; price: number; onlyFromSpawn: boolean;
+  description: string; dinos: KitDinoSpec[]; items: KitItem[];
+};
+// expand an armor set (5 pieces) into per-piece kit items
+const armor = (set: string[], quality: number, amount: number): KitItem[] =>
+  set.map((label) => ({ label, quality, amount }));
+
+export const kits: Kit[] = [
+  // FREE survival kit — 3 claims (re-claim after a death), one loadout each; dinos lvl 150 w/ saddles.
+  {
+    id: 'starter', defaultAmount: 3, price: 0, onlyFromSpawn: false,
+    description: 'Free survival kit — one rideable loadout per claim, 3 claims (re-claim after a death).',
+    dinos: [
+      { label: 'Pteranodon', saddle: 'Pteranodon Saddle', level: STARTER_LEVEL, count: 1 },
+      { label: 'Doedicurus', saddle: 'Doedicurus Saddle', level: STARTER_LEVEL, count: 1 },
+      { label: 'Ankylosaurus', saddle: 'Ankylosaurus Saddle', level: STARTER_LEVEL, count: 1 },
+      { label: 'Castoroides', saddle: 'Castoroides Saddle', level: STARTER_LEVEL, count: 1 },
+    ],
+    items: armor(flakSet, MASTERCRAFT_QUALITY, 1),
+  },
+  // FREE weapons kit — 3 claims, all primitive basics.
+  {
+    id: 'weapons', defaultAmount: 3, price: 0, onlyFromSpawn: false,
+    description: 'Free weapons kit — basic primitive gear, 3 claims (re-claim after a death).',
+    dinos: [],
+    items: [
+      { label: 'Crossbow', quality: 0, amount: 1 },
+      { label: 'Spear', quality: 0, amount: 2 },
+      { label: 'Bola', quality: 0, amount: 3 },
+      { label: 'Stone Arrow', quality: 0, amount: 100 },
+      { label: 'Tranquilizer Arrow', quality: 0, amount: 50 },
+    ],
+  },
+  // PAID taming kit — buy up to 5; mid-tier longneck (journeyman), 500 darts, narcotics, a kibble stack.
+  {
+    id: 'taming', defaultAmount: 5, price: 3000, onlyFromSpawn: false,
+    description: 'Taming kit (buy up to 5) — journeyman longneck, darts, narcotics, kibble.',
+    dinos: [],
+    items: [
+      { label: 'Longneck Rifle', quality: 3, amount: 1 },
+      { label: 'Tranquilizer Dart', quality: 0, amount: 500 },
+      { label: 'Bola', quality: 0, amount: 50 }, // cheap to craft anyway
+      { label: 'Narcotic', quality: 0, amount: 200 },
+      { label: 'Superior Kibble', quality: 0, amount: 20 },
+    ],
+  },
+  // PAID defense kit — buy up to 5; heavy turrets (NOT tek), 500 ARB/turret, metal spikes, a Riot set.
+  {
+    id: 'defense', defaultAmount: 5, price: 5000, onlyFromSpawn: false,
+    description: 'Defense kit (buy up to 5) — 5 heavy turrets + ammo, metal spikes, a riot set.',
+    dinos: [],
+    items: [
+      { label: 'Heavy Turret', quality: 0, amount: 5 },
+      { label: 'Advanced Rifle Bullet', quality: 0, amount: 2500 }, // 500 per turret × 5
+      { label: 'Metal Spike Wall', quality: 0, amount: 10 },
+      ...armor(riotSet, MASTERCRAFT_QUALITY, 1),
+    ],
+  },
+  // PAID underwater taming kit — buy up to 5; SCUBA set + harpoon + tranq spear bolts. Pricier than land taming.
+  {
+    id: 'taming_water', defaultAmount: 5, price: 4000, onlyFromSpawn: false,
+    description: 'Underwater taming kit (buy up to 5) — SCUBA gear, harpoon + tranq spear bolts.',
+    dinos: [],
+    items: [
+      { label: 'SCUBA Tank', quality: 2, amount: 1 },
+      { label: 'SCUBA Mask', quality: 2, amount: 1 },
+      { label: 'SCUBA Flippers', quality: 2, amount: 1 },
+      { label: 'SCUBA Leggings', quality: 2, amount: 1 },
+      { label: 'Harpoon Gun', quality: 3, amount: 1 },
+      { label: 'Tranq Spear Bolt', quality: 0, amount: 200 },
+      { label: 'Superior Kibble', quality: 0, amount: 20 },
+    ],
+  },
+];
 
 // --- Boss tribute sets (uncapped shop items; base 120k; CONTENTS TBD per boss) ---
 // Placeholder until Patrick picks bosses/difficulties (shop.md §8). Drafted from Beacon at build.

@@ -69,8 +69,8 @@ for (const d of D.dinos) {
     Blueprint: dinoBp(d.label),
   };
 }
-// --- resources as item entries ---
-for (const r of D.resources) {
+// --- resources + kibble + consumables as item entries (all uncapped shop items) ---
+for (const r of [...D.resources, ...D.kibble, ...D.consumables]) {
   shopItems[r.id] = {
     Type: 'item',
     Description: `${r.label} (${r.amount}x)`,
@@ -88,26 +88,29 @@ for (const b of D.bossKits) {
   };
 }
 
-// --- build Kits: the one free starter kit (claim once) ---
-const starterDinos: KitDino[] = [];
-for (const e of D.starterKit.dinos) {
-  for (let i = 0; i < e.count; i++) {
-    starterDinos.push({ Level: D.STARTER_LEVEL, Blueprint: dinoBp(e.label), SaddleBlueprint: itemBp(e.saddle) });
+// --- build Kits (general): free survival + free weapons + paid taming + paid defense ---
+const kits: Record<string, Kit> = {};
+for (const k of D.kits) {
+  const dinos: KitDino[] = [];
+  for (const d of k.dinos) {
+    for (let i = 0; i < d.count; i++) {
+      const entry: KitDino = { Level: d.level, Blueprint: dinoBp(d.label) };
+      if (d.saddle) entry.SaddleBlueprint = itemBp(d.saddle);
+      dinos.push(entry);
+    }
   }
+  const items: ItemEntry[] = k.items.map((it) => ({
+    Quality: it.quality, ForceBlueprint: false, Amount: it.amount, Blueprint: itemBp(it.label),
+  }));
+  kits[k.id] = {
+    DefaultAmount: k.defaultAmount,
+    Price: k.price,
+    Description: k.description,
+    OnlyFromSpawn: k.onlyFromSpawn,
+    Items: items,
+    Dinos: dinos,
+  };
 }
-const starterItems: ItemEntry[] = D.flakSet.map((piece) => ({
-  Quality: D.MASTERCRAFT_QUALITY, ForceBlueprint: false, Amount: D.starterKit.armorQty, Blueprint: itemBp(piece),
-}));
-const kits: Record<string, Kit> = {
-  [D.starterKit.id]: {
-    DefaultAmount: D.starterKit.defaultAmount,
-    Price: D.starterKit.price,
-    Description: D.starterKit.description,
-    OnlyFromSpawn: D.starterKit.onlyFromSpawn,
-    Items: starterItems,
-    Dinos: starterDinos,
-  },
-};
 
 // --- assemble config: OVERLAY onto the real ArkShop default (arkshop-config.base.json) ---
 // The base carries every key ArkShop reads — incl. Messages + SellItems (omitting them caused a
@@ -126,21 +129,18 @@ config.Kits = kits;
 
 // --- write outputs ---
 mkdirSync(outDir, { recursive: true });
-const dinoCount = D.dinos.length;
-const resCount = D.resources.length;
-const bossCount = D.bossKits.length;
 writeFileSync(join(outDir, 'arkshop-config.json'), JSON.stringify(config, null, 2) + '\n');
 
 const report = [
-  `ShopItems: ${Object.keys(shopItems).length} (${dinoCount} dinos, ${resCount} resources, ${bossCount} boss sets)`,
-  `Kits: ${Object.keys(kits).length} (starter: ${starterDinos.length} dinos + ${starterItems.length} armor pieces)`,
+  `ShopItems: ${Object.keys(shopItems).length} (${D.dinos.length} dinos, ${D.resources.length} resources, ${D.kibble.length} kibble, ${D.bossKits.length} boss sets)`,
+  `Kits: ${Object.keys(kits).length} — ${D.kits.map((k) => `${k.id}(x${k.defaultAmount}, ${k.price}pt)`).join(', ')}`,
   `Income: ${D.income.amountPerInterval} pts / ${D.income.intervalMinutes} min (~${Math.round(D.income.amountPerInterval * (60 / D.income.intervalMinutes))}/hr)`,
   '',
   'Dinos:',
   ...D.dinos.map((d) => `  ${String(d.price).padStart(6)}  L${D.capForRole(d.role)}  ${d.label} (${d.role})`),
   '',
-  'Resources:',
-  ...D.resources.map((r) => `  ${String(r.price).padStart(6)}  ${r.amount}x ${r.label}`),
+  'Resources + Kibble:',
+  ...[...D.resources, ...D.kibble].map((r) => `  ${String(r.price).padStart(6)}  ${r.amount}x ${r.label}`),
 ].join('\n');
 writeFileSync(join(outDir, 'shop-report.txt'), report + '\n');
 
