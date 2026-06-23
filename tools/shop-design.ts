@@ -18,52 +18,58 @@ export type Role =
 export const capForRole = (role: Role): number => (role === 'utilpet' ? 300 : 225);
 
 // --- Dino catalog (uncapped shop items; price = rarity/desirability, cap = role) ---
-export type Dino = { id: string; label: string; price: number; role: Role };
+// Each store dino ships WITH its saddle equipped (primitive quality) so it's rideable out of the
+// box — same convenience the kits already give. `saddle: null` = no saddle item exists for it
+// (light pets, shoulder pets, bareback gliders, non-rideable). Labels MUST match Beacon's engrams.tsv
+// exactly (resolver FAILS LOUD on a miss). Primitive-only by design: buying gets you mobile, not
+// armored — better saddles still come from crafting/looting (preserves the crafting loop per shop.md §6).
+// Cryopod delivery is unaffected — GiveDinosInCryopods (base config) pods the saddled dino as one item.
+export type Dino = { id: string; label: string; price: number; role: Role; saddle: string | null };
 export const dinos: Dino[] = [
-  // util-pet (300)
-  { id: 'featherlight', label: 'Featherlight', price: 1000, role: 'utilpet' },
-  { id: 'bulbdog', label: 'Bulbdog', price: 1000, role: 'utilpet' },
-  { id: 'glowtail', label: 'Glowtail', price: 1000, role: 'utilpet' },
-  { id: 'shinehorn', label: 'Shinehorn', price: 1000, role: 'utilpet' },
-  { id: 'sinomacrops', label: 'Sinomacrops', price: 1500, role: 'utilpet' },
-  { id: 'otter', label: 'Otter', price: 1500, role: 'utilpet' },
+  // util-pet (300) — all bareback/shoulder pets: no saddle item
+  { id: 'featherlight', label: 'Featherlight', price: 1000, role: 'utilpet', saddle: null },
+  { id: 'bulbdog', label: 'Bulbdog', price: 1000, role: 'utilpet', saddle: null },
+  { id: 'glowtail', label: 'Glowtail', price: 1000, role: 'utilpet', saddle: null },
+  { id: 'shinehorn', label: 'Shinehorn', price: 1000, role: 'utilpet', saddle: null },
+  { id: 'sinomacrops', label: 'Sinomacrops', price: 1500, role: 'utilpet', saddle: null }, // bareback glider
+  { id: 'otter', label: 'Otter', price: 1500, role: 'utilpet', saddle: null }, // shoulder pet
   // green (225)
-  { id: 'parasaur', label: 'Parasaurolophus', price: 1000, role: 'scout' },
-  { id: 'raptor', label: 'Raptor', price: 1500, role: 'combat' },
-  { id: 'trike', label: 'Triceratops', price: 1500, role: 'combat' },
-  { id: 'ptera', label: 'Pteranodon', price: 2000, role: 'transport' },
-  { id: 'diplo', label: 'Diplocaulus', price: 2000, role: 'util' }, // underwater air; scales w/ lvl → 225
-  { id: 'saber', label: 'Sabertooth', price: 2500, role: 'combat' },
-  { id: 'anky', label: 'Ankylosaurus', price: 2500, role: 'gatherer' },
-  { id: 'doed', label: 'Doedicurus', price: 2500, role: 'gatherer' },
+  { id: 'parasaur', label: 'Parasaurolophus', price: 1000, role: 'scout', saddle: 'Parasaur Saddle' },
+  { id: 'raptor', label: 'Raptor', price: 1500, role: 'combat', saddle: 'Raptor Saddle' },
+  { id: 'trike', label: 'Triceratops', price: 1500, role: 'combat', saddle: 'Trike Saddle' },
+  { id: 'ptera', label: 'Pteranodon', price: 2000, role: 'transport', saddle: 'Pteranodon Saddle' },
+  { id: 'diplo', label: 'Diplocaulus', price: 2000, role: 'util', saddle: null }, // underwater air; NOT Diplodocus — Diplocaulus has no saddle
+  { id: 'saber', label: 'Sabertooth', price: 2500, role: 'combat', saddle: 'Sabertooth Saddle' },
+  { id: 'anky', label: 'Ankylosaurus', price: 2500, role: 'gatherer', saddle: 'Ankylosaurus Saddle' },
+  { id: 'doed', label: 'Doedicurus', price: 2500, role: 'gatherer', saddle: 'Doedicurus Saddle' },
   // blue (225)
-  { id: 'carno', label: 'Carnotaurus', price: 3000, role: 'combat' },
-  { id: 'megalodon', label: 'Megalodon', price: 3000, role: 'combat' },
-  { id: 'bary', label: 'Baryonyx', price: 3500, role: 'combat' },
-  { id: 'direbear', label: 'Direbear', price: 3500, role: 'combat' },
-  { id: 'dunkle', label: 'Dunkleosteus', price: 3500, role: 'gatherer' },
-  { id: 'argy', label: 'Argentavis', price: 4000, role: 'transport' },
+  { id: 'carno', label: 'Carnotaurus', price: 3000, role: 'combat', saddle: 'Carno Saddle' },
+  { id: 'megalodon', label: 'Megalodon', price: 3000, role: 'combat', saddle: 'Megalodon Saddle' },
+  { id: 'bary', label: 'Baryonyx', price: 3500, role: 'combat', saddle: 'Baryonyx Saddle' },
+  { id: 'direbear', label: 'Direbear', price: 3500, role: 'combat', saddle: 'Direbear Saddle' },
+  { id: 'dunkle', label: 'Dunkleosteus', price: 3500, role: 'gatherer', saddle: 'Dunkleosteus Saddle' },
+  { id: 'argy', label: 'Argentavis', price: 4000, role: 'transport', saddle: 'Argentavis Saddle' },
   // purple (225)
-  { id: 'mammoth', label: 'Mammoth', price: 4500, role: 'gatherer' },
-  { id: 'megatherium', label: 'Megatherium', price: 5000, role: 'gatherer' },
-  { id: 'daeodon', label: 'Daeodon', price: 5000, role: 'healer' },
-  { id: 'spino', label: 'Spinosaurus', price: 5500, role: 'combat' },
-  { id: 'snowowl', label: 'Snow Owl', price: 6000, role: 'transport' },
-  { id: 'theri', label: 'Therizinosaurus', price: 6000, role: 'combat' },
-  { id: 'yuty', label: 'Yutyrannus', price: 6500, role: 'combat' },
-  { id: 'rhynio', label: 'Rhyniognatha', price: 6500, role: 'combat' },
-  { id: 'quetz', label: 'Quetzalcoatlus', price: 7500, role: 'transport' },
+  { id: 'mammoth', label: 'Mammoth', price: 4500, role: 'gatherer', saddle: 'Mammoth Saddle' },
+  { id: 'megatherium', label: 'Megatherium', price: 5000, role: 'gatherer', saddle: 'Megatherium Saddle' },
+  { id: 'daeodon', label: 'Daeodon', price: 5000, role: 'healer', saddle: 'Daeodon Saddle' },
+  { id: 'spino', label: 'Spinosaurus', price: 5500, role: 'combat', saddle: 'Spino Saddle' },
+  { id: 'snowowl', label: 'Snow Owl', price: 6000, role: 'transport', saddle: 'Snow Owl Saddle' },
+  { id: 'theri', label: 'Therizinosaurus', price: 6000, role: 'combat', saddle: 'Therizinosaurus Saddle' },
+  { id: 'yuty', label: 'Yutyrannus', price: 6500, role: 'combat', saddle: 'Yutyrannus Saddle' },
+  { id: 'rhynio', label: 'Rhyniognatha', price: 6500, role: 'combat', saddle: 'Rhyniognatha Saddle' },
+  { id: 'quetz', label: 'Quetzalcoatlus', price: 7500, role: 'transport', saddle: 'Quetz Saddle' }, // standard, not platform
   // yellow (225)
-  { id: 'allo', label: 'Allosaurus', price: 8000, role: 'combat' },
-  { id: 'basilo', label: 'Basilosaurus', price: 8000, role: 'util' },
-  { id: 'rex', label: 'Rex', price: 10000, role: 'combat' },
-  { id: 'carcharo', label: 'Carcharodontosaurus', price: 10000, role: 'combat' },
+  { id: 'allo', label: 'Allosaurus', price: 8000, role: 'combat', saddle: 'Allosaurus Saddle' },
+  { id: 'basilo', label: 'Basilosaurus', price: 8000, role: 'util', saddle: 'Basilosaurus Saddle' },
+  { id: 'rex', label: 'Rex', price: 10000, role: 'combat', saddle: 'Rex Saddle' },
+  { id: 'carcharo', label: 'Carcharodontosaurus', price: 10000, role: 'combat', saddle: 'Carcharo Saddle' },
   // red (225)
-  { id: 'mosa', label: 'Mosasaurus', price: 12000, role: 'combat' },
-  { id: 'wyvern', label: 'Fire Wyvern', price: 13000, role: 'combat' }, // ASA wyverns are elemental; Fire is the sellable canonical
-  { id: 'tuso', label: 'Tusoteuthis', price: 13000, role: 'combat' },
-  { id: 'rockdrake', label: 'Rock Drake', price: 13000, role: 'combat' },
-  { id: 'giga', label: 'Giganotosaurus', price: 15000, role: 'combat' }, // apex = the 15k ceiling (6h)
+  { id: 'mosa', label: 'Mosasaurus', price: 12000, role: 'combat', saddle: 'Mosasaur Saddle' },
+  { id: 'wyvern', label: 'Fire Wyvern', price: 13000, role: 'combat', saddle: 'Fire Wyvern Saddle' }, // ASA wyverns are elemental + saddled; Fire is the sellable canonical
+  { id: 'tuso', label: 'Tusoteuthis', price: 13000, role: 'combat', saddle: 'Tusoteuthis Saddle' },
+  { id: 'rockdrake', label: 'Rock Drake', price: 13000, role: 'combat', saddle: 'Rock Drake Saddle' },
+  { id: 'giga', label: 'Giganotosaurus', price: 15000, role: 'combat', saddle: 'Giganotosaurus Saddle' }, // apex = the 15k ceiling (6h)
 ];
 
 // --- Resources (uncapped shop items; all RAW gathers — no crafted items, to force crafting) ---
@@ -187,6 +193,16 @@ export const kits: Kit[] = [
       { label: 'Metal Spike Wall', quality: 0, amount: 10 },
       ...armor(riotSet, MASTERCRAFT_QUALITY, 1),
     ],
+  },
+  // PAID cryopod kit — buy up to 5; 5 REUSABLE Empty Cryopods each (25 total/player). The vanilla
+  // Empty Cryopod is reusable, UNLIKE ArkShop's GiveDinosInCryopods delivery pod (one-time-use, poofs
+  // on release) — so this kit is how players get keepable pods. Price = QoL convenience tax until the
+  // engram is unlocked (1000/kit = 200/pod; full 25-pod stock = 5000pt ≈ 2h).
+  {
+    id: 'cryopods', defaultAmount: 5, price: 1000, onlyFromSpawn: false,
+    description: 'Cryopod kit (buy up to 5) — 5 reusable Empty Cryopods.',
+    dinos: [],
+    items: [{ label: 'Empty Cryopod', quality: 0, amount: 5 }],
   },
   // PAID underwater taming kit — buy up to 5; SCUBA set + harpoon + tranq spear bolts. Pricier than land taming.
   {

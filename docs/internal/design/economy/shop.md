@@ -99,6 +99,7 @@ they're purchase-limited (`DefaultAmount`). ArkShop quality index: 0 prim · 1 r
 | **taming** | 3,000 | 5 | Journeyman Longneck ×1, Tranq Dart ×500, Bola ×50, Narcotic ×200, 10× each kibble tier |
 | **defense** | 5,000 | 5 | Heavy Turret ×5, ARB ×2,500 (500/turret), Metal Spike Wall ×10, Mastercraft Riot set |
 | **taming_water** | 4,000 | 5 | SCUBA set (4pc, Q2), Harpoon Gun (Q3), Tranq Spear Bolt ×200, 10× each kibble tier |
+| **cryopods** | 1,000 | 5 | 5 reusable Empty Cryopods (25 total/player) — keepable pods, unlike the dino-delivery pod |
 
 **The two free kits use the 3-claim survival model**: claim → die → re-claim, 3× then on your own
 (one death shouldn't wipe everything). Riot > Flak (~15% more armor, Beacon-verified) so the paid
@@ -115,6 +116,19 @@ Two axes: **price tier** (white→red ladder = how valuable/rare/hard-to-get →
 **All store dinos — shop items AND kits — are neutered** (`NEUTER_STORE_DINOS`): usable but not
 breedable. Closes the bypass where a bought flat-225 gets bred into imprinted (strong) offspring —
 breeding stays gated behind dinos you tamed yourself.
+
+**All rideable store dinos ship WITH their saddle** (`SaddleBlueprint`), at **primitive quality** —
+rideable out of the box, the same convenience the kits give. Buying makes you mobile, not armored:
+better-quality saddles still come from crafting/looting, so the crafting loop is preserved. Dinos
+with no saddle item (light pets, Otter, Sinomacrops, Diplocaulus) ship bareback. Delivery is by
+**cryopod** (`GiveDinosInCryopods: true`, base config) — the saddled dino pods up as one item;
+saddle + cryo are independent. The per-dino `saddle` map lives in `tools/shop-design.ts` (labels
+Beacon-verified; the generator FAILS LOUD on a typo).
+
+> **The delivery pod is NOT keepable.** ArkShop's `GiveDinosInCryopods` pod is **one-time-use** — it
+> poofs when the dino is released (documented ArkShop behavior; no setting makes it permanent).
+> `CryoLimitedTime: false` only governs expiry (true = 60-min). Players who want **reusable** pods buy
+> the **cryopods kit** (§5) — the vanilla `Empty Cryopod` IS reusable, unlike the delivery pod.
 
 | Dino | Role | Tier | Price | Lvl cap |
 |---|---|---|---|---|

@@ -33,14 +33,17 @@ const itemBp = (label: string): string => resolveItem(label, 'item');
 type ItemEntry = { Quality: number; ForceBlueprint: boolean; Amount: number; Blueprint: string };
 type ShopItem =
   | { Type: 'item'; Description: string; Price: number; Items: ItemEntry[] }
-  | { Type: 'dino'; Description: string; Level: number; Price: number; Neutered: boolean; Blueprint: string };
+  | { Type: 'dino'; Description: string; Level: number; Price: number; Neutered: boolean; Blueprint: string; SaddleBlueprint?: string };
 type KitDino = { Level: number; Blueprint: string; SaddleBlueprint?: string; Neutered?: boolean };
 type Kit = { DefaultAmount: number; Price: number; Description: string; OnlyFromSpawn: boolean; Items: ItemEntry[]; Dinos: KitDino[] };
 
 // --- build ShopItems: dinos (price-only gate; MinLevel/MaxLevel omitted = default 1/999) ---
 const shopItems: Record<string, ShopItem> = {};
 for (const d of D.dinos) {
-  shopItems[d.id] = {
+  // Saddle equipped at primitive quality (ArkShop SaddleBlueprint has no quality field — same as kits).
+  // Omitted for bareback/shoulder/non-rideable dinos (saddle: null). Cryopod delivery is orthogonal —
+  // GiveDinosInCryopods (base General block, preserved by the overlay) pods the saddled dino as one item.
+  const entry: ShopItem = {
     Type: 'dino',
     Description: `${d.label} (lvl ${D.capForRole(d.role)})`,
     Level: D.capForRole(d.role),
@@ -48,6 +51,8 @@ for (const d of D.dinos) {
     Neutered: D.NEUTER_STORE_DINOS,
     Blueprint: dinoBp(d.label),
   };
+  if (d.saddle) entry.SaddleBlueprint = itemBp(d.saddle);
+  shopItems[d.id] = entry;
 }
 // --- resources + kibble + consumables as item entries (all uncapped shop items) ---
 for (const r of [...D.resources, ...D.kibble, ...D.consumables]) {
