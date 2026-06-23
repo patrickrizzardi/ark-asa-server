@@ -38,6 +38,7 @@ RUN mkdir -p ${STEAMCMD_DIR} \
 ARG ASAAPI_VERSION=1.21
 ARG ARKSHOP_VERSION=1.4
 ARG PERMISSIONS_VERSION=1.1  # doc-pin only — Permissions ships bundled in the AsaApi zip; no separate download, no URL interpolation. Records which Permissions version the pinned AsaApi (ASAAPI_VERSION) carries.
+ARG ARKSHOPUI_VERSION=1.4    # bridge plugin between ArkShop and the MX-E Ark Shop UI mod (942249)
 RUN mkdir -p /opt/asaapi/ArkApi/Plugins/ArkShop \
  && curl -fsSL "https://ark-server-api.com/resources/asa-server-api.31/download?version=${ASAAPI_VERSION}" \
       -o /tmp/asaapi.zip \
@@ -55,7 +56,12 @@ RUN mkdir -p /opt/asaapi/ArkApi/Plugins/ArkShop \
       -o /tmp/arkshop.zip \
  && unzip -q /tmp/arkshop.zip -d /tmp/arkshop_src \
  && cp -r /tmp/arkshop_src/ArkShop/. /opt/asaapi/ArkApi/Plugins/ArkShop/ \
- && rm -rf /tmp/asaapi.zip /tmp/asaapi_src /tmp/arkshop.zip /tmp/arkshop_src \
+ && mkdir -p /opt/asaapi/ArkApi/Plugins/ArkShopUI \
+ && curl -fsSL "https://ark-server-api.com/resources/arkshopui-ascended.13/download?version=${ARKSHOPUI_VERSION}" \
+      -o /tmp/arkshopui.zip \
+ && unzip -q /tmp/arkshopui.zip -d /tmp/arkshopui_src \
+ && cp -r /tmp/arkshopui_src/ArkShopUI/. /opt/asaapi/ArkApi/Plugins/ArkShopUI/ \
+ && rm -rf /tmp/asaapi.zip /tmp/asaapi_src /tmp/arkshop.zip /tmp/arkshop_src /tmp/arkshopui.zip /tmp/arkshopui_src \
  && find /opt/asaapi -name '*.pdb' -delete \
  && chown -R container:container /opt/asaapi
 
