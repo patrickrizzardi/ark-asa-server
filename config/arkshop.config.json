@@ -41,7 +41,7 @@
     "starter": {
       "DefaultAmount": 3,
       "Price": 0,
-      "Description": "Free survival kit — one rideable loadout per claim, 3 claims (re-claim after a death).",
+      "Description": "Free survival kit",
       "OnlyFromSpawn": false,
       "Items": [
         {
@@ -105,7 +105,7 @@
     "weapons": {
       "DefaultAmount": 3,
       "Price": 0,
-      "Description": "Free weapons kit — basic primitive gear, 3 claims (re-claim after a death).",
+      "Description": "Free weapons kit — basic primitive gear",
       "OnlyFromSpawn": false,
       "Items": [
         {
@@ -144,7 +144,7 @@
     "taming": {
       "DefaultAmount": 5,
       "Price": 3000,
-      "Description": "Taming kit (buy up to 5) — journeyman longneck, darts, narcotics, kibble.",
+      "Description": "Taming kit (buy up to 5) — journeyman",
       "OnlyFromSpawn": false,
       "Items": [
         {
@@ -565,6 +565,14 @@
       "Price": 6500,
       "Neutered": true,
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Yutyrannus/Yutyrannus_Character_BP.Yutyrannus_Character_BP'"
+    },
+    "rhynio": {
+      "Type": "dino",
+      "Description": "Rhyniognatha (lvl 225)",
+      "Level": 225,
+      "Price": 6500,
+      "Neutered": true,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Rhyniognatha/Rhynio_Character_BP.Rhynio_Character_BP'"
     },
     "quetz": {
       "Type": "dino",
