@@ -8,7 +8,7 @@ Global cross-workstream items only. Granular per-chat work lives in:
 
 ## Now (active cross-workstream items)
 
-- [ ] **Shop economy — IN-GAME verify** (deployed + server-verified on dell 2026-06-22, commit 890f659): ArkShop V1.4 loads the generated catalog, server advertising. Patrick to confirm in-game: `/shop` lists catalog, buy a dino (spawns at level), `/buykit starter` claim-once, +250 pts/6min tick. Then: draft boss-tribute kits (`bossKits: []` in `tools/shop-design.ts`, from Beacon) + optional ADR for the ArkShop deploy-from-repo model change. Design SoT: `docs/internal/design/economy/shop.md`. Tweak loop: edit `tools/shop-design.ts` → `cd tools && bun run gen-shop.ts --write` → push → dell pull + restart.
+- [ ] **Shop economy — IN-GAME verify** (deployed + server-verified on dell, latest commit 169757b): ArkShop V1.4 loads the full catalog — 37 dinos, 19 resources, 6 kibble, mindwipe, **5 kits** (starter+weapons free 3-claim; taming 3k / defense 5k / underwater-taming 4k, all buy-5×); **all store dinos neutered** (no breeding bought dinos). Code reviewed + `tools/beacon.ts` extracted (DRY); docs in sync. Patrick to confirm IN-GAME: `/shop` lists, buy a dino (neutered, right level), `/buykit starter` 3× then refused, +250pts/6min, kits give correct contents. **Still open**: (a) boss-tribute kits (`bossKits: []`, draft from Beacon); (b) "other food / other kits" ideas Patrick floated; (c) optional ADR for deploy-from-repo model; (d) optional `bun-types` tsconfig tidy. Tweak loop: edit `tools/shop-design.ts` → `cd tools && bun run gen-shop.ts --write` → push → dell pull + restart.
 
 ## Soon (committed, not started)
 
