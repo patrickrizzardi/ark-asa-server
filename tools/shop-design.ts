@@ -51,6 +51,7 @@ export const dinos: Dino[] = [
   { id: 'snowowl', label: 'Snow Owl', price: 6000, role: 'transport' },
   { id: 'theri', label: 'Therizinosaurus', price: 6000, role: 'combat' },
   { id: 'yuty', label: 'Yutyrannus', price: 6500, role: 'combat' },
+  { id: 'rhynio', label: 'Rhyniognatha', price: 6500, role: 'combat' },
   { id: 'quetz', label: 'Quetzalcoatlus', price: 7500, role: 'transport' },
   // yellow (225)
   { id: 'allo', label: 'Allosaurus', price: 8000, role: 'combat' },
@@ -140,7 +141,7 @@ export const kits: Kit[] = [
   // FREE survival kit — 3 claims (re-claim after a death), one loadout each; dinos lvl 150 w/ saddles.
   {
     id: 'starter', defaultAmount: 3, price: 0, onlyFromSpawn: false,
-    description: 'Free survival kit — one rideable loadout per claim, 3 claims (re-claim after a death).',
+    description: 'Free survival kit',
     dinos: [
       { label: 'Pteranodon', saddle: 'Pteranodon Saddle', level: STARTER_LEVEL, count: 1 },
       { label: 'Doedicurus', saddle: 'Doedicurus Saddle', level: STARTER_LEVEL, count: 1 },
@@ -152,7 +153,7 @@ export const kits: Kit[] = [
   // FREE weapons kit — 3 claims, all primitive basics.
   {
     id: 'weapons', defaultAmount: 3, price: 0, onlyFromSpawn: false,
-    description: 'Free weapons kit — basic primitive gear, 3 claims (re-claim after a death).',
+    description: 'Free weapons kit — basic primitive gear',
     dinos: [],
     items: [
       { label: 'Crossbow', quality: 0, amount: 1 },
@@ -165,7 +166,7 @@ export const kits: Kit[] = [
   // PAID taming kit — buy up to 5; mid-tier longneck (journeyman), 500 darts, narcotics, a kibble stack.
   {
     id: 'taming', defaultAmount: 5, price: 3000, onlyFromSpawn: false,
-    description: 'Taming kit (buy up to 5) — journeyman longneck, darts, narcotics, kibble.',
+    description: 'Taming kit (buy up to 5) — journeyman',
     dinos: [],
     items: [
       { label: 'Longneck Rifle', quality: 3, amount: 1 },
