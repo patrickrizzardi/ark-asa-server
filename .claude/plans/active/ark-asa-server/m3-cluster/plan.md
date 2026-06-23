@@ -215,6 +215,7 @@ Open assumption to confirm at approval (not blocking the draft):
 | ADR `docs/internal/decisions/0003-cluster-architecture.md` + `[locked]` registry entry | Phase 1 | clusterid + ClusterDirOverride + shared cluster volume; per-server full game volumes (named tradeoff vs shared-install M4 deferral); rejected alternatives. Registered `[locked]` in `.claude/design-sources.md`. |
 | ADR `docs/internal/decisions/0004-shared-config-model.md` + `[locked]` registry entry | Phase 2 | The unified model: ALL config = repo canonical → fresh per-server copy each boot → repo wins. The concurrent-boot race that ruled out shared writable files; why GUS can't be shared; Permissions edit-on-host→deploy-from-repo flip (live data in shared DB); removal of the `./plugins-config` bind. Registered `[locked]` in `.claude/design-sources.md`. |
 | NEW repo seed `config/permissions.config.json` | Phase 2 | Captured from the image-default Permissions config; the deploy-from-repo canonical for Permissions |
+| `docs/internal/design/economy/shop.md` §11 update | Phase 2 | Deploy model changed from `plugins-config` host-bind → per-server plugin-dir; keep the doc accurate |
 | `README.md` cluster section | Phase 3 | How to run the cluster locally, the edit→push→restart config loop, per-map ports, the clusterid secret |
 | `.claude/rules/build-time-vs-runtime.md` table row (cluster dir) | Phase 1 | Cluster dir is volume-backed → entrypoint (3-question test: depends on mounted volume = yes) |
 
@@ -374,13 +375,19 @@ This phase establishes the structure on one server; Phase 3 proves it under simu
 shutdown of N.
 **Current-state anchors**:
 - `entrypoint.sh:423-428` — config dir creation + `WindowsServer` **whole-dir** symlink → `/home/container/config` (replace `ln -sfn /home/container/config "$config_link"`)
+- `entrypoint.sh:85-144` — `deploy_plugins()` stash/restore of plugin config.json across the /opt→Win64 sync (:92-101 stash, :132-144 restore) — becomes redundant for repo-deployed plugins (setup_plugin_configs overwrites from repo anyway); confirm it's not broken, simplify if clean
 - `entrypoint.sh:286-319` — `setup_plugin_configs()`: the `cp` seed (:308), the seed-if-absent branch (:310-312), the file-symlink to the shared bind (:316), and `host_root=/home/container/plugins-config` (:287) — all reworked to per-server deploy-from-repo
-- `entrypoint.sh:322-336` — `_inject_mysql_block()` / mysql injection via atomic `mv` (keep; now targets the per-server plugin config)
+- `entrypoint.sh:322-356` — `_inject_mysql_block()`: **has symlink-resolution logic** (`dest="$(readlink -f "${cfg}")"` at :341, comment :335-337, `mv "${tmp}" "${dest}"` at :356) that BREAKS when the target is now a real file. Must become a plain atomic `mv "${tmp}" "${cfg}"` onto the real per-server config; drop the `dest`/readlink resolution; update the comment.
+- `entrypoint.sh:359-410` — `inject_plugin_db_config()` (the CALLER): hardcoded paths `${win64}/ArkApi/Plugins/{ArkShop,Permissions}/config.json` (:392,:405) are already per-server-correct, BUT its comments (:369-375) describe "host-bound path via the symlink"/"plugins-config host bind" — STALE after the rework, must be updated
 - `docker-compose.yml:90` — the `./plugins-config:/home/container/plugins-config` bind to remove
+- `.gitignore:7` — `plugins-config/**` (orphaned after the bind removal — remove) + the tracked `plugins-config/.gitkeep`
+- `docs/internal/design/economy/shop.md:253-270` — §11 "Build & deploy" describes the OLD deploy model (copy → `plugins-config/ArkShop/config.json` host bind) — stale, must update to per-server deploy
 - `config/GameUserSettings.ini:1` — `;METADATA=` header (server-rewritten file)
 - `config/Game.ini` — loot tables (1.2 MB; copied per-server)
 **Files (expected scope)**: `entrypoint.sh`, `config/permissions.config.json` (NEW tracked seed),
-`docker-compose.yml` (remove the `./plugins-config` bind), `docs/internal/decisions/0004-shared-config-model.md`
+`docker-compose.yml` (remove the `./plugins-config` bind), `.gitignore` (remove `plugins-config/**`),
+`plugins-config/` (delete the orphaned dir + `.gitkeep`), `docs/internal/design/economy/shop.md`
+(§11 deploy-model update), `docs/internal/decisions/0004-shared-config-model.md`
 **Scope Boundary**:
 - **In scope (this phase delivers)**: "Shared config across cluster (`Game.ini`, `GameUserSettings.ini`)" (ledger); "Shared plugin configs across cluster (ArkShop `config.json`, Permissions)" (ledger — delivered via per-server deploy-from-repo, the race-safe form); "Per-server config overrides (map, ports, `SessionName`)" (ledger).
 - **Explicitly NOT delivered (deferred to later milestone)**: none.
@@ -413,13 +420,35 @@ shutdown of N.
    `config/arkshop.config.json` → the per-server ArkShop plugin dir's `config.json`, and
    `config/permissions.config.json` → the per-server Permissions plugin dir's `config.json` — each a
    real file written directly into the plugin dir on the per-server game volume (NOT a symlink to a
-   shared bind). Drop the seed-if-absent branch (:310-312) and the shared-bind file-symlink (:316).
-   Keep the existing `_inject_mysql_block()` mysql injection (atomic `mv`, :322-336) onto each
-   per-server config.
-6. Remove the `./plugins-config:/home/container/plugins-config` bind from `docker-compose.yml:90`
-   (no longer used — plugin configs now deploy from the `./config` repo seeds to per-server plugin
-   dirs). Confirm nothing else references the bind before removing.
-7. Write ADR `docs/internal/decisions/0004-shared-config-model.md`: the unified model (repo
+   shared bind). Drop the seed-if-absent branch (:310-312) and the shared-bind file-symlink (:316),
+   and the now-unused `host_root=/home/container/plugins-config` (:287).
+6. Update the mysql-injection path (BOTH functions — this is the silent-DB-less-boot risk):
+   - `_inject_mysql_block()` (:322-356): remove the symlink-resolution logic (`dest="$(readlink -f
+     "${cfg}")"` at :341 + the comment :335-337 + `mv "${tmp}" "${dest}"` at :356). The plugin config
+     is now a REAL file, so this becomes a plain atomic `mv "${tmp}" "${cfg}"`. Update the comment
+     (no more symlink).
+   - `inject_plugin_db_config()` (:359-410): the hardcoded paths (:392,:405) already point at the
+     per-server plugin-dir config.json — KEEP them. Update the stale comments (:369-375) that
+     describe "host-bound path via the symlink" / "plugins-config host bind" → now a real per-server
+     file. The `has("Mysql")` guard for Permissions (:406) still applies (the new Permissions seed
+     must carry a `Mysql` block for it to be injected — ensure the captured seed has one, or
+     Permissions connects DB-less; verify at boot).
+7. `deploy_plugins()` stash/restore (:92-101 + :132-144): confirm it's not broken by the model
+   change (it stashes/restores whatever config.json exists across the /opt→Win64 sync; setup then
+   overwrites from the repo seed anyway, so the stash is now redundant for ArkShop/Permissions). If
+   it's cleanly removable without affecting a non-repo-deployed plugin, simplify; otherwise leave it
+   (redundant but harmless) and note why in the PR.
+8. Remove the `./plugins-config:/home/container/plugins-config` bind from `docker-compose.yml:90`,
+   the `plugins-config/**` line from `.gitignore:7`, and **`git rm`** the tracked
+   `plugins-config/.gitkeep` (it's tracked, not just gitignored — a plain `rm -rf` would leave it in
+   the index) then delete the now-empty `plugins-config/` dir (no longer used — plugin configs now
+   deploy from the `./config` repo seeds to per-server plugin dirs). Grep-confirm nothing else
+   references `plugins-config` before removing.
+9. Update `docs/internal/design/economy/shop.md` §11 (Build & deploy, :253-270): the deploy model
+   changed from "copy → `plugins-config/ArkShop/config.json` host bind" to "copy → per-server ArkShop
+   plugin dir, no host bind". Keep the doc accurate (a diff that makes a doc wrong is incomplete per
+   `rules/documentation.md`).
+10. Write ADR `docs/internal/decisions/0004-shared-config-model.md`: the unified model (repo
    canonical → per-server fresh copy each boot → repo wins, for all 4 configs); the two problems it
    solves (GUS shared-write clobber + plugin-config concurrent-boot `cp` race, Ledger #5c); why
    per-server volumes make it structurally race-free; the Permissions edit-on-host→deploy-from-repo
@@ -427,12 +456,14 @@ shutdown of N.
    removal. Rejected: shared writable configs (clobber/race); per-server config *generator*
    (overkill — only SessionName differs, injected not generated); keeping the whole-dir symlink
    (the GUS-clobber bug); per-config special-casing (more conditionals, same result — Patrick).
-8. Register ADR `0004-shared-config-model.md` `[locked]` in `.claude/design-sources.md` (append a
-   row) so a future diff that re-introduces a shared writable config BLOCKs at the design gate.
-9. Regression-guard: boot `the-island` ALONE on dell, confirm loot (Game.ini) + shop catalog +
-   Permissions + GUS tuning all apply and the server advertises (proves the rework didn't break
-   single-server); confirm `WindowsServer` is a real dir with copied `Game.ini` + writable `GUS`,
-   and the plugin dirs hold real per-server config.json (not symlinks to a shared bind).
+11. Register ADR `0004-shared-config-model.md` `[locked]` in `.claude/design-sources.md` (append a
+    row) so a future diff that re-introduces a shared writable config BLOCKs at the design gate.
+12. Regression-guard: boot `the-island` ALONE on dell, confirm loot (Game.ini) + shop catalog +
+    Permissions + GUS tuning all apply and the server advertises (proves the rework didn't break
+    single-server); confirm `WindowsServer` is a real dir with copied `Game.ini` + writable `GUS`,
+    the plugin dirs hold real per-server config.json (not symlinks), and **`jq .Mysql` on each
+    plugin config shows the injected DB block** (proves the inject-path rework didn't silently
+    DB-less the plugins).
 **Acceptance criteria**:
 - [ ] `the-island` boots alone on dell with loot (Game.ini), shop catalog, Permissions, and GUS tuning all applied (single-server regression intact)
   - Evidence: (filled at phase completion)
@@ -440,24 +471,34 @@ shutdown of N.
   - Evidence: (filled at phase completion)
 - [ ] `GameUserSettings.ini` `SessionName` matches `${SESSION_NAME}` (injected, not the canonical's value)
   - Evidence: (filled at phase completion)
-- [ ] ArkShop + Permissions `config.json` are real per-server files in their plugin dirs (NOT symlinks to a shared bind); each carries the injected `Mysql` block; `config/permissions.config.json` exists as a secret-free tracked seed
+- [ ] ArkShop + Permissions `config.json` are real per-server files in their plugin dirs (NOT symlinks); `config/permissions.config.json` exists as a secret-free tracked seed
   - Evidence: (filled at phase completion)
-- [ ] `./plugins-config` bind removed from `docker-compose.yml` and nothing references it
+- [ ] **DB inject still works on the real-file path**: `jq .Mysql` on the ArkShop config AND the Permissions config shows the injected host/user/db — proves `_inject_mysql_block`'s symlink-resolution removal didn't break the write (the silent-DB-less-boot risk)
+  - Evidence: (filled at phase completion)
+- [ ] **The committed `config/permissions.config.json` seed contains a `Mysql` key** so the `has("Mysql")` guard at entrypoint.sh:406 fires — otherwise Permissions silently boots DB-less and the inject-check above is vacuously skipped
+  - Evidence: (filled at phase completion)
+- [ ] `./plugins-config` bind removed from `docker-compose.yml`, `plugins-config/**` removed from `.gitignore`, orphaned `plugins-config/` dir deleted; grep confirms no remaining `plugins-config` reference in entrypoint/compose
+  - Evidence: (filled at phase completion)
+- [ ] `docs/internal/design/economy/shop.md` §11 updated to the per-server deploy model (no stale `plugins-config` host-bind description)
   - Evidence: (filled at phase completion)
 - [ ] ADR `0004-shared-config-model.md` exists with the unified model + the two races it solves + rejected alternatives (doc-type: adr); registered `[locked]`
   - Evidence: (filled at phase completion)
 **Quality gate**:
 - [ ] Every config copy/seed is idempotent (safe every boot)
 - [ ] No shared writable config file remains (no whole-dir `WindowsServer` symlink; no plugin-config symlink to a shared bind)
+- [ ] `_inject_mysql_block` no longer resolves a symlink (operates on a real file via atomic `mv`); its comment matches
+- [ ] Dirty-volume transition is clean: booting Phase 2 on a volume that still holds the OLD symlinked `config.json` (from a pre-Phase-2 boot) correctly replaces it with a real file (not a dangling symlink) — verify on dell's existing `ark-game` volume, not just a fresh one
+- [ ] `inject_plugin_db_config` comments updated (no "host bind"/"symlink" language)
 - [ ] SessionName injection handles the `[SessionSettings]` block whether present or absent
-- [ ] Permissions seed committed is secret-free (Mysql injected at runtime, like ArkShop)
+- [ ] Permissions seed committed is secret-free (Mysql injected at runtime, like ArkShop); seed carries a `Mysql` block so the inject guard fires
 - [ ] `ENABLE_ASAAPI=0` vanilla path still copies Game.ini + seeds GUS (plugins skipped when disabled — confirm the vanilla path is unaffected)
-- [ ] Follows the existing seed (`cp` :308) + atomic-inject (`mv` :322-336) idioms, not a new pattern
+- [ ] No stale doc left: shop.md §11 + any README plugins-config mention reflect the new model
 **Verification**: dell single-server boot → `docker compose exec the-island sh -c 'ls -la
 <WindowsServer> && ls -la <ArkShop plugin dir>/config.json <Permissions plugin dir>/config.json'`
 shows real files (no symlinks); `grep SessionName <WindowsServer>/GameUserSettings.ini` shows the
-env value; `jq .Mysql <plugin>/config.json` shows the injected block; confirm loot/shop present
-in-game (or via log parse); `git status` shows `config/permissions.config.json` tracked + secret-free.
+env value; `jq .Mysql <plugin>/config.json` shows the injected block; `git status` shows
+`config/permissions.config.json` tracked + secret-free and `plugins-config/` gone;
+`grep -rn plugins-config entrypoint.sh docker-compose.yml` returns nothing.
 
 **Phase Review Gates**:
 - [ ] code-reviewer: <verdict + ISO timestamp>
@@ -500,8 +541,9 @@ last because it needs Phase 1's wiring and Phase 2's shareable config as the uni
 Adding a 4th map or any generator → STOP, that's scope creep / M4.
 **Steps**:
 1. Refactor `the-island` into a YAML anchor `&ark-server` capturing the shared bulk (build/image,
-   depends_on, the shared env block, the shared volume mounts `./config` + `./plugins-config` +
-   `ark-cluster`, stop_grace, restart, logging).
+   depends_on, the shared env block, the shared volume mounts — the read-only `./config` repo-seed
+   bind + `ark-cluster`; NOTE the `./plugins-config` bind was removed in Phase 2 — do not re-add it,
+   stop_grace, restart, logging).
 2. Define 3 services using `<<: *ark-server`, each overriding: `container_name`, `SERVER_MAP`
    (`TheIsland_WP` / `TheCenter_WP` / `Aberration_WP`), `SESSION_NAME`, the published game port
    (7777 / 7779 / 7781 udp) + `SERVER_PORT`, the published RCON port (27020 / 27021 / 27022 tcp) +
@@ -511,7 +553,9 @@ Adding a 4th map or any generator → STOP, that's scope creep / M4.
 4. Update `.env.test.example` / `.env.prod.example` with the per-map port variables + the single
    `ARK_CLUSTER_ID` + a comment on the 3-map layout.
 5. Add a README "Cluster" section: the edit→push→restart config loop (one canonical config, all
-   maps), per-map ports, the clusterid secret, how a player transfers between maps.
+   maps), per-map ports, the clusterid secret, how a player transfers between maps. Also scrub any
+   stale M2 README mention of the `./plugins-config` edit-on-host loop (removed in Phase 2 — config
+   is now edit-`config/`-in-repo → restart).
 6. Deploy to dell (`git pull` → `docker compose up -d --build`), boot all 3, run the validation
    below.
 **Acceptance criteria**:
