@@ -150,6 +150,7 @@ Beacon-verified; the generator FAILS LOUD on a typo).
 | Megalodon | combat (water) | blue | 3,000 | 225 |
 | Baryonyx | combat | blue | 3,500 | 225 |
 | Direbear | combat/gather | blue | 3,500 | 225 |
+| Thylacoleo | combat (climb/ambush) | blue | 3,500 | 225 |
 | Dunkleosteus | gatherer (water: oil/silica/metal) | blue | 3,500 | 225 |
 | Argentavis | transport | blue | 4,000 | 225 |
 | Mammoth | gatherer (wood) | purple | 4,500 | 225 |

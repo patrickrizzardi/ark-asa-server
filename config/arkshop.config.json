@@ -520,6 +520,15 @@
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Direbear/Direbear_Character_BP.Direbear_Character_BP'",
       "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_DireBearSaddle.PrimalItemArmor_DireBearSaddle'"
     },
+    "thyla": {
+      "Type": "dino",
+      "Description": "Thylacoleo (lvl 225)",
+      "Level": 225,
+      "Price": 3500,
+      "Neutered": true,
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Thylacoleo/Thylacoleo_Character_BP.Thylacoleo_Character_BP'",
+      "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_ThylacoSaddle.PrimalItemArmor_ThylacoSaddle'"
+    },
     "dunkle": {
       "Type": "dino",
       "Description": "Dunkleosteus (lvl 225)",

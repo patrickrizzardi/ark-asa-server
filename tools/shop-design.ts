@@ -47,6 +47,7 @@ export const dinos: Dino[] = [
   { id: 'megalodon', label: 'Megalodon', price: 3000, role: 'combat', saddle: 'Megalodon Saddle' },
   { id: 'bary', label: 'Baryonyx', price: 3500, role: 'combat', saddle: 'Baryonyx Saddle' },
   { id: 'direbear', label: 'Direbear', price: 3500, role: 'combat', saddle: 'Direbear Saddle' },
+  { id: 'thyla', label: 'Thylacoleo', price: 3500, role: 'combat', saddle: 'Thylacoleo Saddle' }, // climb/ambush predator
   { id: 'dunkle', label: 'Dunkleosteus', price: 3500, role: 'gatherer', saddle: 'Dunkleosteus Saddle' },
   { id: 'argy', label: 'Argentavis', price: 4000, role: 'transport', saddle: 'Argentavis Saddle' },
   // purple (225)
