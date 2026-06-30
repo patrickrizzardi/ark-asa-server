@@ -26,12 +26,28 @@ export const beacon = {
     });
   },
 
-  // Build a label → pick(row) index, first-occurrence-wins (so a base variant beats an
-  // Aberrant/Tek/Corrupt one, which sort later by label).
+  // Build a label → pick(row) index. Ark Official wins over any mod on a label collision; within a
+  // tier (official-vs-official OR mod-vs-mod) it stays first-occurrence-wins, so a base variant
+  // still beats an Aberrant/Tek/Corrupt one (which sort later by label) and a mod-only label still
+  // resolves to its mod. Without the official preference a junk test pack (e.g. "AoARewardTest")
+  // that ships same-labeled basic resources shadows the real Ark Official blueprint, baking a dead
+  // mod path into the generated config — points charged, item never spawns.
   // Time: O(n) where n = rows  Space: O(n)
   buildIndex: (rows: Row[], pick: (r: Row) => string): Map<string, string> => {
+    const ARK_OFFICIAL = 'b32a3d73-9406-56f2-bd8f-936ee0275249';
     const m = new Map<string, string>();
-    for (const r of rows) { if (r.label && !m.has(r.label)) m.set(r.label, pick(r)); }
+    const lockedOfficial = new Set<string>(); // labels whose stored value is already Ark Official
+    for (const r of rows) {
+      if (!r.label) continue;
+      const isOfficial = r.content_pack_id === ARK_OFFICIAL;
+      if (!m.has(r.label)) {
+        m.set(r.label, pick(r));
+        if (isOfficial) lockedOfficial.add(r.label);
+      } else if (isOfficial && !lockedOfficial.has(r.label)) {
+        m.set(r.label, pick(r)); // first hit was a mod entry — let Ark Official override it once
+        lockedOfficial.add(r.label);
+      }
+    }
     return m;
   },
 
