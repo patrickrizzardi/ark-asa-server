@@ -397,14 +397,6 @@
       "Neutered": true,
       "Blueprint": "Blueprint'/Game/Aberration/Dinos/LanternGoat/LanternGoat_Character_BP.LanternGoat_Character_BP'"
     },
-    "sinomacrops": {
-      "Type": "dino",
-      "Description": "Sinomacrops (lvl 300)",
-      "Level": 300,
-      "Price": 1500,
-      "Neutered": true,
-      "Blueprint": "Blueprint'/DinosaurDiscovery/Dino/Sino/Sinomacrops_Character_BP_ASA.Sinomacrops_Character_BP_ASA'"
-    },
     "otter": {
       "Type": "dino",
       "Description": "Otter (lvl 300)",
@@ -679,8 +671,7 @@
       "Level": 225,
       "Price": 13000,
       "Neutered": true,
-      "Blueprint": "Blueprint'/Game/ScorchedEarth/Dinos/Wyvern/Wyvern_Character_BP_Fire.Wyvern_Character_BP_Fire'",
-      "SaddleBlueprint": "Blueprint'/DraconicChronicles/Saddles/FireWyvern/PrimalItemArmor_FireWyvernArmor.PrimalItemArmor_FireWyvernArmor'"
+      "Blueprint": "Blueprint'/Game/ScorchedEarth/Dinos/Wyvern/Wyvern_Character_BP_Fire.Wyvern_Character_BP_Fire'"
     },
     "tuso": {
       "Type": "dino",
@@ -718,7 +709,7 @@
           "Quality": 0,
           "ForceBlueprint": false,
           "Amount": 300,
-          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_Hide.PrimalItemConsumable_Hide'"
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Hide.PrimalItemResource_Hide'"
         }
       ]
     },
@@ -770,7 +761,7 @@
           "Quality": 0,
           "ForceBlueprint": false,
           "Amount": 500,
-          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_SilicaPearls.PrimalItemConsumable_SilicaPearls'"
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Silicon.PrimalItemResource_Silicon'"
         }
       ]
     },
@@ -783,7 +774,7 @@
           "Quality": 0,
           "ForceBlueprint": false,
           "Amount": 500,
-          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_Crystal.PrimalItemConsumable_Crystal'"
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Crystal.PrimalItemResource_Crystal'"
         }
       ]
     },
@@ -796,7 +787,7 @@
           "Quality": 0,
           "ForceBlueprint": false,
           "Amount": 300,
-          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_Oil.PrimalItemConsumable_Oil'"
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Oil.PrimalItemResource_Oil'"
         }
       ]
     },
@@ -874,7 +865,7 @@
           "Quality": 0,
           "ForceBlueprint": false,
           "Amount": 50,
-          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_Sap.PrimalItemConsumable_Sap'"
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Sap.PrimalItemResource_Sap'"
         }
       ]
     },
@@ -887,7 +878,7 @@
           "Quality": 0,
           "ForceBlueprint": false,
           "Amount": 100,
-          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_BlackPearl.PrimalItemConsumable_BlackPearl'"
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_BlackPearl.PrimalItemResource_BlackPearl'"
         }
       ]
     },
@@ -926,7 +917,7 @@
           "Quality": 0,
           "ForceBlueprint": false,
           "Amount": 100,
-          "Blueprint": "Blueprint'/RewardRemote/Consumables/Resources/Resources/PrimalItemConsumable_BlueGem.PrimalItemConsumable_BlueGem'"
+          "Blueprint": "Blueprint'/Game/Aberration/CoreBlueprints/Resources/PrimalItemResource_Gem_BioLum.PrimalItemResource_Gem_BioLum'"
         }
       ]
     },
