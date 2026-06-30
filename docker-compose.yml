@@ -47,10 +47,10 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  the-island:
+  the-center:
     build: .
     image: ark-asa:latest
-    container_name: ark-the-island
+    container_name: ark-the-center
     depends_on:
       sysctl:
         condition: service_completed_successfully
