@@ -31,7 +31,6 @@ export const dinos: Dino[] = [
   { id: 'bulbdog', label: 'Bulbdog', price: 1000, role: 'utilpet', saddle: null },
   { id: 'glowtail', label: 'Glowtail', price: 1000, role: 'utilpet', saddle: null },
   { id: 'shinehorn', label: 'Shinehorn', price: 1000, role: 'utilpet', saddle: null },
-  { id: 'sinomacrops', label: 'Sinomacrops', price: 1500, role: 'utilpet', saddle: null }, // bareback glider
   { id: 'otter', label: 'Otter', price: 1500, role: 'utilpet', saddle: null }, // shoulder pet
   // green (225)
   { id: 'parasaur', label: 'Parasaurolophus', price: 1000, role: 'scout', saddle: 'Parasaur Saddle' },
@@ -67,7 +66,7 @@ export const dinos: Dino[] = [
   { id: 'carcharo', label: 'Carcharodontosaurus', price: 10000, role: 'combat', saddle: 'Carcharo Saddle' },
   // red (225)
   { id: 'mosa', label: 'Mosasaurus', price: 12000, role: 'combat', saddle: 'Mosasaur Saddle' },
-  { id: 'wyvern', label: 'Fire Wyvern', price: 13000, role: 'combat', saddle: 'Fire Wyvern Saddle' }, // ASA wyverns are elemental + saddled; Fire is the sellable canonical
+  { id: 'wyvern', label: 'Fire Wyvern', price: 13000, role: 'combat', saddle: null }, // vanilla wyverns ride bareback — no saddle item exists
   { id: 'tuso', label: 'Tusoteuthis', price: 13000, role: 'combat', saddle: 'Tusoteuthis Saddle' },
   { id: 'rockdrake', label: 'Rock Drake', price: 13000, role: 'combat', saddle: 'Rock Drake Saddle' },
   { id: 'giga', label: 'Giganotosaurus', price: 15000, role: 'combat', saddle: 'Giganotosaurus Saddle' }, // apex = the 15k ceiling (6h)
