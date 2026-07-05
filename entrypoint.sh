@@ -63,8 +63,34 @@ install_or_update() {
     touch "$INSTALL_MARKER"
   elif [[ "$UPDATE_ON_BOOT" == "1" ]]; then
     echo "[entrypoint] UPDATE_ON_BOOT=1 — delta update, no validate…"
+    local steamcmd_out
+    steamcmd_out="$(mktemp)"
+    # steamcmd exits 0 even on failure (the well-known footgun noted above), so the failure
+    # signal has to come from its own text output, not its exit code — hence the tee+grep
+    # instead of checking $?.
     "${STEAMCMD_DIR}/steamcmd.sh" ${force_windows} +force_install_dir "${ARK_DIR}" \
-      +login anonymous +app_update "${ASA_APPID}" +quit
+      +login anonymous +app_update "${ASA_APPID}" +quit 2>&1 | tee "${steamcmd_out}" || true
+
+    # Flow: a delta update can leave SteamCMD reporting "state is 0x6" (update-required AND
+    # fully-installed at once) when its local depot manifest desyncs from the CDN — observed
+    # 2026-07-05 immediately after a same-day ARK patch, reproduced on both a bare delta and a
+    # validate pass against the stale manifest. Deleting appmanifest_*.acf forces SteamCMD to
+    # rebuild it from scratch; a validate against the manifest-free tree is the confirmed fix
+    # (manually verified same-day: cleared the stuck state and landed on the current build).
+    # Failure mode if this repair also fails: server boots on whatever's already on disk — that
+    # binary may be stale relative to what clients have patched to, but a boot beats no boot.
+    if grep -q "state is 0x6" "${steamcmd_out}"; then
+      echo "[entrypoint] SteamCMD stuck (state 0x6) — deleting manifest and retrying with validate…"
+      rm -f "${ARK_DIR}/steamapps/appmanifest_${ASA_APPID}.acf"
+      "${STEAMCMD_DIR}/steamcmd.sh" ${force_windows} +force_install_dir "${ARK_DIR}" \
+        +login anonymous +app_update "${ASA_APPID}" validate +quit 2>&1 | tee -a "${steamcmd_out}" || true
+      if grep -q "state is 0x6" "${steamcmd_out}"; then
+        echo "[entrypoint] WARNING: SteamCMD still stuck after manifest reset — booting on whatever's already on disk." >&2
+      else
+        echo "[entrypoint] SteamCMD update recovered after manifest reset."
+      fi
+    fi
+    rm -f "${steamcmd_out}"
   else
     echo "[entrypoint] Fast boot — skipping Steam (set UPDATE_ON_BOOT=1 to update)."
   fi
