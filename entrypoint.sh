@@ -15,6 +15,10 @@ set -euo pipefail
 : "${ARK_ADMIN_PASSWORD:=changeme}"
 : "${SERVER_PASSWORD:=}"
 : "${MODS:=}"                          # comma-separated CurseForge mod IDs, e.g. 928988
+: "${ARK_CLUSTER_ID:=}"                # shared cluster id — identical on every cluster server; empty = no cluster args (single-server M2 launch)
+# CLUSTER_DIR embeds UNQUOTED into the launch flags string below (word-split at launch) — avoid
+# spaces in this path; quote if you must (same caveat as SESSION_NAME above).
+: "${CLUSTER_DIR:=${ARK_DIR}/ShooterGame/Saved/clusters}"  # -ClusterDirOverride target; all servers in a cluster must share this path
 # ArkShop DB connection. NAME/USER/PASS fall back to their MARIADB_* peers (the same vars the
 # mariadb service is created from), so the common compose setup works with no ARKSHOP_DB_*
 # overrides. HOST/PORT have no MARIADB_* peer — the DB is always reached at the internal compose
@@ -453,6 +457,89 @@ main() {
   rm -rf "$config_link"
   ln -sfn /home/container/config "$config_link"
 
+  # ARK_CLUSTER_ID interpolates unquoted into the launch flags string (below) — reject anything
+  # outside a safe charset now, at boot, rather than let a stray space/glob char corrupt argv.
+  # ARK_CLUSTER_ID is documented "treat like a password" — never echo the raw value, even on
+  # rejection; state that it's invalid without printing it.
+  if [[ -n "${ARK_CLUSTER_ID}" && ! "${ARK_CLUSTER_ID}" =~ ^[A-Za-z0-9._-]+$ ]]; then
+    echo "[entrypoint] FATAL: ARK_CLUSTER_ID contains invalid characters — only [A-Za-z0-9._-] allowed." >&2
+    exit 1
+  fi
+
+  # CLUSTER_DIR reaches the SAME unquoted launch-flags sink as ARK_CLUSTER_ID above AND feeds a
+  # destructive `rm -rf "${CLUSTER_DIR}"` in the symlink setup just below — reject anything
+  # outside a safe absolute-path charset now, at boot, rather than let a stray space/glob char
+  # corrupt argv or a malformed path widen the rm -rf's blast radius. (Not a secret like
+  # ARK_CLUSTER_ID — a path, so safe to echo back for debugging.)
+  if [[ ! "${CLUSTER_DIR}" =~ ^/[A-Za-z0-9._/-]+$ ]]; then
+    echo "[entrypoint] FATAL: CLUSTER_DIR is not a safe absolute path — only [A-Za-z0-9._/-] allowed, got '${CLUSTER_DIR}'." >&2
+    exit 1
+  fi
+
+  # Charset alone doesn't stop a COLLISION with the game install root — a regex-shape check
+  # (matching literal `..` segments and a bare `${ARK_DIR}"/*"` glob) still let a *spelling*
+  # variant of the same path through uncaught: a trailing slash (`${ARK_DIR}/`), a doubled slash
+  # (`${ARK_DIR}//`), or a bare `.` segment (`${ARK_DIR}/.`) all satisfy `"${CLUSTER_DIR}" ==
+  # "${ARK_DIR}"` in every way that matters on disk, but bash's glob `*` also matches the EMPTY
+  # string, so `"${ARK_DIR}/"` matches the pattern `"${ARK_DIR}"/*` and slipped past that check —
+  # reaching the `rm -rf "${CLUSTER_DIR}"` below and wiping the entire ~13GB game install root
+  # (reproduced live; see entrypoint.sh history / plan review notes). Canonicalization must be
+  # LEXICAL ONLY — `.`, `..`, and repeated/trailing slashes collapsed WITHOUT following any
+  # symlink the path happens to already be. Two reasons: (1) CLUSTER_DIR's parent dirs may not
+  # exist yet on first boot (steamcmd hasn't created ShooterGame/Saved/ before this guard runs),
+  # so plain symlink resolution would fail outright; (2) on every boot AFTER the first, this same
+  # CLUSTER_DIR value already exists on disk as the symlink the block below creates, pointing at
+  # /home/container/cluster-data — which sits OUTSIDE ARK_DIR by design (see that block's comment).
+  # A canonicalizer that follows symlinks would resolve THROUGH that link on a warm boot and see
+  # the out-of-tree target, incorrectly FATAL-rejecting a value that, as a string, is still the
+  # exact same safe default it was on first boot — the server could never restart past its first
+  # boot. `realpath -m -s` (`-m`: tolerate not-yet-existing components; `-s`/`--no-symlinks`:
+  # normalize lexically, never expand a symlink) canonicalizes the STRING shape only, giving the
+  # same verdict on first boot, warm boot, and every spelling variant alike. Requiring the
+  # canonical CLUSTER_DIR to have the canonical ARK_DIR as a strict path-prefix (the glob's `/`
+  # separator rules out a same-prefix-different-dir collision like `${ARK_DIR}foo`) makes every
+  # spelling of "equals or escapes ARK_DIR" collapse to the same rejected case, instead of
+  # enumerating each spelling by hand. Reassign CLUSTER_DIR to its canonical form so every
+  # downstream use (the rm -rf below, the symlink target, the launch flags string) is unambiguous.
+  local cluster_dir_canon ark_dir_canon
+  cluster_dir_canon="$(realpath -m -s -- "${CLUSTER_DIR}")"
+  ark_dir_canon="$(realpath -m -s -- "${ARK_DIR}")"
+  if [[ "${cluster_dir_canon}" != "${ark_dir_canon}"/* ]]; then
+    echo "[entrypoint] FATAL: CLUSTER_DIR must be a path strictly under ARK_DIR (${ARK_DIR}) — got '${CLUSTER_DIR}' (canonicalizes to '${cluster_dir_canon}')." >&2
+    exit 1
+  fi
+  CLUSTER_DIR="${cluster_dir_canon}"
+
+  # The lexical-only check above must never follow a symlink (that's the whole point of `-s` —
+  # see the comment above it), but that also means it is blind to an INTERMEDIATE path component
+  # between ARK_DIR and CLUSTER_DIR's leaf (e.g. if `ShooterGame` or `Saved` were ever a symlink
+  # pointing outside ARK_DIR) — the lexical check only inspects the string, while the actual
+  # mkdir -p / rm -rf / ln -sfn below follow normal kernel symlink resolution through every
+  # component on the real filesystem, so such a symlink could send them outside ARK_DIR even
+  # though the lexical check passed. Only the FINAL `clusters` component is an intentional
+  # symlink (the block below creates it every boot); the PARENT directory is never meant to be
+  # one, so canonicalizing just the parent WITH symlink-following (plain `realpath -m`, no `-s`)
+  # is safe — it cannot reintroduce the warm-boot false-rejection the lexical check above exists
+  # to avoid, because the parent is never the leaf symlink itself.
+  local cluster_parent_canon
+  cluster_parent_canon="$(realpath -m -- "$(dirname "${CLUSTER_DIR}")")"
+  if [[ "${cluster_parent_canon}" != "${ark_dir_canon}" && "${cluster_parent_canon}" != "${ark_dir_canon}"/* ]]; then
+    echo "[entrypoint] FATAL: CLUSTER_DIR's parent directory resolves outside ARK_DIR (${ARK_DIR}) through a symlink — got '${CLUSTER_DIR}' (parent canonicalizes to '${cluster_parent_canon}')." >&2
+    exit 1
+  fi
+
+  # Link CLUSTER_DIR (the -ClusterDirOverride target) to the shared cluster-data volume mount —
+  # same pattern as the WindowsServer config_link above, for the same reason: docker-compose.yml
+  # mounts ark-cluster SHALLOW at a fixed top-level path (/home/container/cluster-data) instead of
+  # directly at CLUSTER_DIR, because CLUSTER_DIR sits inside the already-mounted ark-game volume at
+  # a path that doesn't exist yet on first boot (steamcmd hasn't created ShooterGame/Saved/) —
+  # mounting there directly would make Docker root-create the missing intermediate dirs, blocking
+  # this non-root user's writes to the cluster-transfer files. Idempotent (rm + relink) so a warm
+  # boot with the link already present is a no-op.
+  mkdir -p "$(dirname "${CLUSTER_DIR}")"
+  rm -rf "${CLUSTER_DIR}"
+  ln -sfn /home/container/cluster-data "${CLUSTER_DIR}"
+
   # Proton's lsteamclient loads the native Steam client from ~/.steam/sdk{64,32}/steamclient.so;
   # without it the server asserts in steamclient_main.c and aborts (exit 21). The .so is baked
   # into the image (see Dockerfile); ~/.steam is ephemeral (not on the volume), so relink each boot.
@@ -490,6 +577,9 @@ main() {
   local flags="-log -WinLiveMaxPlayers=${MAX_PLAYERS}"
   if [[ "$ENABLE_BATTLEYE" == "1" ]]; then flags="${flags} -BattlEye"; else flags="${flags} -NoBattlEye"; fi
   [[ -n "$MODS" ]] && flags="${flags} -mods=${MODS}"
+  # Cluster args are inert with one server but required once N servers share transfers — only
+  # appended when ARK_CLUSTER_ID is set, so an unset/empty id preserves the byte-identical M2 launch.
+  [[ -n "$ARK_CLUSTER_ID" ]] && flags="${flags} -clusterid=${ARK_CLUSTER_ID} -ClusterDirOverride=${CLUSTER_DIR}"
 
   # Route launch through the AsaApiLoader (modded) or the vanilla server binary.
   # Both binaries accept identical args; ENABLE_ASAAPI=0 restores the M1 vanilla path with no rebuild.

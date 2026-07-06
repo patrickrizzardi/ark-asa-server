@@ -29,6 +29,7 @@ Ask three questions about any step. **Any "yes" → entrypoint. All "no" → Doc
 | AsaApi loader/framework — **pinned version** | **Dockerfile** | version-controlled; you choose when it updates |
 | The entrypoint script itself | **Dockerfile** (`COPY`) | it's a build artifact |
 | **ARK game files** (`steamcmd +app_update 2430930`) | **entrypoint** | ~30GB, patches constantly, lives on a volume |
+| Cluster transfer dir (`Saved/clusters`) | **entrypoint** | volume-backed shared dir (Q1 yes) |
 | Config templating from env | **entrypoint** | depends on runtime env |
 | `tail -F` log streaming → stdout | **entrypoint** | runtime, every boot |
 | Launch `AsaApiLoader.exe` (NOT `ArkAscendedServer.exe`) | **entrypoint** | runtime, params from env |

@@ -60,7 +60,7 @@ services:
       - "7777:7777/udp"      # game + query
       - "27020:27020/tcp"    # RCON
     environment:
-      SERVER_MAP: ${SERVER_MAP:-TheIsland_WP}
+      SERVER_MAP: ${SERVER_MAP:-TheCenter_WP}
       SESSION_NAME: ${SESSION_NAME:-ARK-Test}
       MAX_PLAYERS: ${MAX_PLAYERS:-10}
       ARK_ADMIN_PASSWORD: ${ARK_ADMIN_PASSWORD:?set ARK_ADMIN_PASSWORD in your env file}
@@ -69,6 +69,16 @@ services:
       ENABLE_BATTLEYE: ${ENABLE_BATTLEYE:-0}
       ENABLE_ASAAPI: ${ENABLE_ASAAPI:-1}
       MODS: ${MODS:-}
+      # Cluster id must be IDENTICAL on every server in the cluster (treat like a password —
+      # never the default "cluster"/"ark"). Defaults EMPTY, not required: entrypoint.sh only
+      # appends cluster args when this is non-empty, so leaving it unset must stay reachable
+      # through this real deployment path — that's the single-server M2 launch invariant
+      # (plan Acceptance Criterion). A `:?` default would make that invariant unreachable here.
+      ARK_CLUSTER_ID: ${ARK_CLUSTER_ID:-}
+      # Logical -ClusterDirOverride path entrypoint.sh launches with; must match its own default
+      # exactly (entrypoint.sh:21) so a host .env override can't silently diverge between the two.
+      # entrypoint.sh symlinks this path onto the ark-cluster volume mount below.
+      CLUSTER_DIR: ${CLUSTER_DIR:-/home/container/arkserver/ShooterGame/Saved/clusters}
       WINEDEBUG: ${WINEDEBUG:--all}   # -all = clean logs; set +err,+seh to debug a crash
       # ArkShop → MariaDB connection. The entrypoint falls back from ARKSHOP_DB_* to MARIADB_*,
       # so passing the MARIADB_* vars here is all that is needed in the common case. Override
@@ -88,6 +98,13 @@ services:
                                              # the volume's intermediate dirs, blocking the non-root user from writing
                                              # Logs/saves. The entrypoint symlinks this into the engine's config path.
       - ./plugins-config:/home/container/plugins-config  # ArkShop + Permissions config.json — edit on host, restart.
+      - ark-cluster:/home/container/cluster-data   # shared cluster-transfer dir. Mounted SHALLOW at a FIXED
+                                                    # top-level path — same reason as ./config above: mounting
+                                                    # directly at CLUSTER_DIR (nested inside the already-mounted
+                                                    # ark-game volume, at a path that doesn't exist until steamcmd
+                                                    # creates ShooterGame/Saved/) makes Docker root-create the
+                                                    # missing intermediate dirs, blocking the non-root user's
+                                                    # writes. entrypoint.sh symlinks CLUSTER_DIR here instead.
     stop_grace_period: ${STOP_GRACE_PERIOD:-30s}   # test=0s insta-kill, prod=30s for SaveWorld
     restart: unless-stopped
     logging:
@@ -101,3 +118,5 @@ volumes:
     name: ark-game
   ark-db:
     name: ark-db
+  ark-cluster:
+    name: ark-cluster

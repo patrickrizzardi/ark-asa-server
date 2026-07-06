@@ -80,6 +80,15 @@ RUN mkdir -p /opt/vcredist \
 RUN mkdir -p /home/container/arkserver \
  && chown container:container /home/container/arkserver
 
+# Same seeding trick for the shared cluster-transfer volume (ark-cluster, docker-compose.yml).
+# Mounted SHALLOW at this fixed top-level path (not nested inside arkserver's
+# ShooterGame/Saved/clusters) — a nested mount there wouldn't exist yet at container-create time
+# (steamcmd hasn't created ShooterGame/Saved/ on first boot), so Docker would root-create the
+# missing intermediate dirs INSIDE the already-mounted ark-game volume, blocking the non-root
+# user's writes. entrypoint.sh symlinks CLUSTER_DIR to this mount (mirrors config_link).
+RUN mkdir -p /home/container/cluster-data \
+ && chown container:container /home/container/cluster-data
+
 ENV STEAMCMD_DIR=${STEAMCMD_DIR} \
     ASA_APPID=2430930 \
     ARK_DIR=/home/container/arkserver \
