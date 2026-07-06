@@ -105,11 +105,17 @@ deploy_plugins() {
   # The game installs at runtime (install_or_update above), so we can't COPY during the
   # build — the image is the version source-of-truth; this sync makes it so on the volume.
   #
-  # Clean-replace strategy: stash operator-edited config.json files from ArkApi/Plugins/*/,
+  # Clean-replace strategy: stash existing config.json files from ArkApi/Plugins/*/,
   # remove the AsaApi-owned paths (so stale binaries from a prior version can't linger),
   # copy fresh from the image, then restore the saved configs. Paths not owned by AsaApi
   # (everything else in Win64) are never touched. Config files that didn't exist before
   # are seeded from the image defaults (seed-if-absent).
+  #
+  # The stash/restore is deliberately KEPT under the per-server deploy-from-repo model
+  # (ADR 0004): it is redundant for ArkShop/Permissions (setup_plugin_configs overwrites both
+  # from their repo seeds right after this), but load-bearing for any plugin WITHOUT a repo
+  # seed — ArkShopUI today — whose volume config would otherwise reset to the image default
+  # on every boot.
   #
   # Time: O(n)  Space: O(n) where n = plugin count (2-5 in practice)
   local win64="${ARK_DIR}/ShooterGame/Binaries/Win64"
@@ -292,68 +298,116 @@ ensure_modded_pdb() {
   fi
 }
 
+seed_gus() {
+  # Deploy GameUserSettings.ini as a fresh per-server copy from the repo canonical each boot,
+  # then inject this server's SessionName so N servers sharing ONE canonical each advertise
+  # their own name. Repo wins: the engine rewrites GUS on shutdown (strips comments), and the
+  # fresh copy discards that rewrite by design — edit config/GameUserSettings.ini → restart.
+  # Injecting onto a fresh copy of the canonical means the injection always operates on a
+  # known-good file, never on last boot's engine-rewritten output.
+  #
+  # The injection is line-oriented (INI — not jq territory) and CRLF-consistent both ways:
+  # matching tolerates a trailing \r (the canonical is CRLF), and every INJECTED line adopts
+  # the source file's own ending (a \r is appended when any source line carries one), so a
+  # CRLF canonical stays uniformly CRLF instead of gaining mixed LF-only injected lines.
+  # Three cases are covered:
+  #   1. SessionName key exists under [SessionSettings]  → replace its value
+  #   2. [SessionSettings] exists but the key is absent  → append the key inside the section
+  #   3. [SessionSettings] section absent                → append section + key at EOF
+  # SESSION_NAME passes via the environment (not awk -v) so awk cannot mangle backslash
+  # escape sequences in the value.
+  #
+  # The `|| { … exit 1; }` is load-bearing under set -e for the same reason documented in
+  # _inject_mysql_block below: awk sits in a non-final list position where set -e won't fire.
+  #
+  # Time: O(n) where n = GUS line count  Space: O(1) streaming (tmp file on disk)
+  local dest_dir="$1"
+  local canonical="/home/container/config/GameUserSettings.ini"
+  local gus="${dest_dir}/GameUserSettings.ini"
+  cp "${canonical}" "${gus}"
+
+  local tmp
+  tmp="$(mktemp)"
+  GUS_SESSION_NAME="${SESSION_NAME}" awk '
+    BEGIN { name = ENVIRON["GUS_SESSION_NAME"]; eol = ""; in_section = 0; seen_section = 0; done = 0 }
+    /\r$/ { eol = "\r" }
+    /^\[SessionSettings\]\r?$/ { in_section = 1; seen_section = 1; print; next }
+    /^\[/ {
+      if (in_section && !done) { print "SessionName=" name eol; done = 1 }
+      in_section = 0; print; next
+    }
+    in_section && /^SessionName[ \t]*=/ {
+      if (!done) { print "SessionName=" name eol; done = 1 }
+      next
+    }
+    { print }
+    END {
+      if (!seen_section) { print "[SessionSettings]" eol; print "SessionName=" name eol }
+      else if (!done)    { print "SessionName=" name eol }
+    }
+  ' "${gus}" > "${tmp}" || { rm -f "${tmp}"; echo "[entrypoint] FATAL: SessionName injection into ${gus} failed." >&2; exit 1; }
+  mv "${tmp}" "${gus}"
+  echo "[entrypoint] GameUserSettings.ini deployed from repo canonical (SessionName=${SESSION_NAME})."
+}
+
 setup_plugin_configs() {
-  # Bind each plugin's config.json onto the host via ./plugins-config/<PluginName>/config.json so
-  # operators can edit configs on the host and pick them up on restart — mirrors the ./config →
-  # WindowsServer symlink for engine INI.
+  # Deploy each plugin's config.json as a fresh per-server copy from its tracked repo seed
+  # every boot (repo = source of truth; runtime edits discarded — ADR 0004). Each copy is a
+  # REAL file written into the deploy_plugins()-managed plugin dir on this server's own game
+  # volume — never a symlink to a shared path — so N servers booting in parallel have
+  # physically distinct files and cannot race or clobber each other. Edit the repo seed →
+  # push → restart to change every server at once.
   #
-  # ONLY the config.json FILE is symlinked, never the whole plugin dir: the deployed plugin dir
-  # also holds the plugin DLL (ArkShop.dll etc.) that AsaApi loads, so replacing the dir with a
-  # symlink to a config-only host dir would delete the DLL and AsaApi would fail to find the plugin
-  # ("Plugin … does not exist"). The DLL + everything else stay in the deploy_plugins()-managed
-  # dir; only config.json points at the host bind.
+  # Seeds carry NO secrets: the DB connection is injected AFTER this
+  # (inject_plugin_db_config) onto the per-server runtime copy only.
+  #   - ArkShop: config/arkshop.config.json — GENERATED + tracked (tools/gen-shop.ts).
+  #   - Permissions: config/permissions.config.json — tracked capture of the image default.
   #
-  # Config source differs per plugin:
-  #   - ArkShop: the catalog (ShopItems/Kits/points) is GENERATED + tracked at
-  #     config/arkshop.config.json (tools/gen-shop.ts; the repo is the source of truth). Deploy that
-  #     seed onto the host config every boot, overwriting — so a `git pull` + restart updates the
-  #     shop, mirroring how config/Game.ini drives loot. The seed carries NO secrets; the Mysql block
-  #     is injected AFTER this (inject_plugin_db_config), onto the runtime host copy only.
-  #   - Permissions (and ArkShop if the seed is missing): seed-if-absent from the image default,
-  #     never overwriting an operator-edited config.
+  # A missing seed is FATAL, not fall-back-to-image-default: the seeds are tracked files on
+  # the read-only ./config bind, so absence means a broken checkout/mount — booting on the
+  # image default would silently serve the wrong catalog (and a DB-less Permissions).
   #
   # Time: O(p) where p = plugin count (2 in practice — ArkShop + Permissions)  Space: O(1)
   local win64="${ARK_DIR}/ShooterGame/Binaries/Win64"
-  local host_root="/home/container/plugins-config"
-  mkdir -p "${host_root}"
 
-  local plugin
+  local plugin seed
   for plugin in ArkShop Permissions; do
     local plugin_dir="${win64}/ArkApi/Plugins/${plugin}"
-    local host_dir="${host_root}/${plugin}"
+    case "${plugin}" in
+      ArkShop)     seed="/home/container/config/arkshop.config.json" ;;
+      Permissions) seed="/home/container/config/permissions.config.json" ;;
+    esac
 
-    # The plugin dir (with its DLL) must already exist from deploy_plugins(); if it doesn't, the
-    # plugin wasn't deployed — skip rather than create a dangling config symlink.
+    # The plugin dir (with its DLL) must already exist from deploy_plugins(); if it doesn't,
+    # the plugin wasn't deployed — skip rather than write a config AsaApi will never load.
     if [[ ! -d "${plugin_dir}" ]]; then
-      echo "[entrypoint] WARN: ${plugin} not deployed (no ${plugin_dir}); skipping config bind." >&2
+      echo "[entrypoint] WARN: ${plugin} not deployed (no ${plugin_dir}); skipping config deploy." >&2
       continue
     fi
-    mkdir -p "${host_dir}"
-
-    # ArkShop: deploy the generated, tracked catalog seed each boot (repo = source of truth).
-    # Mysql is injected onto this host copy afterwards (inject_plugin_db_config), so the tracked
-    # seed stays secret-free. Falls back to seed-if-absent if the seed isn't present.
-    local shop_seed="/home/container/config/arkshop.config.json"
-    if [[ "${plugin}" == "ArkShop" && -f "${shop_seed}" ]]; then
-      cp "${shop_seed}" "${host_dir}/config.json"
-      echo "[entrypoint] Deployed ArkShop catalog from tracked seed (config/arkshop.config.json)."
-    elif [[ ! -f "${host_dir}/config.json" && -f "${plugin_dir}/config.json" ]]; then
-      cp "${plugin_dir}/config.json" "${host_dir}/config.json"
-      echo "[entrypoint] Seeded ${plugin} config.json from image default."
+    if [[ ! -f "${seed}" ]]; then
+      echo "[entrypoint] FATAL: ${plugin} repo seed missing at ${seed} — check the ./config mount / repo checkout." >&2
+      exit 1
     fi
-
-    # Symlink ONLY the config.json file → host bind; the DLL and siblings stay in the deployed dir.
-    ln -sfn "${host_dir}/config.json" "${plugin_dir}/config.json"
+    cp "${seed}" "${plugin_dir}/config.json"
+    echo "[entrypoint] Deployed ${plugin} config.json from repo seed (${seed##*/})."
   done
-
-  echo "[entrypoint] Plugin config.json bound to host: $(ls "${host_root}" 2>/dev/null | tr '\n' ' ')"
 }
 
 _inject_mysql_block() {
   # Write the DB connection block into one plugin's config.json via jq.
+  #   $1 = config path — a REAL per-server file (setup_plugin_configs deploys it from the repo
+  #        seed each boot), so the write is a plain atomic tmp+mv onto that file.
+  #   $2 = schema — the two plugins expect DIFFERENT config shapes:
+  #        nested: ArkShop — connection keys live under a top-level "Mysql" object.
+  #        flat:   Permissions — Mysql* keys sit at the JSON root (the plugin's real schema,
+  #                per its shipped image default; a nested "Mysql" object would be silently
+  #                ignored and the plugin would boot DB-less).
   # jq --arg passes each value as a plain string (not evaluated as a jq filter expression), so
-  # special characters in creds are safe. MysqlPort coerces via tonumber so the JSON type stays
-  # integer, matching ArkShop's expected schema.
+  # special characters in creds are safe. The PASSWORD alone reaches jq via a per-invocation
+  # environment variable (env.INJECT_MYSQL_PASS — the same idiom seed_gus uses for awk) instead
+  # of --arg, so it never appears in the jq process's argv (/proc/<pid>/cmdline); jq's env
+  # values are plain strings too, never evaluated as filter code. MysqlPort coerces via
+  # tonumber so the JSON type stays integer, matching the plugins' expected schema.
   #
   # The `|| { … exit 1; }` is load-bearing: in `jq … > tmp && mv tmp cfg`, jq sits in a non-final
   # position of an && list, where `set -e` does NOT abort on its failure. Without the explicit
@@ -361,48 +415,62 @@ _inject_mysql_block() {
   # false success against an unwritten config. The handler is the list's final element, so its
   # exit fires unconditionally.
   #
-  # Time: O(1)  Space: O(1)   Side effect: rewrites the file ${cfg} resolves to, in place.
-  # ${cfg} is a symlink (setup_plugin_configs points plugin_dir/config.json → the host bind), so we
-  # resolve it and mv onto the real target — a bare `mv tmp symlink` would REPLACE the symlink with
-  # a regular file and orphan the host-bound config the operator edits. Resolving keeps the link.
-  local cfg dest
+  # Time: O(1)  Space: O(1)   Side effect: rewrites ${cfg} in place (atomic tmp+mv).
+  local cfg schema filter
   cfg="$1"
-  dest="${cfg}"
-  [[ -L "${cfg}" ]] && dest="$(readlink -f "${cfg}")"
+  schema="$2"
+  case "${schema}" in
+    nested)
+      filter='.Mysql.UseMysql  = true
+            | .Mysql.MysqlHost = $host
+            | .Mysql.MysqlUser = $user
+            | .Mysql.MysqlPass = env.INJECT_MYSQL_PASS
+            | .Mysql.MysqlDB   = $db
+            | .Mysql.MysqlPort = ($port | tonumber)'
+      ;;
+    flat)
+      filter='.UseMysql  = true
+            | .MysqlHost = $host
+            | .MysqlUser = $user
+            | .MysqlPass = env.INJECT_MYSQL_PASS
+            | .MysqlDB   = $db
+            | .MysqlPort = ($port | tonumber)'
+      ;;
+    *)
+      echo "[entrypoint] FATAL: _inject_mysql_block: unknown schema '${schema}' (expected nested|flat)." >&2
+      exit 1
+      ;;
+  esac
   local tmp
   tmp="$(mktemp)"
+  INJECT_MYSQL_PASS="${ARKSHOP_DB_PASS}" \
   jq --arg host "${ARKSHOP_DB_HOST}" \
      --arg user "${ARKSHOP_DB_USER}" \
-     --arg pass "${ARKSHOP_DB_PASS}" \
      --arg db   "${ARKSHOP_DB_NAME}" \
      --arg port "${ARKSHOP_DB_PORT}" \
-     '.Mysql.UseMysql  = true
-    | .Mysql.MysqlHost = $host
-    | .Mysql.MysqlUser = $user
-    | .Mysql.MysqlPass = $pass
-    | .Mysql.MysqlDB   = $db
-    | .Mysql.MysqlPort = ($port | tonumber)' \
+     "${filter}" \
      "${cfg}" > "${tmp}" || { rm -f "${tmp}"; echo "[entrypoint] FATAL: jq failed to write DB config into ${cfg}." >&2; exit 1; }
-  mv "${tmp}" "${dest}"
+  mv "${tmp}" "${cfg}"
 }
 
 inject_plugin_db_config() {
   # Inject DB connection credentials into the ArkShop (and Permissions) config.json.
   # Credentials come from env vars (ARKSHOP_DB_*), never from a literal in this script. The
-  # password is passed to jq as a --arg command-line argument (transiently visible in this
-  # container's own /proc/<pid>/cmdline during the jq exec — acceptable in a single-user game
-  # container) and is never echoed to stdout or the logs.
+  # password reaches jq through the environment (see _inject_mysql_block), never as a
+  # command-line argument — so it is not visible in /proc/<pid>/cmdline — and is never echoed
+  # to stdout or the logs.
   #
   # Fail-fast on missing/empty creds: a partially-configured ArkShop connects to the wrong host
   # or fails silently, which is harder to diagnose than an explicit boot-time fatal.
   #
-  # The config.json was seeded from the image default by setup_plugin_configs() and is now at the
-  # host-bound path via the symlink.
+  # Each config.json is a real per-server file deployed from its repo seed by
+  # setup_plugin_configs(); injection rewrites that per-server copy in place.
   #
   # Time: O(1)  Space: O(1)
-  # Side effects: mutates ArkShop/config.json (and Permissions/config.json if it has a Mysql block)
-  #               on the plugins-config host bind each boot. The write is idempotent — re-running
-  #               produces the same file content (creds from env are constant within a boot).
+  # Side effects: mutates the per-server ArkShop/config.json (and Permissions/config.json)
+  #               inside the plugin dirs on this server's game volume each boot. The write is
+  #               idempotent — re-running produces the same file content (creds from env are
+  #               constant within a boot).
   local win64="${ARK_DIR}/ShooterGame/Binaries/Win64"
 
   if [[ -z "${ARKSHOP_DB_HOST}" || -z "${ARKSHOP_DB_USER}" || -z "${ARKSHOP_DB_PASS}" || -z "${ARKSHOP_DB_NAME}" ]]; then
@@ -426,16 +494,23 @@ inject_plugin_db_config() {
     exit 1
   fi
 
-  _inject_mysql_block "${arkshop_cfg}"
+  _inject_mysql_block "${arkshop_cfg}" nested
   echo "[entrypoint] ArkShop DB config injected (host=${ARKSHOP_DB_HOST}, db=${ARKSHOP_DB_NAME}, user=${ARKSHOP_DB_USER})."
   # Password intentionally omitted from the log line above.
 
-  # Permissions plugin: inject the same MySQL block if its config.json has one.
-  # Permissions manages in-game role grants and is an ArkShop dependency — it needs the same DB.
+  # Permissions plugin: inject the same MySQL connection, FLAT schema — its Mysql* keys sit at
+  # the JSON root, unlike ArkShop's nested "Mysql" object (see _inject_mysql_block). Permissions
+  # manages in-game role grants and is an ArkShop dependency — it needs the same DB. Guard on
+  # the flat schema's UseMysql key; a config without it cannot take the connection, and skipping
+  # SILENTLY would be the exact DB-less boot this guard exists to surface — so warn loudly.
   local perms_cfg="${win64}/ArkApi/Plugins/Permissions/config.json"
-  if [[ -f "${perms_cfg}" ]] && jq -e 'has("Mysql")' "${perms_cfg}" >/dev/null 2>&1; then
-    _inject_mysql_block "${perms_cfg}"
-    echo "[entrypoint] Permissions DB config injected."
+  if [[ -f "${perms_cfg}" ]]; then
+    if jq -e 'has("UseMysql")' "${perms_cfg}" >/dev/null 2>&1; then
+      _inject_mysql_block "${perms_cfg}" flat
+      echo "[entrypoint] Permissions DB config injected."
+    else
+      echo "[entrypoint] WARN: Permissions config.json carries no UseMysql key — DB inject skipped; Permissions would run on its LOCAL store, not the shared DB. Check config/permissions.config.json." >&2
+    fi
   fi
 }
 
@@ -448,14 +523,22 @@ main() {
            "$(dirname "$LOG_FILE")" "$XDG_RUNTIME_DIR"
   chmod 700 "$XDG_RUNTIME_DIR"
 
-  # Link the engine's config path to the host bind mount (/home/container/config).
-  # The bind is shallow (see docker-compose.yml) so the volume tree stays owned by this
-  # non-root user; we create the dir chain here and symlink WindowsServer at the host mount.
-  # Edit ./config/*.ini on the host → restart → ASA reads through the link.
-  local config_link="${ARK_DIR}/ShooterGame/Saved/Config/WindowsServer"
-  mkdir -p "$(dirname "$config_link")"
-  rm -rf "$config_link"
-  ln -sfn /home/container/config "$config_link"
+  # Deploy the engine INIs: WindowsServer is a REAL per-server directory on the ark-game
+  # volume holding fresh copies of the repo canonicals (the ./config bind) each boot — repo
+  # wins, runtime edits are discarded (ADR 0004). Per-server copies mean the engine's GUS
+  # shutdown-rewrite lands on this server's own file, never a shared one — N servers cannot
+  # clobber each other. Edit ./config/*.ini on the host → restart → fresh copies deployed.
+  # This is a real dir on the ark-game VOLUME, not a Docker bind — docker-compose.yml's
+  # deep-bind root-creation warning (on the ./config mount) does not apply here.
+  # Transition-safe: a volume last booted on the whole-dir-symlink model still has
+  # WindowsServer as a symlink to /home/container/config — remove the LINK itself (never the
+  # canonical it points at; rm on a symlink never follows it) before creating the real dir,
+  # or the copies below would write THROUGH the link into the shared canonicals.
+  local config_dir="${ARK_DIR}/ShooterGame/Saved/Config/WindowsServer"
+  [[ -L "${config_dir}" ]] && rm -f "${config_dir}"
+  mkdir -p "${config_dir}"
+  cp /home/container/config/Game.ini "${config_dir}/Game.ini"
+  seed_gus "${config_dir}"
 
   # ARK_CLUSTER_ID interpolates unquoted into the launch flags string (below) — reject anything
   # outside a safe charset now, at boot, rather than let a stray space/glob char corrupt argv.

@@ -96,8 +96,9 @@ services:
       - ./config:/home/container/config      # YOUR ini files — edit on host, restart. Bound SHALLOW on purpose:
                                              # a deep bind into …/Saved/Config/WindowsServer makes Docker root-create
                                              # the volume's intermediate dirs, blocking the non-root user from writing
-                                             # Logs/saves. The entrypoint symlinks this into the engine's config path.
-      - ./plugins-config:/home/container/plugins-config  # ArkShop + Permissions config.json — edit on host, restart.
+                                             # Logs/saves. The entrypoint deploys fresh per-server COPIES of these
+                                             # into the engine's config dir each boot — repo wins (ADR 0004,
+                                             # docs/internal/decisions/0004-shared-config-model.md).
       - ark-cluster:/home/container/cluster-data   # shared cluster-transfer dir. Mounted SHALLOW at a FIXED
                                                     # top-level path — same reason as ./config above: mounting
                                                     # directly at CLUSTER_DIR (nested inside the already-mounted

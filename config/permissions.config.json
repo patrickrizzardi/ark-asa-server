@@ -1,0 +1,14 @@
+{
+  "UseMysql": false,
+  "MysqlHost": "localhost",
+  "MysqlUser": "",
+  "MysqlPass": "",
+  "MysqlDB": "",
+  "MysqlPort": 3306,
+  "DbPathOverride": "",
+  "ClusterSyncTime": 60,
+  "HideAllPlayerSuccessMessages": false,
+  "SendMessagesAsNotification": false,
+  "TextSize": 1.5,
+  "DisplayTime": 3.0
+}

@@ -275,15 +275,18 @@ the ArkShop `config.json` (General.TimedPointsReward + ShopItems + Kits), and **
 **Tweak loop** (same shape as loot):
 ```
 edit tools/shop-design.ts  →  cd tools && bun run gen-shop.ts --write  →  git push
-  →  on dell: git pull  →  docker compose restart the-island
+  →  on dell: git pull  →  docker compose restart the-center
 ```
 - `--write` writes the **tracked** seed `config/arkshop.config.json` (no secrets → safe to commit).
   Without `--write` it only writes `tools/out/arkshop-config.json` (gitignored, for inspection).
-- **Deploy model**: the entrypoint copies `config/arkshop.config.json` → the host
-  `plugins-config/ArkShop/config.json` **every boot** (repo = source of truth for the catalog), then
-  injects the Mysql block onto that runtime copy. This flips ArkShop's config from M2's
-  edit-on-host model to **deploy-from-repo** — host edits to the ArkShop catalog are overwritten each
-  boot by design (edit the spec, not the host file). Permissions stays edit-on-host (seed-if-absent).
+- **Deploy model**: the entrypoint copies `config/arkshop.config.json` → the **per-server** ArkShop
+  plugin dir (`…/Win64/ArkApi/Plugins/ArkShop/config.json` on each server's own game volume)
+  **every boot** (repo = source of truth for the catalog), then injects the Mysql block onto that
+  per-server runtime copy. There is **no host bind** — each server owns its copy, so N cluster
+  servers never contend on a shared file. Catalog edits happen in the spec, never on a deployed
+  copy (overwritten each boot by design). Permissions follows the same model from
+  `config/permissions.config.json` (see
+  [ADR 0004](../../decisions/0004-shared-config-model.md)).
 
 **Levels are flat** (ArkShop spawns no taming/imprint bonus, §1), so a shop 225 is beaten by anything
 bred — the no-P2W spine needs no per-stat tuning. **Not yet boot-verified on dell.**

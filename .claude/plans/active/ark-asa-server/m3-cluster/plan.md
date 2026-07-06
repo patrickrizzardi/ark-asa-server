@@ -17,6 +17,7 @@ files:
   - README.md
   - .claude/design-sources.md
   - .claude/rules/build-time-vs-runtime.md
+  - .gitignore
 created: 2026-06-22
 last_updated: 2026-07-06
 session-id: ["46d42803-00ea-46b6-9744-f1dd992ba974", "d7c269b0-2ae5-436b-b487-ea3d1b8ef35d", "74db45a6-a185-4885-a2b3-f3045dba37fa"]
@@ -250,7 +251,7 @@ the *feature* it breaks is headline.
 | **Genesis Part 1 transfers via Mission Terminals, not obelisks** (web-confirmed) — the transfer-proof method differs from the obelisk flow; gates the headline proof (Center↔Genesis is the ONLY transfer pair on a 2-map set) | D | III | L | **Web-confirmed (2026-07-05, conductor):** Genesis has NO obelisks but DOES support **bidirectional** cross-ARK transfer via **Mission Terminals** (~85,63 Bog biome; transfer-only, no tech-tier grind) + player Tek Transmitters — see Research Findings. Confirming the *mechanism* dropped prob from the earlier **B** ("might not support transfer at all") to **D** (design confirmed; only live-server behavior could surprise). Phase 3 step 7 still confirms live behavior via the terminal (B3 detection, 0). `lookup(D,III)` | **L** | pass (Phase 3 terminal test confirms live) |
 | Port collision on dell (2 game + 2 RCON ports) | D | III | L | Distinct documented host ports (7777/7779 udp; 27020/27021 tcp) in compose + `.env` examples — B1 design | **L** | pass |
 | Changing the `WindowsServer` symlink model breaks the M1/M2 single-server config loop | B | III | M | Phase 2 regression-guard boots `the-center` ALONE + real-file/inject checks before the multi-service compose lands (B2, prob −1 → C); **and** revert-compose-to-one-service is a tested known-good backout to the M2 state (B1, sev −2 → IV). Two different patterns, two axes. `lookup(C,IV)` | **L** | pass |
-| **Silent DB-less plugin boot** — the Phase 2 mysql-inject rework (real-file `mv`, symlink-resolution removed at entrypoint.sh:352-387) silently no-ops the `Mysql` write, OR the committed Permissions seed lacks a `Mysql` key so the `has("Mysql")` guard (`:436`) skips injection → ArkShop/Permissions boot connected to NO DB with no loud error (economy silently broken). *Named in Phase 2 step 6.* | C | III | M | *Prob C:* a mechanical simplification of the inject path (removes the readlink special-case; atomic `mv tmp cfg` onto a real file is the standard jq-write idiom already used for the shop seed) — failures are edge cases (seed over-stripped of its `Mysql` block, a jq quirk), not novel logic. **Mitigation = Phase 2 build-blocking ACs, not documentation:** `jq .Mysql` on BOTH the ArkShop AND Permissions plugin configs must show the injected host/user/db, AND the committed `config/permissions.config.json` seed must carry a `Mysql` key — the phase **cannot pass its dell regression gate** if the inject silently no-ops, so a DB-less boot **cannot ship** (a build-blocking verification that reproduces the failure → B2, prob −1 → D). Sev III (recoverable: fix inject + restart; the DB and its data are untouched). `lookup(D,III)` | **L** | pass |
+| **Silent DB-less plugin boot** — the Phase 2 mysql-inject rework (real-file `mv`, symlink-resolution removed at entrypoint.sh:352-387) silently no-ops the DB-settings write, OR the committed Permissions seed lacks its flat root-level `UseMysql` key so the `has("UseMysql")` guard (`:508`, loud-WARN fallback `:512`) skips injection — the plugin's real schema is FLAT (root-level `UseMysql`/`Mysql*` keys, NOT a nested `Mysql` block; ADR 0004 §Consequences) → ArkShop/Permissions boot connected to NO DB with no loud error (economy silently broken). *Named in Phase 2 step 6.* | C | III | M | *Prob C:* a mechanical simplification of the inject path (removes the readlink special-case; atomic `mv tmp cfg` onto a real file is the standard jq-write idiom already used for the shop seed) — failures are edge cases (seed over-stripped of its flat root-level `UseMysql`/`Mysql*` keys, a jq quirk), not novel logic. **Mitigation = Phase 2 build-blocking ACs, not documentation:** `jq .Mysql` on the ArkShop config (nested schema) AND `jq '{UseMysql,MysqlHost,MysqlUser,MysqlPass,MysqlDB,MysqlPort}'` on the Permissions config (flat schema — FRAGO 003) must show the injected host/user/db, AND the committed `config/permissions.config.json` seed must carry the flat root-level `UseMysql`/`Mysql*` keys — the phase **cannot pass its dell regression gate** if the inject silently no-ops, so a DB-less boot **cannot ship** (a build-blocking verification that reproduces the failure → B2, prob −1 → D). Sev III (recoverable: fix inject + restart; the DB and its data are untouched). `lookup(D,III)` | **L** | pass |
 | ASA upload/download can DUPE dinos/items if a server crashes mid-transfer | D | II | M | Engine behavior, out of M3's control; `SAVE_ON_STOP` + clean shutdowns + documented ASA caveat in the ADR — B3 operational, 0. No money/irreversible **floor** fires (in-game items, admin-cleanable, "not money" per the Risk Assessment criteria). `lookup(D,II)` | **M** | recorded → Future Reqs (trigger = dupes observed, or ASA patches it) |
 
 ## Questions
@@ -800,7 +801,8 @@ each boot** (repo wins, runtime edits discarded) — no shared writable config f
 servers booting simultaneously never contend. `WindowsServer` is a real per-server dir (on the
 per-server game volume) holding a copied `Game.ini` and a seeded `GameUserSettings.ini` (+ injected
 `SessionName`); ArkShop + Permissions config.json deploy per-server from `config/arkshop.config.json`
-+ the NEW `config/permissions.config.json` (+ injected `Mysql`). The single `the-center` server
++ the NEW `config/permissions.config.json` (+ injected DB settings — nested `Mysql` block for
+ArkShop, flat root-level `Mysql*` keys for Permissions). The single `the-center` server
 boots and behaves exactly as M2 (regression-safe).
 **Why this phase exists**: This is the precondition for N servers sharing config without
 corruption. Two problems with today's model: (1) `WindowsServer` is a whole-dir symlink →
@@ -857,8 +859,10 @@ shutdown of N.
 
 4. Capture the image-default Permissions config into a NEW tracked repo seed
    `config/permissions.config.json`: grab `Win64/ArkApi/Plugins/Permissions/config.json` from the
-   built image (or dell's deployed copy), strip any `Mysql` secret block (the entrypoint injects it,
-   same as the ArkShop seed), commit it secret-free.
+   built image (or dell's deployed copy), blank the flat root-level Mysql credential values
+   (`MysqlUser`/`MysqlPass`/`MysqlDB` — KEEP the keys themselves, the `has("UseMysql")` guard needs
+   them; the entrypoint injects real values at boot, as it does for the ArkShop seed's nested
+   `Mysql` block), commit it secret-free.
 5. Rework `setup_plugin_configs()` to **per-server deploy-from-repo for BOTH plugins**: deploy
    `config/arkshop.config.json` → the per-server ArkShop plugin dir's `config.json`, and
    `config/permissions.config.json` → the per-server Permissions plugin dir's `config.json` — each a
@@ -873,11 +877,15 @@ shutdown of N.
    - `inject_plugin_db_config()` (:385-436): the hardcoded paths (:418,:431) already point at the
      per-server plugin-dir config.json — KEEP them. Update the stale comments (:395-401) that
      describe "host-bound path via the symlink" / "plugins-config host bind" → now a real per-server
-     file. The `has("Mysql")` guard for Permissions (:432) still applies (the new Permissions seed
-     must carry a `Mysql` block for it to be injected — ensure the captured seed has one, or
-     Permissions connects DB-less; verify at boot).
+     file. The Permissions inject guard keys on `has("UseMysql")` (entrypoint.sh:508, loud-WARN
+     fallback :512) because the plugin's real schema is FLAT — its Mysql keys sit at the JSON root
+     (`UseMysql`/`MysqlHost`/`MysqlUser`/`MysqlPass`/`MysqlDB`/`MysqlPort`), unlike ArkShop's
+     nested `Mysql` object. The captured seed must carry those flat root-level keys for the guard
+     to fire, or Permissions connects DB-less; do NOT "normalize" the seed to a nested `Mysql`
+     block — the plugin would silently ignore it and boot on its local store (ADR 0004
+     §Consequences); verify at boot.
 
-**CHECKPOINT** — plugin-config path reworked: ArkShop + Permissions deploy per-server from repo seeds (new `config/permissions.config.json` captured), DB inject works on the real-file path via atomic `mv` (no symlink resolution); `jq .Mysql` shows the injected block on both plugin configs.
+**CHECKPOINT** — plugin-config path reworked: ArkShop + Permissions deploy per-server from repo seeds (new `config/permissions.config.json` captured), DB inject works on the real-file path via atomic `mv` (no symlink resolution); `jq .Mysql` (ArkShop, nested) / `jq '{UseMysql,MysqlHost,MysqlUser,MysqlPass,MysqlDB,MysqlPort}'` (Permissions, flat schema — FRAGO 003) shows the injected values on each plugin config.
 
 7. `deploy_plugins()` stash/restore (:120-127 + :161-170): confirm it's not broken by the model
    change (it stashes/restores whatever config.json exists across the /opt→Win64 sync; setup then
@@ -913,44 +921,135 @@ shutdown of N.
 12. Regression-guard: boot `the-center` ALONE on dell, confirm loot (Game.ini) + shop catalog +
     Permissions + GUS tuning all apply and the server advertises (proves the rework didn't break
     single-server); confirm `WindowsServer` is a real dir with copied `Game.ini` + writable `GUS`,
-    the plugin dirs hold real per-server config.json (not symlinks), and **`jq .Mysql` on each
-    plugin config shows the injected DB block** (proves the inject-path rework didn't silently
-    DB-less the plugins).
+    the plugin dirs hold real per-server config.json (not symlinks), and **`jq .Mysql` on the
+    ArkShop config (nested) plus `jq '{UseMysql,MysqlHost,MysqlUser,MysqlPass,MysqlDB,MysqlPort}'`
+    on the Permissions config (flat schema — FRAGO 003) show the injected DB settings** (proves
+    the inject-path rework didn't silently DB-less the plugins).
 **Acceptance criteria**:
 - [ ] `the-center` boots alone on dell with loot (Game.ini), shop catalog, Permissions, and GUS tuning all applied (single-server regression intact)
-  - Evidence: (filled at phase completion)
+  - Evidence: DELL-BOOT-ONLY — not verifiable from this workstation. Static proxies all green: `bash -n` clean, `docker compose --env-file .env.test.example config` resolves clean, `docker buildx build --check` clean, full copy/seed/inject flow simulated (see below). Honest: unchecked until a live dell boot.
 - [ ] `${WindowsServer}` is a real directory (NOT a symlink); both `Game.ini` and `GameUserSettings.ini` inside it are real regular files (`stat`/`readlink` evidence), copied from `config/` each boot
-  - Evidence: (filled at phase completion)
+  - Evidence: STATIC SIM PASSED (live dell stat pending): the exact main() block (entrypoint.sh — `[[ -L ]] && rm -f` → `mkdir -p` → `cp Game.ini` → `seed_gus`) run in a sandbox against a volume holding the OLD whole-dir symlink: link removed (not followed), real dir created, both files real regular files, shared canonicals untouched; warm-boot re-run idempotent.
 - [ ] `GameUserSettings.ini` `SessionName` matches `${SESSION_NAME}` (injected, not the canonical's value)
-  - Evidence: (filled at phase completion)
+  - Evidence: STATIC SIM PASSED (live dell grep pending): verbatim-extracted `seed_gus()` run against the REAL CRLF canonical → exactly one `SessionName=<env value>` line, canonical's `ARK-Test` gone, all other lines byte-identical. All 3 spec cases + key-at-EOF + `SessionName = x` (spaced) variants pass; double-run idempotent.
 - [ ] ArkShop + Permissions `config.json` are real per-server files in their plugin dirs (NOT symlinks); `config/permissions.config.json` exists as a secret-free tracked seed
-  - Evidence: (filled at phase completion)
-- [ ] **DB inject still works on the real-file path**: `jq .Mysql` on the ArkShop config AND the Permissions config shows the injected host/user/db — proves `_inject_mysql_block`'s symlink-resolution removal didn't break the write (the silent-DB-less-boot risk)
-  - Evidence: (filled at phase completion)
-- [ ] **The committed `config/permissions.config.json` seed contains a `Mysql` key** so the `has("Mysql")` guard at entrypoint.sh:436 fires — otherwise Permissions silently boots DB-less and the inject-check above is vacuously skipped
-  - Evidence: (filled at phase completion)
-- [ ] `./plugins-config` bind removed from `docker-compose.yml`, `plugins-config/**` removed from `.gitignore`, orphaned `plugins-config/` dir deleted; grep confirms no remaining `plugins-config` reference in entrypoint/compose
-  - Evidence: (filled at phase completion)
-- [ ] `docs/internal/design/economy/shop.md` §11 updated to the per-server deploy model (no stale `plugins-config` host-bind description)
-  - Evidence: (filled at phase completion)
-- [ ] ADR `0004-shared-config-model.md` exists with the unified model + the two races it solves + rejected alternatives (doc-type: adr); registered `[locked]`
-  - Evidence: (filled at phase completion)
+  - Evidence: Seed half VERIFIED: `config/permissions.config.json` tracked, captured from the REAL image default (`ark-asa:gate-check`, built 2026-07-06 from current Dockerfile, `/opt/asaapi/ArkApi/Plugins/Permissions/config.json`), creds blanked (`MysqlUser/Pass/DB=""`, `UseMysql:false`). Deployed-files half: setup_plugin_configs writes via plain `cp` (no `ln`) — real-file property simulated; live dell `readlink` pending.
+- [ ] **DB inject still works on the real-file path**: `jq .Mysql` on the ArkShop config AND `jq '{UseMysql,MysqlHost,MysqlUser,MysqlPass,MysqlDB,MysqlPort}'` on the Permissions config shows the injected host/user/db — proves `_inject_mysql_block`'s symlink-resolution removal didn't break the write (the silent-DB-less-boot risk)
+  - Evidence: STATIC SIM PASSED (criterion re-worded per FRAGO 003 — the Permissions plugin's real schema is FLAT, root-level Mysql* keys; rationale in ADR 0004 §Consequences + `audit.md` FRAGO 003): verbatim-extracted `_inject_mysql_block` run on copies of both real seeds → ArkShop `jq .Mysql` shows injected host/user/db (nested schema); Permissions `jq '{UseMysql,MysqlHost,…}'` shows them at the JSON root (flat schema). Re-verified 2026-07-06 after the env-var password rework (see Review-round fixes below), incl. a special-char password round-tripping byte-exact through both schemas. Live dell check pending.
+- [x] **The committed `config/permissions.config.json` seed carries the plugin's real FLAT schema** (root-level `UseMysql`/`MysqlHost`/`MysqlUser`/`MysqlPass`/`MysqlDB`/`MysqlPort` keys) so the `has("UseMysql")` guard at entrypoint.sh:508 fires — otherwise Permissions silently boots DB-less and the inject-check above is vacuously skipped
+  - Evidence: VERIFIED (criterion re-worded per FRAGO 003 — the shipped image-default Permissions config is FLAT, `jq 'has("Mysql")'` = false on the plugin's own default; a nested `Mysql` key would make the old guard fire but inject a block the plugin never reads. Rationale in ADR 0004 §Consequences + `audit.md` FRAGO 003): `jq -e 'has("UseMysql")'` on the tracked seed returns true (guard fires); guard grep-confirmed live at entrypoint.sh:508, loud-WARN fallback at :512 (a config failing the guard warns instead of silently skipping). Re-verified 2026-07-06 against the current seed + entrypoint.sh, not inherited from prior verdicts.
+- [x] `./plugins-config` bind removed from `docker-compose.yml`, `plugins-config/**` removed from `.gitignore`, orphaned `plugins-config/` dir deleted; grep confirms no remaining `plugins-config` reference in entrypoint/compose
+  - Evidence: bind line removed (compose config resolves clean, no `plugins-config` in resolved output); `.gitignore` lines 6-7 removed; `git rm plugins-config/.gitkeep` + dir deleted (git status: `D plugins-config/.gitkeep`); repo-wide grep of entrypoint/compose/gitignore/README/docs/config/tools → only ADR 0004's historical Context mentions remain (describing the removed model — correct ADR content).
+- [x] `docs/internal/design/economy/shop.md` §11 updated to the per-server deploy model (no stale `plugins-config` host-bind description)
+  - Evidence: shop.md §11 Deploy-model bullet rewritten (per-server plugin dir, no host bind, Permissions same model, links ADR 0004); stale `the-island` service name in the tweak loop fixed to `the-center`; grep confirms no `plugins-config` mention left in shop.md.
+- [x] ADR `0004-shared-config-model.md` exists with the unified model + the two races it solves + rejected alternatives (doc-type: adr); registered `[locked]`
+  - Evidence: `docs/internal/decisions/0004-shared-config-model.md` (doc-type "adr", matches 0003 template): unified model table, GUS shared-write clobber + concurrent-boot cp race, structural race-freedom, Permissions flip rationale, bind removal, all 4 rejected alternatives; registered `[locked]` in `.claude/design-sources.md` (row appended incl. the flat-schema warning).
 **Quality gate**:
-- [ ] Every config copy/seed is idempotent (safe every boot)
-- [ ] No shared writable config file remains (no whole-dir `WindowsServer` symlink; no plugin-config symlink to a shared bind)
-- [ ] `_inject_mysql_block` no longer resolves a symlink (operates on a real file via atomic `mv`); its comment matches
+- [x] Every config copy/seed is idempotent (safe every boot)
+  - Evidence: all deploys are `mkdir -p`/`cp`-overwrite/`awk`+atomic-`mv` (no seed-if-absent state); seed_gus + WindowsServer block double-run in sandbox → identical result; inject idempotent (env-constant within a boot, unchanged property).
+- [x] No shared writable config file remains (no whole-dir `WindowsServer` symlink; no plugin-config symlink to a shared bind)
+  - Evidence: `ln -sfn` for WindowsServer and the plugin-config file-symlink both removed; grep of entrypoint.sh — remaining `ln` calls are cluster-dir + steamclient sdk only; the only shared mount (`./config`) is never a runtime write target.
+- [x] `_inject_mysql_block` no longer resolves a symlink (operates on a real file via atomic `mv`); its comment matches
+  - Evidence: `readlink -f`/`dest` gone; plain `mv "${tmp}" "${cfg}"`; header comment rewritten (real per-server file, atomic tmp+mv, nested/flat schema doc).
 - [ ] Dirty-volume transition is clean: booting Phase 2 on a volume that still holds the OLD symlinked `config.json` (from a pre-Phase-2 boot) correctly replaces it with a real file (not a dangling symlink) — verify on dell's existing `ark-game` volume, not just a fresh one
-- [ ] `inject_plugin_db_config` comments updated (no "host bind"/"symlink" language)
-- [ ] SessionName injection handles the `[SessionSettings]` block whether present or absent
-- [ ] Permissions seed committed is secret-free (Mysql injected at runtime, like ArkShop); seed carries a `Mysql` block so the inject guard fires
-- [ ] `ENABLE_ASAAPI=0` vanilla path still copies Game.ini + seeds GUS (plugins skipped when disabled — confirm the vanilla path is unaffected)
-- [ ] No stale doc left: shop.md §11 + any README plugins-config mention reflect the new model
+  - Evidence: DELL-BOOT-ONLY as written. Static analysis: plugin-dir config symlinks are cleared by deploy_plugins' existing `rm -rf ArkApi` clean-replace before setup writes real files (stash `[[ -f ]]` skips a dangling link); the WindowsServer whole-dir-symlink transition simulated green (link removed not followed, canonicals untouched). Live dell volume check pending.
+- [x] `inject_plugin_db_config` comments updated (no "host bind"/"symlink" language)
+  - Evidence: comments rewritten (per-server real files from repo seeds); repo grep for `plugins-config`/host-bind language in entrypoint.sh → none.
+- [x] SessionName injection handles the `[SessionSettings]` block whether present or absent
+  - Evidence: sandbox runs of the verbatim function: key-present (replace), section-present/key-absent mid-file (append inside section), section-absent (append section+key), section-at-EOF, spaced-key variant — all green, CRLF-tolerant.
+- [x] Permissions seed committed is secret-free (Mysql injected at runtime, like ArkShop); seed carries the flat `UseMysql`/`Mysql*` root-level keys so the `has("UseMysql")` inject guard fires
+  - Evidence: SECRET-FREE half VERIFIED (`MysqlUser/Pass/DB` blank, `UseMysql:false`; image default's placeholder `root`/`pass`/`arkdb` stripped). Flat-keys half VERIFIED (criterion re-worded per FRAGO 003 — rationale in ADR 0004 §Consequences + `audit.md` FRAGO 003): `jq -e 'has("UseMysql")'` on the seed = true; guard fires at entrypoint.sh:508. Re-verified 2026-07-06 against the current seed + entrypoint.sh.
+- [x] `ENABLE_ASAAPI=0` vanilla path still copies Game.ini + seeds GUS (plugins skipped when disabled — confirm the vanilla path is unaffected)
+  - Evidence: the Game.ini copy + seed_gus call sit in main() BEFORE and OUTSIDE the `ENABLE_ASAAPI` branch (unconditional every boot); setup_plugin_configs/inject remain inside the `== "1"` branch; launch-string construction untouched by this phase.
+- [x] No stale doc left: shop.md §11 + any README plugins-config mention reflect the new model
+  - Evidence: shop.md §11 rewritten; README "Plugin config edit loop" section rewritten to deploy-from-repo (tracked seeds, links ADR 0004); repo-wide grep — only ADR 0004's historical Context references remain.
 **Verification**: dell single-server boot → `docker compose exec the-center sh -c 'ls -la
 <WindowsServer> && ls -la <ArkShop plugin dir>/config.json <Permissions plugin dir>/config.json'`
 shows real files (no symlinks); `grep SessionName <WindowsServer>/GameUserSettings.ini` shows the
-env value; `jq .Mysql <plugin>/config.json` shows the injected block; `git status` shows
+env value; `jq .Mysql` (ArkShop, nested) / `jq '{UseMysql,MysqlHost,MysqlUser,MysqlPass,MysqlDB,MysqlPort}'`
+(Permissions, flat schema — FRAGO 003) shows the injected block; `git status` shows
 `config/permissions.config.json` tracked + secret-free and `plugins-config/` gone;
 `grep -rn plugins-config entrypoint.sh docker-compose.yml` returns nothing.
+
+**Review-round fixes (2026-07-06, applied by a fresh executor after the review fleet's first
+pass)** — 3 should-fix/minor items plus 1 already-ratified FRAGO application:
+- **SHOULD-FIX** (code-reviewer): `docker-compose.yml`'s `./config` bind comment still said "The
+  entrypoint symlinks this into the engine's config path" — stale since this phase deleted the
+  symlink model. Rewritten to the per-server-copy model ("deploys fresh per-server COPIES … repo
+  wins") with an explicit pointer to ADR 0004, matching the accurate comment already at the
+  `WindowsServer` deploy block in `entrypoint.sh` main().
+- **MINOR** (code-reviewer): `seed_gus()` wrote its awk-injected lines (`SessionName=`, and the
+  `[SessionSettings]` header in the section-absent case) LF-only into a CRLF source, producing
+  mixed line endings — the function was CRLF-*tolerant* (reading) but not CRLF-*consistent*
+  (writing). Fixed: an `/\r$/ { eol = "\r" }` detection rule sets the injected-line ending from
+  the source file's own, so every injected line adopts the source's ending; comment updated to
+  say so. Verified with the verbatim-extracted function (only the canonical-path constant
+  substituted to the sandbox): all 3 spec cases on CRLF inputs (key-present replace,
+  section-present/key-absent append, section-absent append) + section-at-EOF variant → output
+  uniformly CRLF (crlf-line-count == total-line-count, exactly one `SessionName=<env>` line);
+  LF-input regression (all 3 cases) → output stays pure LF (zero `\r` introduced); the REAL
+  484-line CRLF canonical → 484/484 CRLF; double-run byte-identical (idempotent).
+- **MINOR** (security): `_inject_mysql_block()` passed the DB password to jq via `--arg`,
+  transiently visible in `/proc/<pid>/cmdline` during the jq exec. Fixed: the password now
+  reaches jq through a per-invocation environment variable (`INJECT_MYSQL_PASS="…" jq …`, read as
+  `env.INJECT_MYSQL_PASS` in both the nested and flat filters) — the same env-passing idiom
+  `seed_gus()` already uses for awk (`GUS_SESSION_NAME`); jq env values are plain strings, never
+  evaluated as filter code. Non-secret values stay `--arg`. Comments in both functions updated.
+  Verified with the verbatim-extracted function on copies of both real seeds, jq shimmed by a
+  wrapper recording every invocation's full argv: a special-char password
+  (`s3cr#t "quoted" $dollar \back` + backtick) round-trips byte-exact into BOTH schemas
+  (ArkShop nested `jq .Mysql`, Permissions flat root keys), and zero of 48 recorded argv lines
+  contain the secret.
+- **FRAGO 003 applied** (already ratified — risk-neutral re-word, auto-apply + log; rationale in
+  ADR 0004 §Consequences + `audit.md` FRAGO 003): the two ACs + one Quality-gate item that assumed
+  a NESTED Permissions `Mysql` key re-worded to the plugin's real FLAT schema — the Permissions
+  verification command is now `jq '{UseMysql,MysqlHost,MysqlUser,MysqlPass,MysqlDB,MysqlPort}'`,
+  the seed criterion now names the root-level `UseMysql`/`Mysql*` keys and the `has("UseMysql")`
+  guard at its ACTUAL current line (`entrypoint.sh:508`, loud-WARN fallback `:512` — the plan's
+  `:436` was drift), and the phase-level **Verification** block's `jq .Mysql <plugin>` command got
+  the same schema-split correction (same defect, same amendment). The re-worded seed AC + QG item
+  ticked after fresh verification against the current tree (`jq -e 'has("UseMysql")'` on the seed
+  = true; seed secret-free), NOT inherited from prior verdicts; the inject AC stays unticked
+  (evidence static-only, live dell check pending — consistent with its sibling dell-gated ACs).
+  The dangling "see phase deviations" cross-references (no such section exists) now point at the
+  real homes: ADR 0004 §Consequences + `audit.md`'s FRAGO 003 entry. NOT amended (surfaced for
+  the conductor, outside FRAGO 003's stated scope): the ¶1 risk-table row and Phase 2 Step 6 /
+  CHECKPOINT texts still carry the historical `jq .Mysql`-on-both / `has("Mysql")`/`:436` wording.
+- All fixes re-verified: `bash -n entrypoint.sh` clean, `docker compose --env-file
+  .env.test.example config` resolves clean, `docker buildx build --check` clean ("no warnings
+  found"), plus the two live sandbox matrices above (CRLF/LF injection; argv-audited DB inject on
+  both real seeds).
+
+**Review-round fixes (2026-07-06, second round — applied by a fresh executor)** — 1
+already-ratified FRAGO application plus 1 minor doc fix:
+- **FRAGO 004 applied** (already ratified — risk-neutral plan-text re-word, auto-apply + log; the
+  follow-on to FRAGO 003, closing the locations that entry explicitly surfaced as outside its
+  scope): every remaining plan-text instance of the falsified nested-Permissions-Mysql-schema
+  assumption re-worded to the plugin's real FLAT schema (root-level `UseMysql`/`MysqlHost`/
+  `MysqlUser`/`MysqlPass`/`MysqlDB`/`MysqlPort`; rationale in ADR 0004 §Consequences + `audit.md`
+  FRAGO 003/004). **Six** instances fixed — the FRAGO named 4 and mandated a grep of the Risks
+  table + the whole Phase 2 section rather than trusting the count; the grep found 2 more: (1) the
+  Risks-table "Silent DB-less plugin boot" row (`has("Mysql")` guard `:436` → `has("UseMysql")`
+  at its ACTUAL current line, `entrypoint.sh:508` + loud-WARN `:512`, grep-confirmed against the
+  live file before re-wording; mitigation text now schema-split); (2) Phase 2 Step 6's guard
+  narrative ("seed must carry a `Mysql` block" — the literal OPPOSITE of ADR 0004 §Consequences'
+  do-NOT-normalize warning → seed must carry the flat root-level keys, nested block silently
+  ignored); (3) the CHECKPOINT after Step 6 (`jq .Mysql`-on-both → the schema-split command pair,
+  mirroring the phase Verification block's FRAGO 003 wording); (4) Step 12's regression-guard text
+  (same schema-split fix); (5) the phase Objective's "(+ injected `Mysql`)" shorthand (now names
+  both schemas); (6) Step 4's "strip any `Mysql` secret block" capture instruction (now: blank the
+  flat `MysqlUser`/`MysqlPass`/`MysqlDB` VALUES, keep the keys — stripping them would defeat the
+  `has("UseMysql")` guard). No code touched: entrypoint.sh already implements the flat schema
+  correctly (guard verified live at :508/:512); this round is plan-text only. NOT amended
+  (outside FRAGO 004's stated scope of the Risks table + Phase 2; surfaced for the conductor):
+  the Context & Why deliverables list and the Research Findings config-matrix row still carry the
+  loose "injected `Mysql` (block)" shorthand for Permissions; Phase 1's dated fourth-round
+  Review-round entry logging the historical `:432`→`:436` anchor refresh is a dated record, left
+  untouched per this plan's own no-rewrite-of-prior-entries convention.
+- **MINOR** (code-reviewer + graveyard-auditor, both flagged): `README.md:37` — the "Fast config
+  loop" section still said `docker compose restart the-island`; the service is `the-center`.
+  Fixed (the sibling "Plugin config edit loop" instance was already fixed in the prior round;
+  repo grep confirms no `the-island` reference remains in README.md).
 
 **Phase Review Gates**:
 - [ ] code-reviewer: <verdict + ISO timestamp>
