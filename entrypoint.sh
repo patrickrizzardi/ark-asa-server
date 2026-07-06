@@ -315,15 +315,27 @@ ensure_modded_pdb() {
   }
 
   # Best-effort only: caching is a nice-to-have optimization, never a boot-blocking requirement.
-  # Any failure here (unwritable volume, unknown buildid) is silently skipped, never fatal.
+  # Any failure here (unwritable volume, unknown buildid) is skipped, never fatal — and this
+  # function ALWAYS explicitly `return 0`, on every branch, rather than falling through to
+  # "whatever the last command's exit code happened to be". This script runs under
+  # `set -euo pipefail`, and this function is called as a bare statement (not `foo || true`) at
+  # both call sites below — a version that let a failed `cp` become its own return value would
+  # silently abort the ENTIRE entrypoint on a cache-write failure alone, killing an otherwise-
+  # healthy boot to protect a nice-to-have optimization (caught live by graveyard-auditor before
+  # this shipped: reproduced the abort with a failing `cp` and zero log output). Never repeat that
+  # shape here — every path out of this function must end in an explicit `return 0`.
   _cache_pdb_if_new() {
     local buildid; buildid="$(_current_buildid)"
-    [[ -n "${buildid}" ]] || return 0
-    mkdir -p "${pdb_cache_dir}" 2>/dev/null || return 0
+    if [[ -z "${buildid}" ]]; then return 0; fi
+    if ! mkdir -p "${pdb_cache_dir}" 2>/dev/null; then return 0; fi
     local cached="${pdb_cache_dir}/${buildid}.pdb"
-    [[ -f "${cached}" ]] && return 0
-    cp -f "${pdb}" "${cached}" 2>/dev/null \
-      && echo "[entrypoint] Cached ArkAscendedServer.pdb for buildid ${buildid} on the shared cluster volume (future maps/rebuilds at this buildid will reuse it)."
+    if [[ -f "${cached}" ]]; then return 0; fi
+    if cp -f "${pdb}" "${cached}" 2>/dev/null; then
+      echo "[entrypoint] Cached ArkAscendedServer.pdb for buildid ${buildid} on the shared cluster volume (future maps/rebuilds at this buildid will reuse it)."
+    else
+      echo "[entrypoint] NOTE: could not write pdb cache to ${pdb_cache_dir} (non-fatal, continuing boot)." >&2
+    fi
+    return 0
   }
 
   if pdb_ok; then
