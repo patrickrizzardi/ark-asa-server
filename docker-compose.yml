@@ -1,8 +1,69 @@
-# ARK: Survival Ascended — shared-economy server stack.
+# ARK: Survival Ascended — shared-economy, multi-map cluster stack.
 # MariaDB backs the ArkShop economy; AsaApi + ArkShop + Permissions run when ENABLE_ASAAPI=1.
 #
 # The config dir is a HOST bind mount on purpose: edit ./config/GameUserSettings.ini,
 # restart, and you're back in ~1 min. That's the whole point of the local sandbox.
+#
+# Multi-map cluster (M3): `the-center` + `genesis` share ONE MariaDB economy, ONE `ark-cluster`
+# transfer volume (gated by the SAME ARK_CLUSTER_ID on both), and ONE canonical read-only
+# `./config` seed — each map still gets its OWN game volume (saves + Proton prefix isolated per
+# map; see Decision Ledger #13). The `&ark-server` / `&ark-common-env` anchors below hold the bulk
+# that's identical across maps; each service overrides only container_name / map / session /
+# ports / its own game volume.
+
+x-ark-server: &ark-server
+  build: .
+  image: ark-asa:latest
+  depends_on:
+    sysctl:
+      condition: service_completed_successfully
+    mariadb:
+      condition: service_healthy
+  stop_grace_period: ${STOP_GRACE_PERIOD:-30s}   # test=0s insta-kill, prod=30s for SaveWorld
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+# Env vars shared byte-for-byte across every map in the cluster. Merged into each service's own
+# `environment:` block via `<<: *ark-common-env`, then that service adds its map-specific keys
+# (SERVER_MAP / SESSION_NAME / SERVER_PORT / RCON_PORT) alongside it. A single monolithic
+# `&ark-server` anchor can't express this: YAML merge-key semantics replace a key's value
+# WHOLESALE on override, so per-map keys have to live one level down, in their own anchored env
+# mapping, for the shared keys to merge while only the per-map keys differ.
+x-ark-common-env: &ark-common-env
+  MAX_PLAYERS: ${MAX_PLAYERS:-10}
+  ARK_ADMIN_PASSWORD: ${ARK_ADMIN_PASSWORD:?set ARK_ADMIN_PASSWORD in your env file}
+  UPDATE_ON_BOOT: ${UPDATE_ON_BOOT:-0}
+  SAVE_ON_STOP: ${SAVE_ON_STOP:-0}
+  ENABLE_BATTLEYE: ${ENABLE_BATTLEYE:-0}
+  ENABLE_ASAAPI: ${ENABLE_ASAAPI:-1}
+  MODS: ${MODS:-}
+  # Cluster id must be IDENTICAL on every server in the cluster (treat like a password —
+  # never the default "cluster"/"ark"). Defaults EMPTY, not required: entrypoint.sh only
+  # appends cluster args when this is non-empty, so leaving it unset must stay reachable
+  # through this real deployment path — that's the single-server M2 launch invariant
+  # (plan Acceptance Criterion). A `:?` default would make that invariant unreachable here.
+  # SHARED across every map in the cluster via this common-env anchor — the one clusterid gate.
+  ARK_CLUSTER_ID: ${ARK_CLUSTER_ID:-}
+  # Logical -ClusterDirOverride path entrypoint.sh launches with; must match its own default
+  # exactly (entrypoint.sh:21) so a host .env override can't silently diverge between the two.
+  # entrypoint.sh symlinks this path onto the shared ark-cluster volume mount below.
+  CLUSTER_DIR: ${CLUSTER_DIR:-/home/container/arkserver/ShooterGame/Saved/clusters}
+  WINEDEBUG: ${WINEDEBUG:--all}   # -all = clean logs; set +err,+seh to debug a crash
+  # ArkShop → MariaDB connection. The entrypoint falls back from ARKSHOP_DB_* to MARIADB_*,
+  # so passing the MARIADB_* vars here is all that is needed in the common case. Override
+  # ARKSHOP_DB_* only when ArkShop connects as a different DB user or host.
+  MARIADB_DATABASE: ${MARIADB_DATABASE:-arkshop}
+  MARIADB_USER: ${MARIADB_USER:-arkshop}
+  MARIADB_PASSWORD: ${MARIADB_PASSWORD:?set MARIADB_PASSWORD in your env file}
+  ARKSHOP_DB_HOST: ${ARKSHOP_DB_HOST:-mariadb}
+  ARKSHOP_DB_PORT: ${ARKSHOP_DB_PORT:-3306}
+  ARKSHOP_DB_NAME: ${ARKSHOP_DB_NAME:-arkshop}
+  ARKSHOP_DB_USER: ${ARKSHOP_DB_USER:-arkshop}
+  ARKSHOP_DB_PASS: ${ARKSHOP_DB_PASS:-}
 
 services:
   # Sets the host kernel mmap limit ASA needs, or the server crash-loops (exit code 21).
@@ -47,76 +108,69 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # The Center — existing single-server map, unchanged ports (7777/udp game, 27020/tcp RCON).
   the-center:
-    build: .
-    image: ark-asa:latest
+    <<: *ark-server
     container_name: ark-the-center
-    depends_on:
-      sysctl:
-        condition: service_completed_successfully
-      mariadb:
-        condition: service_healthy
     ports:
-      - "7777:7777/udp"      # game + query
-      - "27020:27020/tcp"    # RCON
+      - "${CENTER_GAME_PORT:-7777}:${CENTER_GAME_PORT:-7777}/udp"      # game + query
+      - "${CENTER_RCON_PORT:-27020}:${CENTER_RCON_PORT:-27020}/tcp"    # RCON
     environment:
-      SERVER_MAP: ${SERVER_MAP:-TheCenter_WP}
+      <<: *ark-common-env
+      SERVER_MAP: TheCenter_WP
       SESSION_NAME: ${SESSION_NAME:-ARK-Test}
-      MAX_PLAYERS: ${MAX_PLAYERS:-10}
-      ARK_ADMIN_PASSWORD: ${ARK_ADMIN_PASSWORD:?set ARK_ADMIN_PASSWORD in your env file}
-      UPDATE_ON_BOOT: ${UPDATE_ON_BOOT:-0}
-      SAVE_ON_STOP: ${SAVE_ON_STOP:-0}
-      ENABLE_BATTLEYE: ${ENABLE_BATTLEYE:-0}
-      ENABLE_ASAAPI: ${ENABLE_ASAAPI:-1}
-      MODS: ${MODS:-}
-      # Cluster id must be IDENTICAL on every server in the cluster (treat like a password —
-      # never the default "cluster"/"ark"). Defaults EMPTY, not required: entrypoint.sh only
-      # appends cluster args when this is non-empty, so leaving it unset must stay reachable
-      # through this real deployment path — that's the single-server M2 launch invariant
-      # (plan Acceptance Criterion). A `:?` default would make that invariant unreachable here.
-      ARK_CLUSTER_ID: ${ARK_CLUSTER_ID:-}
-      # Logical -ClusterDirOverride path entrypoint.sh launches with; must match its own default
-      # exactly (entrypoint.sh:21) so a host .env override can't silently diverge between the two.
-      # entrypoint.sh symlinks this path onto the ark-cluster volume mount below.
-      CLUSTER_DIR: ${CLUSTER_DIR:-/home/container/arkserver/ShooterGame/Saved/clusters}
-      WINEDEBUG: ${WINEDEBUG:--all}   # -all = clean logs; set +err,+seh to debug a crash
-      # ArkShop → MariaDB connection. The entrypoint falls back from ARKSHOP_DB_* to MARIADB_*,
-      # so passing the MARIADB_* vars here is all that is needed in the common case. Override
-      # ARKSHOP_DB_* only when ArkShop connects as a different DB user or host.
-      MARIADB_DATABASE: ${MARIADB_DATABASE:-arkshop}
-      MARIADB_USER: ${MARIADB_USER:-arkshop}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?set MARIADB_PASSWORD in your env file}
-      ARKSHOP_DB_HOST: ${ARKSHOP_DB_HOST:-mariadb}
-      ARKSHOP_DB_PORT: ${ARKSHOP_DB_PORT:-3306}
-      ARKSHOP_DB_NAME: ${ARKSHOP_DB_NAME:-arkshop}
-      ARKSHOP_DB_USER: ${ARKSHOP_DB_USER:-arkshop}
-      ARKSHOP_DB_PASS: ${ARKSHOP_DB_PASS:-}
+      SERVER_PORT: ${CENTER_GAME_PORT:-7777}
+      RCON_PORT: ${CENTER_RCON_PORT:-27020}
     volumes:
-      - ark-game:/home/container/arkserver   # game files + proton prefix + saves (persist → fast boot)
-      - ./config:/home/container/config      # YOUR ini files — edit on host, restart. Bound SHALLOW on purpose:
+      - ark-game-center:/home/container/arkserver   # game files + proton prefix + saves — THIS map's own volume (persist → fast boot)
+      - ./config:/home/container/config      # ONE canonical read-only seed shared by every map. Bound SHALLOW on purpose:
                                              # a deep bind into …/Saved/Config/WindowsServer makes Docker root-create
                                              # the volume's intermediate dirs, blocking the non-root user from writing
                                              # Logs/saves. The entrypoint deploys fresh per-server COPIES of these
                                              # into the engine's config dir each boot — repo wins (ADR 0004,
                                              # docs/internal/decisions/0004-shared-config-model.md).
-      - ark-cluster:/home/container/cluster-data   # shared cluster-transfer dir. Mounted SHALLOW at a FIXED
-                                                    # top-level path — same reason as ./config above: mounting
+      - ark-cluster:/home/container/cluster-data   # shared cluster-transfer dir — SAME volume as every other map,
+                                                    # gated by the SAME ARK_CLUSTER_ID above. Mounted SHALLOW at a
+                                                    # FIXED top-level path — same reason as ./config above: mounting
                                                     # directly at CLUSTER_DIR (nested inside the already-mounted
-                                                    # ark-game volume, at a path that doesn't exist until steamcmd
-                                                    # creates ShooterGame/Saved/) makes Docker root-create the
-                                                    # missing intermediate dirs, blocking the non-root user's
+                                                    # ark-game-center volume, at a path that doesn't exist until
+                                                    # steamcmd creates ShooterGame/Saved/) makes Docker root-create
+                                                    # the missing intermediate dirs, blocking the non-root user's
                                                     # writes. entrypoint.sh symlinks CLUSTER_DIR here instead.
-    stop_grace_period: ${STOP_GRACE_PERIOD:-30s}   # test=0s insta-kill, prod=30s for SaveWorld
-    restart: unless-stopped
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+    # stop_grace_period / restart / logging inherited from &ark-server — identical for every map.
+
+  # Genesis Part 1 — no obelisks on this map; cross-ARK transfer is via a Mission Terminal
+  # (~85,63 Bog biome) or a player Tek Transmitter (see README Cluster section). Distinct ports.
+  genesis:
+    <<: *ark-server
+    container_name: ark-genesis
+    ports:
+      - "${GENESIS_GAME_PORT:-7779}:${GENESIS_GAME_PORT:-7779}/udp"    # game + query
+      - "${GENESIS_RCON_PORT:-27021}:${GENESIS_RCON_PORT:-27021}/tcp" # RCON
+    environment:
+      <<: *ark-common-env
+      SERVER_MAP: Genesis_WP
+      SESSION_NAME: "${SESSION_NAME:-ARK-Test} - Genesis"
+      SERVER_PORT: ${GENESIS_GAME_PORT:-7779}
+      RCON_PORT: ${GENESIS_RCON_PORT:-27021}
+    volumes:
+      - ark-game-genesis:/home/container/arkserver   # game files + proton prefix + saves — THIS map's own volume (persist → fast boot)
+      - ./config:/home/container/config      # SAME canonical read-only seed as the-center — one edit, both maps change on restart
+      - ark-cluster:/home/container/cluster-data   # SAME shared cluster-transfer volume + mount path as the-center —
+                                                    # this identical path/volume pairing (plus the shared ARK_CLUSTER_ID
+                                                    # above) is what makes the two servers see each other's transfers.
+    # stop_grace_period / restart / logging inherited from &ark-server — identical for every map.
 
 volumes:
-  ark-game:
-    name: ark-game
+  # Per-map game volumes (Decision Ledger #13): each map gets its own full install (saves + Proton
+  # prefix isolated per map). The pre-existing single-server `ark-game` volume is NOT migrated or
+  # reused (additive change — see plan Risks); the-center boots against a fresh `ark-game-center`
+  # volume on dell, same as genesis's `ark-game-genesis`. Shared read-only install volume across
+  # maps is a deferred M4 optimization (Decision Ledger #13 / Future Requirements).
+  ark-game-center:
+    name: ark-game-center
+  ark-game-genesis:
+    name: ark-game-genesis
   ark-db:
     name: ark-db
   ark-cluster:

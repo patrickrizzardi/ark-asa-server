@@ -275,7 +275,7 @@ the ArkShop `config.json` (General.TimedPointsReward + ShopItems + Kits), and **
 **Tweak loop** (same shape as loot):
 ```
 edit tools/shop-design.ts  →  cd tools && bun run gen-shop.ts --write  →  git push
-  →  on dell: git pull  →  docker compose restart the-center
+  →  on dell: git pull  →  docker compose restart the-center genesis
 ```
 - `--write` writes the **tracked** seed `config/arkshop.config.json` (no secrets → safe to commit).
   Without `--write` it only writes `tools/out/arkshop-config.json` (gitignored, for inspection).

@@ -26,15 +26,17 @@ cp .env.test.example .env.test     # set ARK_ADMIN_PASSWORD
 docker compose --env-file .env.test up --build
 ```
 
-First boot installs ~13GB of game + builds the Proton prefix (slow, one-time). Every boot
-after skips Steam entirely and is fast — full startup is ~20s. Verified on bare-metal Ubuntu
-22.04: `Server has successfully started!` → advertising for join, port 7777/udp bound.
+`up` boots the **whole cluster** — both map servers (see [Cluster](#cluster-multi-map) below) plus
+MariaDB. First boot installs ~13GB of game + builds the Proton prefix **per map** (slow,
+one-time; each map has its own game volume). Every boot after skips Steam entirely and is fast —
+full startup is ~20s. Verified on bare-metal Ubuntu 22.04 (single-server, pre-cluster):
+`Server has successfully started!` → advertising for join, port 7777/udp bound.
 
 ### Fast config loop
 
 1. First boot generates `./config/GameUserSettings.ini` on the host.
 2. Edit it.
-3. `docker compose restart the-center` → relaunch, no Steam, just the map load.
+3. `docker compose restart the-center genesis` → relaunch both, no Steam, just the map load.
 
 ## Profiles
 
@@ -67,7 +69,7 @@ client when running under WSL2, set `networkingMode=mirrored` in `.wslconfig`, o
 ## Database
 
 The compose stack includes **MariaDB 11.4** (M2+). It starts automatically alongside the game
-server and the game service waits for it to be healthy before launching. ArkShop connects to it
+servers, and each map service waits for it to be healthy before launching. ArkShop connects to it
 via the compose-internal service name `mariadb:3306` — no host port is published.
 
 DB creds live in `.env.test` / `.env.prod` (gitignored). See `.env.test.example` for the
@@ -90,8 +92,8 @@ config/
   permissions.config.json    ← Permissions plugin config (groups/grants live in the shared DB, not here)
 ```
 
-Edit the seed (or regenerate it) → commit/push → `docker compose restart the-center` → the boot
-re-deploys it to every server. No image rebuild needed.
+Edit the seed (or regenerate it) → commit/push → `docker compose restart the-center genesis` →
+the boot re-deploys it to every server. No image rebuild needed.
 
 ### DB credentials
 
@@ -114,10 +116,77 @@ docker compose exec mariadb mariadb -u arkshop -p arkshop -e 'SHOW TABLES;' arks
 provides the singleton hooks ArkShop registers into. The entrypoint adds it to the mod list
 automatically when `ENABLE_ASAAPI=1`; you do not need to list it in `MODS` yourself.
 
+## Cluster (multi-map)
+
+`docker compose up` boots **2 map servers together** — `the-center` (The Center) and `genesis`
+(Genesis Part 1) — sharing ONE MariaDB economy (above), ONE cluster-transfer volume, and ONE
+canonical `./config` seed. Both services are generated from the same `&ark-server` /
+`&ark-common-env` YAML anchors in `docker-compose.yml`; only map/ports/session/volume/
+container_name differ per service.
+
+### One config, every map
+
+The edit→push→restart loop above (Fast config loop, Plugin config edit loop) is **cluster-wide,
+not per-map**: `config/Game.ini`, `config/GameUserSettings.ini`, `config/arkshop.config.json`,
+and `config/permissions.config.json` are each a single canonical file. Edit one, restart both
+services, and every map picks up the same change on its next boot (repo wins — see
+`docs/internal/decisions/0004-shared-config-model.md`):
+
+```bash
+docker compose restart the-center genesis
+```
+
+### Per-map ports
+
+| Map | Service | Game port (udp) | RCON port (tcp) |
+|---|---|---|---|
+| The Center | `the-center` | `CENTER_GAME_PORT` (default `7777`) | `CENTER_RCON_PORT` (default `27020`) |
+| Genesis Part 1 | `genesis` | `GENESIS_GAME_PORT` (default `7779`) | `GENESIS_RCON_PORT` (default `27021`) |
+
+Override any of the 4 vars in your `.env.test` / `.env.prod` only if you hit a real port
+collision on your host.
+
+### The clusterid secret
+
+`ARK_CLUSTER_ID` (in `.env.test` / `.env.prod`, gitignored) must be **identical on every server in
+the cluster** — treat it like a password, never the default `"cluster"`/`"ark"`. It gates cross-map
+transfer: two servers with different cluster ids see each other's transfer uploads but downloads
+silently fail. Leave it unset only for a single-server sandbox boot (no cluster args are added).
+
+### Transferring between maps
+
+ASA's native "Travel to another ARK" flow moves a character (+ its dinos + inventory) between
+maps on the shared cluster volume:
+
+- **The Center** has a standard obelisk (and supports a player-built Tek Transmitter).
+- **Genesis Part 1 has no obelisks at all.** Use a **Mission Terminal** instead — community
+  sources place one around **~85, 63** in the Bog biome. It behaves like Extinction's City
+  Terminal: transfer-only, no Tek-tier grind, unlike a Tek Transmitter. Both directions
+  (Center→Genesis and Genesis→Center) work via the terminal.
+
+Upload on the source map → "Travel to another ARK" → download on the destination map. Both
+servers must share the same `ARK_CLUSTER_ID` (above) and the same `ark-cluster` volume (already
+wired identically for both services).
+
+### Known limitation: Genesis-exclusive crate loot
+
+Supply-crate loot tuning is class-keyed and global (`docs/internal/design/economy/loot-crates.md`
+Rule 1): any Genesis Part 1 crate that reuses a standard/shared beacon crate class already tuned
+in `config/Game.ini` **already inherits the cluster's custom loot**. Only crate classes
+**exclusive** to Genesis Part 1 are affected — those still serve ASA's **vanilla** loot, because
+the local Beacon snapshot (`docs/internal/reference/beacon-asa/`) has no Genesis Part 1 data yet
+(the map released after the snapshot was pulled) and this project never hand-guesses class
+strings (a wrong guess is a silent no-op, worse than transparent vanilla).
+
+**To fix once Beacon catches up:** re-pull the snapshot (`docs/internal/reference/beacon-asa/README.md`
+"Re-pulling"), then `cd tools && bun run gen-loot.ts --write`, commit `config/Game.ini`, and
+`docker compose restart the-center genesis`.
+
 ## Roadmap
 
-M1 lean image → **M2 (current)** AsaApi + ArkShop + MariaDB shared store → **M3** cluster (one
-economy across maps) → **M4** config tooling / backups / CLI → VPS deploy.
+M1 lean image → M2 AsaApi + ArkShop + MariaDB shared store → **M3 (current)** cluster (2 maps —
+The Center + Genesis Part 1 — one economy, one config) → **M4** config tooling / backups / CLI →
+VPS deploy.
 
 Design decisions live in `.claude/state.md`; build-vs-runtime split in
 `.claude/rules/build-time-vs-runtime.md`; DB engine rationale in

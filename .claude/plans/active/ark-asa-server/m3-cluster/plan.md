@@ -20,7 +20,7 @@ files:
   - .gitignore
 created: 2026-06-22
 last_updated: 2026-07-06
-session-id: ["46d42803-00ea-46b6-9744-f1dd992ba974", "d7c269b0-2ae5-436b-b487-ea3d1b8ef35d", "74db45a6-a185-4885-a2b3-f3045dba37fa"]
+session-id: ["46d42803-00ea-46b6-9744-f1dd992ba974", "d7c269b0-2ae5-436b-b487-ea3d1b8ef35d", "74db45a6-a185-4885-a2b3-f3045dba37fa", "ec937db0-96ea-4c68-9108-58dafc4fd5f6", "8c4255f4-dc90-4012-9ecd-287cd28f9794"]
 plan_base: main
 depends_on: [m2-shared-economy-store]
 ---
@@ -1137,10 +1137,16 @@ last because it needs Phase 1's wiring and Phase 2's shareable config as the uni
 **Deviation rule**: MAY adjust ports/volume names if a collision is found on dell. Document each.
 Adding a 4th map or any generator → STOP, that's scope creep / M4.
 **Steps**:
-1. Refactor `the-center` into a YAML anchor `&ark-server` capturing the shared bulk (build/image,
-   depends_on, the shared env block, the shared volume mounts — the read-only `./config` repo-seed
-   bind + `ark-cluster`; NOTE the `./plugins-config` bind was removed in Phase 2 — do not re-add it,
-   stop_grace, restart, logging).
+1. Refactor `the-center` into TWO YAML anchors: `&ark-server` capturing build/image, depends_on,
+   stop_grace, restart, logging — and a SEPARATE `&ark-common-env` anchor capturing the shared env
+   block, merged one level deeper inside each service's own `environment:` mapping (via
+   `<<: *ark-common-env` alongside that service's per-map keys), since `<<:` merge-key semantics
+   replace a mapping key WHOLESALE on override — a single flat anchor can't selectively merge
+   `environment:` while still letting each service add its own `SERVER_MAP`/`SESSION_NAME`/
+   `SERVER_PORT`/`RCON_PORT`. `volumes:`/`ports:` have no YAML merge mechanism for sequences at
+   all, so each service fully restates its own `volumes:`/`ports:` list (the shared read-only
+   `./config` repo-seed bind + `ark-cluster` mount repeated verbatim per service; NOTE the
+   `./plugins-config` bind was removed in Phase 2 — do not re-add it).
 2. Define 2 services using `<<: *ark-server`, each overriding: `container_name`, `SERVER_MAP`
    (`TheCenter_WP` / `Genesis_WP`), `SESSION_NAME`, the published game port
    (7777 / 7779 udp) + `SERVER_PORT`, the published RCON port (27020 / 27021 tcp) +
@@ -1163,6 +1169,19 @@ Adding a 4th map or any generator → STOP, that's scope creep / M4.
 
 **CHECKPOINT** — `.env` examples + README cluster section (incl. the Genesis loot-gap note) complete; the 2-map stack is fully authored and ready to deploy + validate on dell (steps 6–7).
 
+**Steps 1-5 status (2026-07-06, session `ec937db0`): COMPLETE.** `docker-compose.yml` refactored to
+the `&ark-server`/`&ark-common-env` anchor pair; `the-center` + `genesis` both defined and
+validated via `docker compose config` (both env-file paths: `ARK_CLUSTER_ID` unset AND set to a
+real value) — distinct ports (7777/27020 vs 7779/27021), distinct game volumes
+(`ark-game-center`/`ark-game-genesis`), SAME `ARK_CLUSTER_ID` + SAME `ark-cluster` mount +
+SAME DB env reaching both services. `.env.test.example`/`.env.prod.example` updated with
+`CENTER_GAME_PORT`/`CENTER_RCON_PORT`/`GENESIS_GAME_PORT`/`GENESIS_RCON_PORT` + a 2-map layout
+comment. `README.md` "Cluster (multi-map)" section added (config loop, per-map ports, clusterid
+secret, transfer flow via Genesis Mission Terminal, Genesis loot-gap note) + stale single-service
+`docker compose restart the-center` references updated to `the-center genesis`. **Not performed:**
+no `docker compose up` / actual boot was attempted (no dell access from this executor) — Steps 6-7
+below remain, gated on Patrick + dell.
+
 6. Deploy to dell (`git pull` → `docker compose up -d --build`), boot both.
 7. **Genesis transfer-capability gate — run FIRST, before treating Center↔Genesis as the transfer
    proof.** Attempt a real upload+download in BOTH directions (Center→Genesis and Genesis→Center) with
@@ -1178,30 +1197,36 @@ Adding a 4th map or any generator → STOP, that's scope creep / M4.
    on an assumption. If both directions work, proceed to the validation ACs below.
 **Acceptance criteria**:
 - [ ] Both map servers boot on dell and each advertises for join on its own port (Center 7777 / Genesis 7779)
-  - Evidence: (filled at phase completion — dell logs per service)
+  - Evidence: NOT VERIFIED — requires a live dell boot, which this executor did not perform (no dell access). Static-only: `docker compose config` (2026-07-06) confirms `the-center` publishes 7777/udp+27020/tcp and `genesis` publishes 7779/udp+27021/tcp with no overlap; actual advertise-for-join behavior is unchecked.
 - [ ] **Genesis Part 1 transfer confirmed BIDIRECTIONAL in live behavior via the Mission Terminal** (step 7 gate): a real Center→Genesis AND Genesis→Center upload/download each succeed, using a Genesis **Mission Terminal** (~85,63 Bog biome) — NOT an obelisk (Genesis has none). The map design is already web-confirmed to support this; this AC confirms THIS server's live behavior. If the live test unexpectedly blocks a direction, this AC is met by *documenting the observed limitation* + the FRAGO that adapted the transfer proof — NOT by silently passing the transfer ACs below on an untested assumption.
-  - Evidence: (filled at phase completion)
+  - Evidence: NOT VERIFIED — requires live dell deploy + Patrick in-game testing (see phase Steps 6-7); executor has no dell/game access.
 - [ ] Cross-map transfer works with a CHECKABLE artifact, not just eyeballing: after a player uploads a character (+ a dino + an item) on map A, a cluster transfer file appears under `${CLUSTER_DIR}/${ARK_CLUSTER_ID}/` on the shared `ark-cluster` volume (`docker compose exec the-center ls -la ${CLUSTER_DIR}/${ARK_CLUSTER_ID}/` shows it from a DIFFERENT service — proving the volume is genuinely shared, not per-container) — Patrick in-game upload + Claude verifies the file. (Uses whichever transfer direction step 7 confirmed works.)
-  - Evidence: (filled at phase completion)
+  - Evidence: NOT VERIFIED — requires live dell deploy + Patrick in-game testing (see phase Steps 6-7); executor has no dell/game access.
 - [ ] Transfer is a MOVE not a DUPE: after downloading on map B, the character/dino/item arrives on B with correct identity AND is gone from A (guards the silent-dupe failure mode flagged in Risks) — Patrick in-game
-  - Evidence: (filled at phase completion)
+  - Evidence: NOT VERIFIED — requires live dell deploy + Patrick in-game testing (see phase Steps 6-7); executor has no dell/game access.
 - [ ] Concurrent-shutdown GUS integrity: `docker compose stop` both servers together, then `docker compose up` — each server's `GameUserSettings.ini` retains its OWN `SessionName` and identical tuning (proves per-server volumes make GUS structurally clobber-proof, the Phase 2 invariant under N servers)
-  - Evidence: (filled at phase completion)
+  - Evidence: NOT VERIFIED — requires live dell deploy + Patrick in-game testing (see phase Steps 6-7); executor has no dell/game access.
 - [ ] Points are shared: `SetPoints <eosid> <n>` via one server's RCON, then `GetPoints <eosid>` via a DIFFERENT server's RCON returns the same value (same MariaDB)
-  - Evidence: (filled at phase completion)
+  - Evidence: NOT VERIFIED — requires live dell deploy + Patrick in-game testing (see phase Steps 6-7); executor has no dell/game access.
 - [ ] Config consistency: pop the same-tier **standard/shared** beacon crate on both maps → identical contents (class-keyed global override per `loot-crates.md` Rule 1); `/shop` catalog identical across maps (one canonical source); editing the repo config once + restart changes both maps. **Known exception:** Genesis-Part-1-EXCLUSIVE crate classes serve ASA vanilla loot (Beacon has no Genesis-P1 rows yet) — this is the documented deferral (Risks + Future Requirements), NOT a phase failure; verify it is the vanilla default, not a broken/empty table.
-  - Evidence: (filled at phase completion)
-- [ ] README cluster section documents the loop, ports, clusterid, and transfer flow (doc-type: how-to + reference)
-  - Evidence: (filled at phase completion)
+  - Evidence: NOT VERIFIED — requires live dell deploy + Patrick in-game testing (see phase Steps 6-7); executor has no dell/game access. Statically confirmed only: both services mount the SAME `./config` bind (`docker compose config` shows identical `source: /home/patrick/development/ark-asa/config, target: /home/container/config` on both `the-center` and `genesis`), so the wiring for "one canonical source" is in place; the actual pop-crate/shop-catalog comparison is unrun.
+- [x] README cluster section documents the loop, ports, clusterid, and transfer flow (doc-type: how-to + reference)
+  - Evidence: `README.md` "Cluster (multi-map)" section added (2026-07-06) — subsections "One config, every map" (edit→push→restart loop, cluster-wide), "Per-map ports" (table of the 4 port env vars + defaults), "The clusterid secret" (ARK_CLUSTER_ID password-like requirement + gating behavior), "Transferring between maps" (Center obelisk/Transmitter vs Genesis Mission Terminal ~85,63 Bog), "Known limitation: Genesis-exclusive crate loot" (the Beacon-gap deferral + fix trigger). Stale single-service `docker compose restart the-center` references in the pre-existing "Fast config loop" and "Plugin config edit loop" sections updated to `the-center genesis`.
 - [ ] `ENABLE_ASAAPI=0` on a service still produces the vanilla rollback for that map
-  - Evidence: (filled at phase completion)
+  - Evidence: NOT VERIFIED — requires a live boot per service, which this executor did not perform (no dell access). Note: `ENABLE_ASAAPI` lives in the shared `&ark-common-env` anchor (both services read the same env-var value), matching Phase 3 Step 2's override list (which does NOT name `ENABLE_ASAAPI` as a per-service override) — so this AC verifies the existing Phase 1/2 single-server vanilla-rollback invariant still holds once that same shared toggle is read by 2 services, not independent per-map toggling. Unverified either way pending a live boot.
 **Quality gate**:
-- [ ] YAML anchor shares the bulk; per-service overrides are only map/ports/session/volume/container_name
-- [ ] Both services use the SAME `ARK_CLUSTER_ID` + the SAME `ark-cluster` mount path
-- [ ] No port collisions (2 distinct game + 2 distinct RCON ports), documented in `.env.*.example`
-- [ ] Each map has its own game volume (saves isolated); cluster + DB volumes shared
-- [ ] No secret committed (clusterid stays in `.env`)
+- [x] YAML anchor shares the bulk; per-service overrides are only map/ports/session/volume/container_name
+  - Evidence: `docker-compose.yml` — `&ark-server` anchor (build/image/depends_on/stop_grace_period/restart/logging) + `&ark-common-env` anchor (the shared env keys) merged via `<<:` into both `the-center` and `genesis`; each service's own block only sets `container_name`, `ports`, `environment.SERVER_MAP`/`SESSION_NAME`/`SERVER_PORT`/`RCON_PORT`, and `volumes` (its own game volume + the 2 shared mounts, restated per-service — YAML merge keys can't partially override a list, only replace it wholesale, so the shared `./config`+`ark-cluster` mounts are declared literally in each service rather than via anchor; recorded decision, not a deviation from Step 1's intent).
+- [x] Both services use the SAME `ARK_CLUSTER_ID` + the SAME `ark-cluster` mount path
+  - Evidence: `docker compose config` (2026-07-06, env file with `ARK_CLUSTER_ID=my-secret-cluster`) shows `ARK_CLUSTER_ID: my-secret-cluster` under BOTH `the-center.environment` and `genesis.environment`, and both services' `volumes` list a `source: ark-cluster, target: /home/container/cluster-data` entry — identical volume + identical mount path on both.
+- [x] No port collisions (2 distinct game + 2 distinct RCON ports), documented in `.env.*.example`
+  - Evidence: `docker compose config` resolves `the-center` ports to `7777/udp` + `27020/tcp` and `genesis` to `7779/udp` + `27021/tcp` (plus MariaDB's separate `127.0.0.1:3307`) — 4 distinct host ports, no overlap. `.env.test.example`/`.env.prod.example` both document `CENTER_GAME_PORT`/`CENTER_RCON_PORT`/`GENESIS_GAME_PORT`/`GENESIS_RCON_PORT` with these exact defaults.
+- [x] Each map has its own game volume (saves isolated); cluster + DB volumes shared
+  - Evidence: `docker compose config` — `the-center` mounts `source: ark-game-center`, `genesis` mounts `source: ark-game-genesis` (distinct); both mount the SAME `ark-cluster` (cluster transfer) and both read the SAME `mariadb` service/DB env (shared economy). Top-level `volumes:` block declares `ark-game-center`, `ark-game-genesis`, `ark-db`, `ark-cluster` — no single shared `ark-game` volume remains (Decision Ledger #13; existing single-server `ark-game` data intentionally not migrated, per plan.md:279).
+- [x] No secret committed (clusterid stays in `.env`)
+  - Evidence: `docker-compose.yml` references `${ARK_CLUSTER_ID:-}` (interpolation only, no literal value); `.env.test.example`/`.env.prod.example` (tracked) carry only placeholder values (`CHANGE-ME-unique-per-cluster-test`/`-prod`); `.gitignore:2` (`.env*`) keeps the real `.env.test`/`.env.prod` untracked. `git status`/`git check-ignore -v .env` confirm the local `.env` scratch file is gitignored, not staged.
 - [ ] clusterid actually gates (optional adversarial check): temporarily set one service's `ARK_CLUSTER_ID` to a different value → it does NOT see the others' transfers → revert. Proves the clusterid is the gate, not just the shared dir.
+  - Evidence: NOT VERIFIED — optional adversarial check requiring a live dell boot + in-game observation; not run (no dell/game access).
 **Verification**: dell `docker compose up -d` → `docker compose logs` shows 2× "successfully
 started" + advertising; in-game transfer Center↔Genesis (Mission Terminal on the Genesis side — no obelisk there); `SetPoints` on The Center
 RCON visible via `GetPoints` on Genesis RCON; pop a standard/shared beacon crate on each map to

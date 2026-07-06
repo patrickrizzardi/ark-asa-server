@@ -18,6 +18,8 @@ Step-3a / Step-0 reconcile; never by executors (they read the current-truth plan
 - 74db45a6-a185-4885-a2b3-f3045dba37fa — 2026-07-06 — Phase 1 fix round 4 (BLOCKER, reproduced live: round 3's regex-shape guard missed trailing/doubled-slash and bare-dot spellings colliding with ARK_DIR; fixed via `realpath -m` canonicalization; exhaustive whole-plan `entrypoint.sh` line-citation sweep, including Phase 2's un-executed anchors shifted +4).
 - 74db45a6-a185-4885-a2b3-f3045dba37fa — 2026-07-06 — Phase 1 fix round 5 (BLOCKER, reproduced live: round 4's `realpath -m` followed the warm-boot CLUSTER_DIR symlink and false-rejected a legitimate restart; fixed via `realpath -m -s` lexical-only canonicalization; exhaustive whole-plan citation sweep across `entrypoint.sh`, `docker-compose.yml`, and `shop.md`).
 - 74db45a6-a185-4885-a2b3-f3045dba37fa — 2026-07-06 — Phase 1 fix round 6, tightly-scoped 5-item final pass (should-fix, code-reviewer AND security via live reproduction: added a symlink-following parent-containment guard closing the intermediate-path-component escape the lexical-only guard couldn't see; 4 targeted citation fixes: entrypoint.sh query-string/`-flags` line refs, docker-compose.yml volume-block ref, shop.md §11 end-line; backfilled this audit's Session log for rounds 2-5).
+- ec937db0-96ea-4c68-9108-58dafc4fd5f6 — 2026-07-06 — Phase 3 Steps 1-5 (checkpoint segment): `docker-compose.yml` refactored to `&ark-server`/`&ark-common-env` YAML anchors defining `the-center` + `genesis`; `.env.test.example`/`.env.prod.example` per-map port vars added; `README.md` Cluster section added. Validated via `docker compose config` only (no dell access). Checkpointed at the phase's own planned post-Step-5 boundary; `handoff-phase-3.md` written; resume-at `phase-3/step-6` (dell deploy + Patrick in-game testing — gated on Patrick, not this executor).
+- 8c4255f4-dc90-4012-9ecd-287cd28f9794 — 2026-07-06 — Phase 3 follow-up (still checkpointed at `phase-3/step-6`, no new steps attempted): applied FRAGO 006 to `plan.md` Phase 3 Step 1 text (rewrote the stale single-anchor prose to describe the real `&ark-server`/`&ark-common-env` two-anchor structure, verified against the live `docker-compose.yml`); fixed the stale `docker compose restart the-center` (singular) reference in `docs/internal/design/economy/shop.md:278` → `the-center genesis`, matching the same staleness class already corrected in `README.md` this phase. No code touched; `docker-compose.yml` unchanged. Left uncommitted for the conductor's CONFIRM-mode commit gate.
 
 ## FRAGO log
 
@@ -166,6 +168,41 @@ deviation-judge judged these fine to leave — they drive no AC, no QG item, no 
 FRAGO 003/004 locations, which drove actual verification commands and, in Step 4's case, an actively
 dangerous instruction). Filed as an addendum to the plan.md line-citation drift deferral, since it's
 the same class of "narrative accuracy, zero functional/AC impact" residue.
+
+## FRAGO 006 — 2026-07-06 — session-id: (conductor, execute-plan)
+Base:      m3-cluster @ Phase 3
+Trigger:   deviation-judge review of Phase 3 Steps 1-5 found the executor built the compose refactor
+           as TWO YAML anchors (`&ark-server` for build/depends_on/restart/logging + `&ark-common-env`
+           for the shared env block) with each service's `volumes:`/`ports:` fully restated, whereas
+           Phase 3 Step 1's literal text described ONE anchor (`&ark-server`) capturing "the shared env
+           block, the shared volume mounts" as well. deviation-judge independently verified the
+           underlying YAML mechanics rather than taking the executor's word for it: `<<:` merge-key
+           semantics are non-recursive on mapping-key collision (a service's own `environment:` key
+           fully replaces, never selectively merges with, the anchor's `environment:`) and are undefined
+           for sequences entirely (`volumes:`/`ports:` have no merge mechanism at all) — so a single flat
+           anchor could never have delivered per-service env overrides or partial volume/port
+           inheritance as Step 1's prose implied. The two-anchor structure is the only mechanically
+           possible way to deliver Step 1/2's actual intent (shared bulk, minimal per-service diffs),
+           and `docker compose config` (verified both with `ARK_CLUSTER_ID` unset and set) confirms both
+           services resolve correctly. Ruled: JUSTIFIED (the plan's single-anchor phrasing was
+           mechanically unexecutable as literally worded, verified against real YAML/Compose merge-key
+           semantics, not assumed), risk-neutral (no behavior change, no new secret/attack surface,
+           output already verified correct) — auto-apply + log, no signature required. (Process note,
+           not part of this FRAGO's substance: the executor initially self-characterized this as "a
+           recorded decision, not a deviation" rather than surfacing it distinctly for this FRAGO path;
+           the conductor is filing it through the standard mechanism here, matching FRAGO 001-005.)
+Changes:
+  - Phase 3 Step 1: CHANGED "Refactor `the-center` into a YAML anchor `&ark-server` capturing the
+    shared bulk (build/image, depends_on, the shared env block, the shared volume mounts…)" → describes
+    the real two-anchor structure: `&ark-server` for build/image/depends_on/stop_grace/restart/logging,
+    and a SEPARATE `&ark-common-env` anchor for the shared env block (merged one level deeper inside
+    each service's own `environment:` mapping, since `<<:` cannot selectively merge a nested mapping
+    key each service also declares); volumes/ports are fully restated per service (YAML `<<:` has no
+    merge mechanism for sequences).
+  - ¶1 Risk Assessment: NO CHANGE (risk-neutral; the working implementation is already correct and
+    verified via `docker compose config`, this is a plan-text correction only).
+Unchanged: everything not listed.
+Override:  n/a — risk-neutral, no signature required.
 
 ## Deferred follow-ups
 
