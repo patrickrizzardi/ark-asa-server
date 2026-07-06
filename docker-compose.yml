@@ -161,6 +161,48 @@ services:
                                                     # above) is what makes the two servers see each other's transfers.
     # stop_grace_period / restart / logging inherited from &ark-server — identical for every map.
 
+  # Ragnarok — added for extra maps to play, not part of the M3 milestone's own transfer/economy
+  # testing scope (that's The Center + Genesis above). Same anchor pattern, distinct ports/volume.
+  ragnarok:
+    <<: *ark-server
+    container_name: ark-ragnarok
+    ports:
+      - "${RAGNAROK_GAME_PORT:-7781}:${RAGNAROK_GAME_PORT:-7781}/udp"     # game + query
+      - "${RAGNAROK_RCON_PORT:-27022}:${RAGNAROK_RCON_PORT:-27022}/tcp"  # RCON
+    environment:
+      <<: *ark-common-env
+      SERVER_MAP: Ragnarok_WP
+      SESSION_NAME: "${SESSION_NAME:-ARK-Test} - Ragnarok"
+      SERVER_PORT: ${RAGNAROK_GAME_PORT:-7781}
+      RCON_PORT: ${RAGNAROK_RCON_PORT:-27022}
+    volumes:
+      - ark-game-ragnarok:/home/container/arkserver   # game files + proton prefix + saves — THIS map's own volume (persist → fast boot)
+      - ./config:/home/container/config      # SAME canonical read-only seed as every other map — one edit, all maps change on restart
+      - ark-cluster:/home/container/cluster-data   # SAME shared cluster-transfer volume + mount path as every other map —
+                                                    # same ARK_CLUSTER_ID above makes transfers to/from this map work too.
+    # stop_grace_period / restart / logging inherited from &ark-server — identical for every map.
+
+  # The Island — added for extra maps to play, not part of the M3 milestone's own transfer/economy
+  # testing scope. Same anchor pattern, distinct ports/volume.
+  island:
+    <<: *ark-server
+    container_name: ark-island
+    ports:
+      - "${ISLAND_GAME_PORT:-7783}:${ISLAND_GAME_PORT:-7783}/udp"     # game + query
+      - "${ISLAND_RCON_PORT:-27023}:${ISLAND_RCON_PORT:-27023}/tcp"  # RCON
+    environment:
+      <<: *ark-common-env
+      SERVER_MAP: TheIsland_WP
+      SESSION_NAME: "${SESSION_NAME:-ARK-Test} - Island"
+      SERVER_PORT: ${ISLAND_GAME_PORT:-7783}
+      RCON_PORT: ${ISLAND_RCON_PORT:-27023}
+    volumes:
+      - ark-game-island:/home/container/arkserver   # game files + proton prefix + saves — THIS map's own volume (persist → fast boot)
+      - ./config:/home/container/config      # SAME canonical read-only seed as every other map — one edit, all maps change on restart
+      - ark-cluster:/home/container/cluster-data   # SAME shared cluster-transfer volume + mount path as every other map —
+                                                    # same ARK_CLUSTER_ID above makes transfers to/from this map work too.
+    # stop_grace_period / restart / logging inherited from &ark-server — identical for every map.
+
 volumes:
   # Per-map game volumes (Decision Ledger #13): each map gets its own full install (saves + Proton
   # prefix isolated per map). The pre-existing single-server `ark-game` volume is NOT migrated or
@@ -171,6 +213,10 @@ volumes:
     name: ark-game-center
   ark-game-genesis:
     name: ark-game-genesis
+  ark-game-ragnarok:
+    name: ark-game-ragnarok
+  ark-game-island:
+    name: ark-game-island
   ark-db:
     name: ark-db
   ark-cluster:
