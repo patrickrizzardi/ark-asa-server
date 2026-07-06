@@ -350,7 +350,12 @@ ensure_modded_pdb() {
   cached_pdb="${pdb_cache_dir}/${current_buildid}.pdb"
   if [[ -n "${current_buildid}" ]] && [[ -f "${cached_pdb}" ]]; then
     echo "[entrypoint] pdb missing locally but found cached for buildid ${current_buildid} on the shared cluster volume — restoring from cache (no steamcmd needed)…"
-    cp -f "${cached_pdb}" "${pdb}"
+    # `|| true`: a bare `cp` here, under this script's `set -euo pipefail`, would abort the WHOLE
+    # entrypoint on failure (disk full, permission issue) instead of falling through to the
+    # steamcmd path this comment block promises — the exact sibling bug graveyard-auditor caught
+    # in _cache_pdb_if_new()'s write path, live-reproduced here too. Let pdb_ok (not cp's exit
+    # code) decide whether the restore actually worked.
+    cp -f "${cached_pdb}" "${pdb}" || true
     if pdb_ok; then
       echo "[entrypoint] pdb restored from shared cache."
       return 0
