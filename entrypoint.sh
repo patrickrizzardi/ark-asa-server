@@ -56,10 +56,15 @@ install_or_update() {
       exit 1
     fi
     # Shed assets a headless server never needs. Movies/ is the intro videos a headless server never plays.
-    # ArkAscendedServer.pdb (~6GB): kept on a fresh modded install, shed on a fresh vanilla install.
-    # A volume first-installed as vanilla (pdb absent) that later flips to ENABLE_ASAAPI=1 is
-    # handled by ensure_modded_pdb() at the launch gate — it restores the pdb via steamcmd validate
-    # without requiring a manual intervention or a full reinstall.
+    # ArkAscendedServer.pdb (~2GB, not shipped by every build — see ensure_modded_pdb() below):
+    # kept on a fresh modded install ONLY WHEN the currently-installed build's Steam depot actually
+    # includes it (confirmed NOT always true — e.g. build 89.38/buildid 24058917 shipped without
+    # it, an acknowledged upstream Wildcard regression: https://github.com/ArkServerApi/AsaApi/issues/61).
+    # Shed on a fresh vanilla install regardless. A volume first-installed as vanilla (pdb absent)
+    # that later flips to ENABLE_ASAAPI=1 is checked by ensure_modded_pdb() at the launch gate —
+    # it CAN restore the pdb via steamcmd validate when the depot has it, but validate is a no-op
+    # if the current build's depot doesn't ship the file at all; in that case a same-buildid pdb
+    # must be manually copied from elsewhere (see ensure_modded_pdb()'s FATAL message).
     rm -rf "${ARK_DIR}/ShooterGame/Content/Movies/"
     if [[ "${ENABLE_ASAAPI}" != "1" ]]; then
       rm -rf "${ARK_DIR}/ShooterGame/Binaries/Win64/ArkAscendedServer.pdb"
@@ -253,25 +258,92 @@ ensure_modded_pdb() {
   # ENABLE_ASAAPI=0 sheds the pdb and writes .installed, so subsequent boots with ENABLE_ASAAPI=1
   # skip install_or_update entirely and would launch into the silent failure without this gate.
   #
+  # ---------------------------------------------------------------------------------------------
+  # Cross-map pdb cache (added 2026-07-06 — see .claude/plans/active/ark-asa-server/m3-cluster/audit.md
+  # for the full incident this fixes). WHAT this is: a small, buildid-keyed cache directory living
+  # on the SHARED `ark-cluster` volume (already mounted into every map service at the fixed path
+  # `/home/container/cluster-data` for ASA's own native cluster-transfer feature — this reuses that
+  # existing mount, adds no new volume). WHY it exists: a genuinely fresh install cannot always get
+  # this file from steamcmd — confirmed live: Wildcard's build 89.38/buildid 24058917 shipped with
+  # NO pdb at all (an acknowledged upstream regression, AsaApi/AsaApi#61), and `steamcmd validate`
+  # can only restore a file that's actually in the depot's current manifest, so retrying it is a
+  # predictable no-op, not flakiness. WHAT it fixes: the first map that successfully boots at a
+  # given buildid (whether the depot legitimately shipped the pdb, or an operator manually restored
+  # it from elsewhere) seeds this cache; every OTHER map added afterward at the SAME buildid — a
+  # new map on this same cluster, a rebuild-from-clean, anything sharing this `ark-cluster` volume —
+  # picks it up automatically, with zero steamcmd calls and zero manual intervention. This does NOT
+  # cover a genuinely fresh, isolated host with no shared volume to seed from at all (e.g. a first-
+  # ever prod VPS deploy) — that case still needs the pdb carried over manually (see the FATAL
+  # message below), since there is nothing on that host to cache from.
+  # ---------------------------------------------------------------------------------------------
+  #
   # Flow:
-  #   1. Return early if the pdb is already present and non-trivially-sized (common path on a modded volume)
-  #   2. Attempt steamcmd validate (up to 3 times) to restore the pdb; break on a valid artifact
-  #   3. Verify the pdb is present and non-trivially-sized — trust the artifact, not steamcmd's exit code
-  #   4. Fatal-exit if still missing after all attempts
+  #   1. Return early if the pdb is already present and non-trivially-sized (common path on a modded
+  #      volume) — and opportunistically seed the shared cache if this buildid isn't cached yet.
+  #   2. If missing, check the shared cache for this exact buildid first — free, instant, no steamcmd.
+  #   3. Only if the cache misses: attempt steamcmd validate (up to 3 times); break on a valid artifact.
+  #      NOTE: validate can only restore a file the CURRENT build's depot actually ships — if it
+  #      doesn't (see the 89.38 case above), all 3 attempts are a predictable no-op, not flakiness.
+  #   4. Verify the pdb is present and non-trivially-sized — trust the artifact, not steamcmd's exit code.
+  #      On success, seed the shared cache so the NEXT map/rebuild at this buildid skips steamcmd too.
+  #   5. If still missing after all attempts: HOLD (loud, periodic, non-exiting) rather than
+  #      fatal-exit — see the holding loop below for why exiting here is actively harmful.
   #
   # Time: O(1) compute, up to 3 steamcmd validate calls (I/O-dominated)  Space: O(1)
   #
-  # Side effects: may write ~6GB pdb file onto the ark-game volume.
+  # Side effects: may write the ~2GB pdb file onto the ark-game volume, and/or a ~2GB copy onto the
+  # shared ark-cluster volume's cache directory (once per distinct buildid, never per-boot).
   local pdb="${ARK_DIR}/ShooterGame/Binaries/Win64/ArkAscendedServer.pdb"
   local force_windows="+@sSteamCmdForcePlatformType windows"
+  local appmanifest="${ARK_DIR}/steamapps/appmanifest_${ASA_APPID}.acf"
+  # Fixed path, NOT derived from ${CLUSTER_DIR}: CLUSTER_DIR is ASA's own launch-arg-facing path,
+  # subject to its own charset/traversal guards further down this file for ASA's specific use —
+  # this cache is an unrelated, our-own-infra concern, so it reads the real shared mount point
+  # directly (the same one docker-compose.yml mounts `ark-cluster` at) rather than reusing or
+  # depending on that ASA-specific variable's validation logic.
+  local pdb_cache_dir="/home/container/cluster-data/.infra-pdb-cache"
 
   # A bare -f test passes a 0-byte or truncated pdb (e.g. steamcmd exhausted disk mid-download),
   # which AsaApi then fails to SHA-256 — the exact silent-zero-plugin failure this function prevents.
-  # The real pdb is ~6GB; require >1 MiB to reject truncated files while never rejecting a real one.
+  # The real pdb is ~2GB; require >1 MiB to reject truncated files while never rejecting a real one.
   pdb_ok() { [[ -f "${pdb}" ]] && [[ "$(stat -c%s "${pdb}" 2>/dev/null || echo 0)" -gt 1048576 ]]; }
 
+  # Steam's own appmanifest is the single source of truth for "which build is actually installed
+  # right now" — read directly from it rather than trusting any env var or cached assumption.
+  _current_buildid() {
+    grep -oP '"buildid"\s*"\K[0-9]+' "${appmanifest}" 2>/dev/null || true
+  }
+
+  # Best-effort only: caching is a nice-to-have optimization, never a boot-blocking requirement.
+  # Any failure here (unwritable volume, unknown buildid) is silently skipped, never fatal.
+  _cache_pdb_if_new() {
+    local buildid; buildid="$(_current_buildid)"
+    [[ -n "${buildid}" ]] || return 0
+    mkdir -p "${pdb_cache_dir}" 2>/dev/null || return 0
+    local cached="${pdb_cache_dir}/${buildid}.pdb"
+    [[ -f "${cached}" ]] && return 0
+    cp -f "${pdb}" "${cached}" 2>/dev/null \
+      && echo "[entrypoint] Cached ArkAscendedServer.pdb for buildid ${buildid} on the shared cluster volume (future maps/rebuilds at this buildid will reuse it)."
+  }
+
   if pdb_ok; then
+    _cache_pdb_if_new
     return 0
+  fi
+
+  # Shared-cache check — before ever touching steamcmd. Skipped silently if the buildid can't be
+  # determined or nothing is cached for it yet; falls through to the steamcmd path below either way.
+  local current_buildid cached_pdb
+  current_buildid="$(_current_buildid)"
+  cached_pdb="${pdb_cache_dir}/${current_buildid}.pdb"
+  if [[ -n "${current_buildid}" ]] && [[ -f "${cached_pdb}" ]]; then
+    echo "[entrypoint] pdb missing locally but found cached for buildid ${current_buildid} on the shared cluster volume — restoring from cache (no steamcmd needed)…"
+    cp -f "${cached_pdb}" "${pdb}"
+    if pdb_ok; then
+      echo "[entrypoint] pdb restored from shared cache."
+      return 0
+    fi
+    echo "[entrypoint] WARNING: cached pdb for buildid ${current_buildid} failed validation after copy — falling through to steamcmd." >&2
   fi
 
   echo "[entrypoint] ENABLE_ASAAPI=1 but pdb is absent — restoring via steamcmd validate…"
@@ -285,16 +357,36 @@ ensure_modded_pdb() {
       +login anonymous +app_update "${ASA_APPID}" validate +quit || true
     if pdb_ok; then
       echo "[entrypoint] pdb restored on attempt ${attempt}."
+      _cache_pdb_if_new
       break
     fi
     echo "[entrypoint] pdb still absent after attempt ${attempt}."
   done
 
   if ! pdb_ok; then
+    # Do NOT exit here. `restart: unless-stopped` restarts on ANY exit code, so exiting would
+    # re-trigger this exact 3x-validate loop forever — an unattended, unbounded hammer on the
+    # Steam CDN (each attempt is a full validate pass against the ~13.5GB depot), not a fast
+    # crash-loop. Hold the container open in a visibly-failed state instead: loud, periodic,
+    # impossible to miss in `docker compose logs`/`ps`, and it never re-touches steamcmd.
     echo "[entrypoint] FATAL: ArkAscendedServer.pdb is still missing or truncated after 3 steamcmd validate attempts." >&2
     echo "  Expected: ${pdb}" >&2
-    echo "  AsaApi cannot load plugins without the pdb. Check Steam CDN reachability or disk space." >&2
-    exit 1
+    echo "  This is usually NOT a local problem (CDN/disk) — steamcmd validate can only restore" >&2
+    echo "  files that are actually in the current build's depot manifest. If Wildcard's current" >&2
+    echo "  build shipped without this file (check https://github.com/ArkServerApi/AsaApi/issues" >&2
+    echo "  for a known regression on this buildid), validate will never produce it no matter how" >&2
+    echo "  many times it's retried." >&2
+    echo "  Fix (this server): copy a same-buildid ArkAscendedServer.pdb from another server/volume" >&2
+    echo "  onto ${pdb}, then restart this container manually." >&2
+    echo "  Fix (every future map/rebuild too, recommended): drop that same pdb at" >&2
+    echo "  ${pdb_cache_dir}/${current_buildid:-<buildid>}.pdb on the shared ark-cluster volume instead —" >&2
+    echo "  this server AND every other map on this cluster will pick it up automatically on next boot," >&2
+    echo "  no per-server manual copy needed again for this buildid." >&2
+    echo "[entrypoint] HOLDING (not exiting) to avoid an unattended validate-storm crash-loop." >&2
+    while true; do
+      echo "[entrypoint] $(date -Iseconds) — still holding: ArkAscendedServer.pdb missing, AsaApi cannot start. See FATAL above." >&2
+      sleep 300
+    done
   fi
 }
 
