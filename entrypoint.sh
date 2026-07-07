@@ -766,7 +766,15 @@ main() {
   local query="${SERVER_MAP}?listen?SessionName=${SESSION_NAME}?Port=${SERVER_PORT}?MaxPlayers=${MAX_PLAYERS}?RCONEnabled=True?RCONPort=${RCON_PORT}?ServerAdminPassword=${ARK_ADMIN_PASSWORD}"
   [[ -n "$SERVER_PASSWORD" ]] && query="${query}?ServerPassword=${SERVER_PASSWORD}"
 
-  local flags="-log -WinLiveMaxPlayers=${MAX_PLAYERS}"
+  # -Port= as a STANDALONE flag (not just the ?Port= inside the quoted map-URL query above) is
+  # required for the engine's actual listen socket to bind to it. Verified live, this was a real
+  # bug: with only the URL's ?Port=, every instance's engine bound its UDP game socket to 7777
+  # regardless of SERVER_PORT — the URL param is read later by ARK's own game code (which is why
+  # RCONPort, read the same way, worked correctly per-instance the whole time), but the engine's
+  # low-level socket subsystem binds from a standalone command-line switch parsed earlier, before
+  # the game-specific URL options are read at all. Confirmed via `ss` inside each container: every
+  # map's actual UDP listener was 0.0.0.0:7777 until this flag was added.
+  local flags="-log -Port=${SERVER_PORT} -WinLiveMaxPlayers=${MAX_PLAYERS}"
   if [[ "$ENABLE_BATTLEYE" == "1" ]]; then flags="${flags} -BattlEye"; else flags="${flags} -NoBattlEye"; fi
   [[ -n "$MODS" ]] && flags="${flags} -mods=${MODS}"
   # Cluster args are inert with one server but required once N servers share transfers — only
