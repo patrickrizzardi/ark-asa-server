@@ -36,9 +36,9 @@ RUN mkdir -p ${STEAMCMD_DIR} \
 # Lib/ (developer import lib) and the ONLY FOR DEVELOPERS dir are excluded — not needed at
 # runtime. Per build-time-vs-runtime.md: immutable + version-pinned → Dockerfile.
 ARG ASAAPI_VERSION=1.21
-ARG ARKSHOP_VERSION=1.4
+ARG ARKSHOP_VERSION=1.5
 ARG PERMISSIONS_VERSION=1.1  # doc-pin only — Permissions ships bundled in the AsaApi zip; no separate download, no URL interpolation. Records which Permissions version the pinned AsaApi (ASAAPI_VERSION) carries.
-ARG ARKSHOPUI_VERSION=1.4    # bridge plugin between ArkShop and the MX-E Ark Shop UI mod (942249)
+ARG ARKSHOPUI_VERSION=1.5    # bridge plugin between ArkShop and the MX-E Ark Shop UI mod (942249)
 RUN mkdir -p /opt/asaapi/ArkApi/Plugins/ArkShop \
  && curl -fsSL "https://ark-server-api.com/resources/asa-server-api.31/download?version=${ASAAPI_VERSION}" \
       -o /tmp/asaapi.zip \
