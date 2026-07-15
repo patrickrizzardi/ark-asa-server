@@ -35,10 +35,23 @@ RUN mkdir -p ${STEAMCMD_DIR} \
 # Rebuild the image to update versions (no auto-latest; bad upstream = silent server breakage).
 # Lib/ (developer import lib) and the ONLY FOR DEVELOPERS dir are excluded — not needed at
 # runtime. Per build-time-vs-runtime.md: immutable + version-pinned → Dockerfile.
-ARG ASAAPI_VERSION=1.21
-ARG ARKSHOP_VERSION=1.5
+ARG ASAAPI_VERSION=2.01
+ARG ARKSHOP_VERSION=1.61
 ARG PERMISSIONS_VERSION=1.1  # doc-pin only — Permissions ships bundled in the AsaApi zip; no separate download, no URL interpolation. Records which Permissions version the pinned AsaApi (ASAAPI_VERSION) carries.
-ARG ARKSHOPUI_VERSION=1.5    # bridge plugin between ArkShop and the MX-E Ark Shop UI mod (942249)
+ARG ARKSHOPUI_VERSION=1.61   # bridge plugin between ArkShop and the MX-E Ark Shop UI mod (942249)
+# Locked trio moves together: AsaApi 2.01 + ArkShop 1.61 (MinApiVersion 2.00) + ArkShopUI 1.61
+# (requires ArkShop 1.61, "NOT COMPATIBLE WITH ANY OTHER ARKSHOP VERSION") — a mismatched pair
+# fails plugin load. ArkShop 1.61 also needs the "ASA API Utils" mod loaded (in MODS) or it errors
+# "Singleton not found".
+#
+# THE ACTUAL PLUGIN-LOAD DEPENDENCY IS THE GAME BUILD, NOT THESE PINS. AsaApi resolves ARK's
+# function offsets from EITHER the depot-shipped ArkAscendedServer.pdb OR a downloadable offset
+# cache (sha256(ArkAscendedServer.exe).zip) fetched from cdn.pelayori.com. Vanilla installs strip
+# the pdb, so the cache is the live path — and pelayori only publishes a cache per SPECIFIC game
+# build. A game build with no published cache (verified live: build 24137622 → HTTP 404) makes
+# AsaApi loop forever on "Cache archive unavailable" and NO plugin loads, regardless of these
+# versions. Fix = keep the game build current to one pelayori has cached (build 24193506 → 200,
+# verified 2026-07-14), NOT bumping the trio. Bumping the trio without a cached game build is a no-op.
 RUN mkdir -p /opt/asaapi/ArkApi/Plugins/ArkShop \
  && curl -fsSL "https://ark-server-api.com/resources/asa-server-api.31/download?version=${ASAAPI_VERSION}" \
       -o /tmp/asaapi.zip \

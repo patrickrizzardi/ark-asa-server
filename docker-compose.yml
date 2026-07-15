@@ -86,6 +86,13 @@ services:
   # (see docs/internal/decisions/0001-db-engine-mariadb.md).
   mariadb:
     image: mariadb:11.4
+    # Disable server-side TLS. The bundled ArkShop "Permissions" plugin (v1.1) links an ancient
+    # libmysqlclient that aborts MariaDB 11.4's TLS handshake ("closed without authentication"),
+    # so Permissions can't connect while SSL is advertised. ArkShop 1.61's own connector is fine
+    # either way. Named tradeoff: ark DB traffic is plaintext — acceptable because the DB is on the
+    # internal compose network only (host port defaults to 127.0.0.1) and this is a single-operator
+    # cluster; require_secure_transport was already 0, so nothing enforced TLS. See ADR 0001.
+    command: ["--skip-ssl"]
     ports:
       - "${MARIADB_HOST_PORT:-127.0.0.1:3307}:3306"
     environment:
