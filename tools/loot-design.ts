@@ -149,7 +149,9 @@ export const structures: { name: string; stone: string; metal: string; qtyLo: nu
   { name: 'Wall', stone: 'Stone Wall, Doorways & Windowframe', metal: 'Metal Wall, Doorways & Windowframe', qtyLo: 8, qtyHi: 12, metalOnly: false },
   { name: 'Ceiling', stone: 'Stone Ceiling & Hatchframe', metal: 'Metal Ceiling & Hatchframe', qtyLo: 4, qtyHi: 9, metalOnly: false },
   { name: 'Dino Gate', stone: 'Stone Gateway', metal: 'Metal Gateway', qtyLo: 1, qtyHi: 4, metalOnly: false },
+  { name: 'Dino Gate Door', stone: 'Stone Reinforced Gate', metal: 'Metal Gate', qtyLo: 1, qtyHi: 4, metalOnly: false },
   { name: 'Behemoth Gate', stone: 'Stone Behemoth Gateway', metal: 'Metal Behemoth Gateway', qtyLo: 1, qtyHi: 2, metalOnly: true },
+  { name: 'Behemoth Gate Door', stone: 'Stone Reinforced Behemoth Gate', metal: 'Metal Behemoth Gate', qtyLo: 1, qtyHi: 2, metalOnly: true },
 ];
 
 export const isStoneTier = (t: Tier): boolean => t === 'white' || t === 'green';
